@@ -19,7 +19,7 @@ jobs:
       - name: Lint with black
         run: black . --check --diff --color
       - name: Check types
-        run: mypy
+        run: mypy -m tests
       - name: Run tests
         run: |
           python -m unittest discover -s tests
