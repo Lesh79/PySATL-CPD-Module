@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "pysatl-cpd"
+version = "0.1.0"
+description = "Batch module for changepoint detection"
+authors = ["Lesh79, alexdtat, Alexey Veter, Aleksandra Listkova, Artem Romanyuk"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/Lesh79/PySATL-CPD-Module"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+numpy = "^2.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.2"
+mypy = "^1.10.1"
+black = "^24.4.2"
+
+[tool.black]
+line-length = 120
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
