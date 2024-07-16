@@ -2,5 +2,9 @@
 
 Dependencies installation
 ``` shell
-poetry install / poetry install --with dev
+poetry install
+```
+Dependencies installation for developer
+```shell
+poetry install --with dev
 ```
