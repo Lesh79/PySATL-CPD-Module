@@ -14,8 +14,7 @@ class MarkedCPData:
     :type expected_res: danno yet, mb some sort of list or other crap
     """
 
-    def __init__(
-        self, raw_data: list[float], expected_res):  # (?) в каком виде ожидаемые резы
+    def __init__(self, raw_data: list[float], expected_res):  # (?) в каком виде ожидаемые резы
         """CPDShell object constructor
 
         :param raw_data: Data for CPD algorithms
