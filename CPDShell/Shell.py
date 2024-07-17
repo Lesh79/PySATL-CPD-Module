@@ -20,11 +20,12 @@ class MarkedCPData:
         """MarkedCPData iterator"""
         return self.raw_data.__iter__()
 
-    def generate_CP_dataset(self, distribution) -> "MarkedCPData":  # (?) type of distribution
+    @staticmethod
+    def generate_CP_dataset(distribution) -> "MarkedCPData":  # (?) type of distribution
         """Method for generating marked data, that contains CP with specific
         distribution"""
         # (?) distribution mb optional.
-        return MarkedCPData([], [])
+        return MarkedCPData(["chin chon"], ["gop", "stop"])
 
 
 class CPDShell:
@@ -82,3 +83,7 @@ class CPDShell:
         if isinstance(self._data, MarkedCPData):
             result["expected"] = self._data.expected_res
         return result
+
+
+shell_marked_data = CPDShell(MarkedCPData([1, 2, 3], [4, 5, 6]))
+print(shell_marked_data.run_CPD())
