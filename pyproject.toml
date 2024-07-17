@@ -29,9 +29,12 @@ indent-width = 4
 respect-gitignore = true
 
 [tool.ruff.format]
-quote-style = "single"
-indent-style = "tab"
+quote-style = "double"
+indent-style = "space"
 docstring-code-format = true
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
 
 [tool.ruff.lint]
 select = ["A", "E", "F", "I", "PL", "RUF", "SIM", "UP", "W"]
