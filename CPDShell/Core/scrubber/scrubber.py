@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Iterable
 
 from ..scenario import Scenario
 
@@ -24,11 +24,11 @@ class Scrubber:
 
         # data: list or numpy.array
         self.scenario = scenario
-        self._data = data
+        self.data = data
         # mock realization
         self.change_points: list[int] = []
         self.is_running = True
-        self._uncompleted_window_index: list[int] = [0, 100, 200]
+        self._uncompleted_window_index: list[int] = [0, 100]
         self._completed_window_index: list[int] = [0]
 
     def generate_window(self) -> Iterable[float]:
@@ -39,9 +39,7 @@ class Scrubber:
         """
         if not self.is_running:
             raise ValueError("All windows were given")
-        first_data_index = self._uncompleted_window_index[len(self._completed_window_index) - 1]
-        second_data_index = self._uncompleted_window_index[len(self._completed_window_index)]
-        window = self._data
+        window = self.data
         return window
 
     def add_change_points(self, window_change_points: list[int]) -> None:

@@ -1,4 +1,4 @@
-from typing import Iterable, Sized
+from typing import Iterable
 
 from .abstract_algorithm import Algorithm
 
