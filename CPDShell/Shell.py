@@ -1,7 +1,7 @@
 from typing import Optional, Iterable, Iterator
 
-from Core.CPDCore import *
-from Core.scrubber.scrubber import Scrubber
+from CPDShell.Core.CPDCore import *
+from CPDShell.Core.scrubber.scrubber import Scrubber
 
 
 class MarkedCPData:
@@ -37,7 +37,11 @@ class CPDShell:
     ) -> None:
         """CPDShell object constructor"""
         self._data = data
-        self.cpd_core: CPDCore = CPDCore(scrubber_class(Scenario(10, True), data), algorithm)  # if no algo or scrubber was given, then some standard
+        scrubber_class = scrubber_class if scrubber_class is not None else Scrubber
+        algorithm = algorithm if algorithm is not None else GraphAlgorithm(1, 2)
+        self.cpd_core: CPDCore = CPDCore(
+            scrubber_class(Scenario(10, True), data), algorithm
+        )  # if no algo or scrubber was given, then some standard
 
     @property
     def data(self) -> Iterable[float]:
