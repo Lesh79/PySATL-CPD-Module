@@ -43,12 +43,8 @@ class Scrubber:
         """
         if not self.is_running:
             raise ValueError("All windows were given")
-        first_data_index = self._uncompleted_window_index[
-            len(self._completed_window_index) - 1
-        ]
-        second_data_index = self._uncompleted_window_index[
-            len(self._completed_window_index)
-        ]
+        first_data_index = self._uncompleted_window_index[len(self._completed_window_index) - 1]
+        second_data_index = self._uncompleted_window_index[len(self._completed_window_index)]
         window = self._data[first_data_index:second_data_index]
         return window
 
@@ -60,15 +56,11 @@ class Scrubber:
         """
         for window_change_point in window_change_points:
             if len(self.change_points) < self.scenario.change_point_number:
-                self.change_points.append(
-                    self._completed_window_index[-1] + window_change_point
-                )
+                self.change_points.append(self._completed_window_index[-1] + window_change_point)
             else:
                 self._completed_window_index = self._uncompleted_window_index
                 self.is_running = False
                 return
-        self._completed_window_index.append(
-            self._uncompleted_window_index[len(self._completed_window_index)]
-        )
+        self._completed_window_index.append(self._uncompleted_window_index[len(self._completed_window_index)])
         if self._completed_window_index == self._uncompleted_window_index:
             self.is_running = False

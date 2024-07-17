@@ -15,8 +15,7 @@ class MarkedCPData:
     """
 
     def __init__(
-        self, raw_data: list[float], expected_res
-    ):  # (?) в каком виде ожидаемые резы
+        self, raw_data: list[float], expected_res):  # (?) в каком виде ожидаемые резы
         """CPDShell object constructor
 
         :param raw_data: Data for CPD algorithms
@@ -27,9 +26,7 @@ class MarkedCPData:
         self.raw_data = raw_data
         self.expected_res = expected_res
 
-    def generate_CP_dataset(
-        self, distribution
-    ) -> "MarkedCPData":  # (?) в каком виде дистрибьюшн
+    def generate_CP_dataset(self, distribution) -> "MarkedCPData":  # (?) в каком виде дистрибьюшн
         """Method for generating marked data, that contains CP with specific
         distribution
         :return: object with marked data
@@ -71,15 +68,11 @@ class CPDShell:
         """
         ...
 
-    def change_scrubber(
-        self, scrubber_class: type[Scrubber]
-    ) -> None:  # (?) в каком виде скраббер
+    def change_scrubber(self, scrubber_class: type[Scrubber]) -> None:  # (?) в каком виде скраббер
         """Sets another scrubber in :class: `CPDShell` object"""
         ...
 
-    def change_CPD_algorithm(
-        self, algorithm_class: type["Algorithm"]
-    ) -> None:  # (?) в каком виде алгос
+    def change_CPD_algorithm(self, algorithm_class: type["Algorithm"]) -> None:  # (?) в каком виде алгос
         """Sets another scrubber in :class: `CPDShell` object"""
         ...
 
