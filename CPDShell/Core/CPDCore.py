@@ -11,9 +11,7 @@ class CPDCore:
         :param scrubber: scrubber for dividing data into windows
             and subsequent processing of data windows
             by change point detection algorithms
-        :type scrubber: :class:'Scrubber'
         :param algorithm: change point detection algorithm
-        :type algorithm: :class:'Algorithm'
         """
         self.scrubber = scrubber
         self.algorithm = algorithm
@@ -22,7 +20,6 @@ class CPDCore:
         """Find change points
 
         :return: list of change points
-        :rtype: list[int]
         """
         while self.scrubber.is_running:
             window = self.scrubber.generate_window()
