@@ -1,6 +1,9 @@
-from typing import Optional, Iterable, Iterator
+from collections.abc import Iterable, Iterator
+from typing import Optional
 
-from CPDShell.Core.CPDCore import *
+from CPDShell.Core.algorithms.graph_algorithm import Algorithm, GraphAlgorithm
+from CPDShell.Core.CPDCore import CPDCore
+from CPDShell.Core.scenario import Scenario
 from CPDShell.Core.scrubber.scrubber import Scrubber
 
 
@@ -29,11 +32,7 @@ class CPDShell:
     work with CPD algorithms"""
 
     def __init__(
-        self,
-        data: Iterable,
-        *,
-        algorithm: Optional["Algorithm"] = None,
-        scrubber_class: Optional[type[Scrubber]] = None
+        self, data: Iterable, *, algorithm: Optional["Algorithm"] = None, scrubber_class: type[Scrubber] | None = None
     ) -> None:
         """CPDShell object constructor"""
         self._data = data

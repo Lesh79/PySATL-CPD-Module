@@ -1,10 +1,9 @@
 import pytest
 
-from CPDShell.Core.scrubber.scrubber import *
+from CPDShell.Core.scrubber.scrubber import Scenario, Scrubber
 
 
 class TestScrubber:
-
     @pytest.mark.parametrize(
         "scenario_param,data,expected_windows",
         (
