@@ -46,7 +46,7 @@ class TestMarkedCPData:
 
             directory = [file_names for (_, _, file_names) in walk(tempdir)]
             for file_names in directory[1:]:
-                assert file_names == ["changepoints.csv", "sample.adoc", "sample.png", "sample.csv"]
+                assert sorted(file_names) == sorted(["changepoints.csv", "sample.adoc", "sample.png", "sample.csv"])
 
 
 class TestCPDShell:
