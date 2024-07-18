@@ -1,31 +1,53 @@
+import os.path
 from collections.abc import Iterable, Iterator
+from pathlib import Path
 from typing import Optional
 
 from CPDShell.Core.algorithms.graph_algorithm import Algorithm, GraphAlgorithm
 from CPDShell.Core.CPDCore import CPDCore
 from CPDShell.Core.scenario import Scenario
 from CPDShell.Core.scrubber.scrubber import Scrubber
+from CPDShell.generator.generator import DatasetGenerator, ScipyDatasetGenerator
+from CPDShell.generator.saver import DatasetSaver
 
 
-class MarkedCPData:
-    """Class for generating and storing marked data,
+class LabeledCPData:
+    """Class for generating and storing labeled data,
     needed in CPDShell"""
 
     def __init__(self, raw_data: Iterable[float], expected_res) -> None:  # (?) type of expected_res
-        """MarkedCPData object constructor"""
+        """labeledCPData object constructor"""
         self.raw_data = raw_data
         self.expected_res = expected_res
 
     def __iter__(self) -> Iterator:
-        """MarkedCPData iterator"""
+        """labeledCPData iterator"""
         return self.raw_data.__iter__()
 
+    def __str__(self) -> str:
+        return f"data={self.raw_data}, change_points={self.expected_res}"
+
     @staticmethod
-    def generate_CP_dataset(distribution) -> "MarkedCPData":  # (?) type of distribution
-        """Method for generating marked data, that contains CP with specific
+    def generate_cp_dataset(
+        config_path: Path,
+        generator: DatasetGenerator = ScipyDatasetGenerator(),
+        to_save: bool = False,
+        output_directory: Path = Path(),
+        to_replace: bool = True,
+    ) -> list["LabeledCPData"]:
+        """Method for generating labeled data, that contains CP with specific
         distribution"""
-        # (?) distribution mb optional.
-        return MarkedCPData(["chin chon"], ["gop", "stop"])
+        # maybe create default config
+        if not os.path.exists(config_path):
+            raise ValueError("Incorrect config path")
+        if to_save:
+            datasets = generator.generate_datasets(config_path, DatasetSaver(output_directory, to_replace))
+        else:
+            datasets = generator.generate_datasets(config_path)
+        labeled_data_list = []
+        for data, change_points in datasets:
+            labeled_data_list.append(LabeledCPData(data, change_points))
+        return labeled_data_list
 
 
 class CPDShell:
@@ -33,10 +55,14 @@ class CPDShell:
     work with CPD algorithms"""
 
     def __init__(
-        self, data: Iterable, *, algorithm: Optional["Algorithm"] = None, scrubber_class: type[Scrubber] | None = None
+        self,
+        data: Iterable[float],
+        *,
+        algorithm: Optional["Algorithm"] = None,
+        scrubber_class: type[Scrubber] | None = None,
     ) -> None:
         """CPDShell object constructor"""
-        self._data = data
+        self._data: Iterable[float] | LabeledCPData = data
         scrubber_class = scrubber_class if scrubber_class is not None else Scrubber
         algorithm = algorithm if algorithm is not None else GraphAlgorithm(1, 2)
         self.cpd_core: CPDCore = CPDCore(
@@ -80,10 +106,9 @@ class CPDShell:
         """Execute CPD algorithm, returns its result and prints it"""
         algo_result = self.cpd_core.run()  # TODO: rename later
         result = {"result": algo_result}
-        if isinstance(self._data, MarkedCPData):
+        if isinstance(self._data, LabeledCPData):
             result["expected"] = self._data.expected_res
         return result
 
 
-shell_marked_data = CPDShell(MarkedCPData([1, 2, 3], [4, 5, 6]))
-print(shell_marked_data.run_CPD())
+shell_labeled_data = CPDShell(LabeledCPData([1, 2, 3], [4, 5, 6]))
