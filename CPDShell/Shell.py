@@ -36,7 +36,15 @@ class LabeledCPData:
         to_replace: bool = True,
     ) -> list["LabeledCPData"]:
         """Method for generating labeled data, that contains CP with specific
-        distribution"""
+        distribution
+
+        :param config_path: path to config file
+        :param generator: DataGenerator object, defaults to ScipyDatasetGenerator()
+        :param to_save: is it necessary to save the data, defaults to False
+        :param output_directory: directory to save data, defaults to Path()
+        :param to_replace: is it necessary to replace the files in directory
+
+        :return: list of LabeledCPData (pairs of data and change points)"""
         # maybe create default config
         if not os.path.exists(config_path):
             raise ValueError("Incorrect config path")
