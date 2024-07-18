@@ -1,5 +1,5 @@
-from .algorithms.graph_algorithm import *
-from .scrubber.scrubber import *
+from .algorithms.graph_algorithm import Algorithm
+from .scrubber.scrubber import Scrubber
 
 
 class CPDCore:
