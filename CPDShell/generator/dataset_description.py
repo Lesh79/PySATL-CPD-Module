@@ -108,24 +108,28 @@ class SampleDescription(Generic[D]):
 class DatasetDescriptionBuilder:
     """Builder for `DatasetDescription` instance."""
 
-    _name: str | None
-    _samples_length: list[int] | None
-    _samples_distributions: list[Distribution] | None
-
-    def __init__(self):
+    def __init__(self) -> None:
         """Creates new DatasetDescriptionBuilder empty instance."""
-        self._name = None
-        self._samples_length = None
-        self._samples_distributions = None
+        self._distributions: dict[int, tuple[int, Distribution]] = dict()
+        self._name: str | None = None
 
     def set_name(self, name: str) -> None:
+        """Set name for dataset
+
+        :param name: name for dataset"""
         self._name = name
 
-    def set_samples_lengths(self, samples_lengths: list[int]) -> None:
-        self._samples_length = samples_lengths
+    def add_distribution(
+        self, distribution_type: str, distribution_length: int, distribution_parameters: dict[str, str]
+    ) -> None:
+        """Add new distribution to dataset
 
-    def set_samples_distributions(self, samples_distributions: list[Distribution]) -> None:
-        self._samples_distributions = samples_distributions
+        :param distribution_type: type of distribution
+        :param distribution_length: length of distribution in dataset
+        :param distribution_parameters: special distribution parameters"""
+        distribution_index = len(self._distributions)
+        distribution = Distribution.from_str(distribution_type, distribution_parameters)
+        self._distributions[distribution_index] = (distribution_length, distribution)
 
     def build(self) -> SampleDescription:
         """
@@ -134,7 +138,6 @@ class DatasetDescriptionBuilder:
         :return: New `DatasetDescription` instance.
         """
         assert self._name
-        assert self._samples_length
-        assert self._samples_distributions
-        assert len(self._samples_length) == len(self._samples_distributions)
-        return SampleDescription(self._name, self._samples_length, self._samples_distributions)
+        assert len(self._distributions)
+        lengths, distributions = zip(*self._distributions.values())
+        return SampleDescription(self._name, list(lengths), list(distributions))
