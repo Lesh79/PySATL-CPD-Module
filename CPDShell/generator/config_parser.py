@@ -28,8 +28,6 @@ class ConfigParser(Generic[D]):
         self.validate_config(config_path)
         with open(config_path) as cf:
             config: list[dict] = yaml.safe_load(cf)
-            for i in config:
-                print(i)
             self._descriptions = self._parse_config(config)
 
     def __iter__(self) -> Iterator[SampleDescription[D]]:
