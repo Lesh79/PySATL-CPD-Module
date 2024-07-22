@@ -88,12 +88,6 @@ class TestCPDShell:
         assert True
 
     def test_run_CPD(self) -> None:
-<<<<<<< HEAD:tests/test_CPDShell/test_shell.py
         assert self.shell_normal.run_CPD() == {"result": [0]}
         assert self.shell_default.run_CPD() == {"result": [0]}
         assert self.shell_marked_data.run_CPD() == {"result": [0], "expected": [4, 5, 6, 7]}
-=======
-        assert self.shell_normal.run_CPD() == {"result": [10]}
-        assert self.shell_default.run_CPD() == {"result": [10]}
-        assert self.shell_marked_data.run_CPD() == {"result": [10], "expected": [4, 5, 6]}
->>>>>>> d3d59c3 (fix: parametrs added to docstrings, new methods for working with scenario):tests/test_CPDShell/test_Shell.py
