@@ -1,20 +1,26 @@
 - name: 20-normal-0-1-no-change-point
-  distributions: [normal]
-  lengths: [20]
-  parameters:
-    - mean: 0
-      variance: 1
+  distributions:
+    - type: normal
+      length: 20
+      parameters:
+        mean: 0
+        variance: 1
 - name: 100-normal-0-1-no-change-point
-  distributions: [normal]
-  lengths: [100]
-  parameters:
-    - mean: 0
-      variance: 1
+  distributions:
+    - type: normal
+      length: 100
+      parameters:
+        mean: 0
+        variance: 1
 - name: 20-normal-0-1-20-normal-10-1
-  distributions: [normal, normal]
-  lengths: [20, 20]
-  parameters:
-    - mean: 0
-      variance: 1
-    - mean: 10
-      variance: 1
+  distributions:
+    - type: normal
+      length: 20
+      parameters:
+        mean: 0
+        variance: 1
+    - type: normal
+      length: 20
+      parameters:
+        mean: 10
+        variance: 1
