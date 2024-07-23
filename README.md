@@ -1,4 +1,4 @@
-# PySATL-CPD-Module
+# PySATL-IGraph_CPD-Module
 
 Dependencies installation
 
