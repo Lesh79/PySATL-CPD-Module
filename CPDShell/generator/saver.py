@@ -4,7 +4,7 @@ from typing import Final
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .dataset_description import SampleDescription
+from CPDShell.generator.dataset_description import SampleDescription
 
 
 class DatasetSaver:

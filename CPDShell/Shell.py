@@ -117,6 +117,3 @@ class CPDShell:
         if isinstance(self._data, LabeledCPData):
             result["expected"] = self._data.expected_res
         return result
-
-
-shell_labeled_data = CPDShell(LabeledCPData([1, 2, 3], [4, 5, 6]))
