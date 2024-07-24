@@ -3,7 +3,7 @@ from typing import Any
 
 from CPDShell.Core.algorithms.GpraphCPD.abstracts.ibuilder import IBuilder
 from CPDShell.Core.algorithms.GpraphCPD.abstracts.igraph import IGraph
-from CPDShell.Core.algorithms.GpraphCPD.GraphList import GraphList
+from CPDShell.Core.algorithms.GpraphCPD.graph_list import GraphList
 
 
 class AdjacencyListBuilder(IBuilder):

@@ -1,7 +1,7 @@
 import math
 
 from CPDShell.Core.algorithms.GpraphCPD.abstracts.igraph import IGraph
-from CPDShell.Core.algorithms.GpraphCPD.abstracts.igraphBased_CPD import IGraphCPD
+from CPDShell.Core.algorithms.GpraphCPD.abstracts.igraph_cpd import IGraphCPD
 
 
 class GraphCPD(IGraphCPD):

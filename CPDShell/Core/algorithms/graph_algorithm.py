@@ -2,8 +2,8 @@ from collections.abc import Callable, Iterable
 from typing import Any
 
 from .abstract_algorithm import Algorithm
-from .GpraphCPD.Builders.AdjMatrix_Builder import AdjacencyMatrixBuilder
-from .GpraphCPD.Graph_CPD import GraphCPD
+from .GpraphCPD.Builders.matrix_builder import AdjacencyMatrixBuilder
+from .GpraphCPD.graph_cpd import GraphCPD
 
 
 class GraphAlgorithm(Algorithm):
