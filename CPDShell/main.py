@@ -3,7 +3,7 @@ from pathlib import Path
 from CPDShell.Core.algorithms.graph_algorithm import GraphAlgorithm
 from CPDShell.Core.cpd_core import CPDCore, Scrubber
 from CPDShell.Core.scenario import Scenario
-from CPDShell.Shell import LabeledCPData
+from CPDShell.shell import LabeledCPData
 
 scenario = Scenario(10, True)
 scrubber = Scrubber(scenario, [1, 1.2, 12, 13, 11, 12, 1, 1, 1, 1, 1])

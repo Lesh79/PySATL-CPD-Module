@@ -6,7 +6,7 @@ import pytest
 
 from CPDShell.Core.algorithms.graph_algorithm import GraphAlgorithm
 from CPDShell.Core.scrubber.scrubber import Scrubber
-from CPDShell.Shell import CPDShell, LabeledCPData
+from CPDShell.shell import CPDShell, LabeledCPData
 
 
 class TestMarkedCPData:
