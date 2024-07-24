@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 from CPDShell.Core.algorithms.graph_algorithm import Algorithm, GraphAlgorithm
-from CPDShell.Core.CPDCore import CPDCore
+from CPDShell.Core.cpd_core import CPDCore
 from CPDShell.Core.scenario import Scenario
 from CPDShell.Core.scrubber.scrubber import Scrubber
 from CPDShell.generator.generator import DatasetGenerator, ScipyDatasetGenerator
