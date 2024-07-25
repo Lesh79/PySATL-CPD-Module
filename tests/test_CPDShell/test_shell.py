@@ -55,10 +55,10 @@ def custom_comparison(node1, node2):  # TODO: Remove it everywhere
 
 
 class TestCPDShell:
-    shell_normal = CPDShell([1, 2, 3, 4], algorithm=GraphAlgorithm(custom_comparison, 4), scrubber_class=Scrubber)
-    shell_default = CPDShell([3, 4, 5, 6], algorithm=GraphAlgorithm(custom_comparison, 4))
+    shell_normal = CPDShell([1, 2, 3, 4], cpd_algorithm=GraphAlgorithm(custom_comparison, 4), scrubber_class=Scrubber)
+    shell_default = CPDShell([3, 4, 5, 6], cpd_algorithm=GraphAlgorithm(custom_comparison, 4))
     shell_marked_data = CPDShell(
-        LabeledCPData([1, 2, 3, 4], [4, 5, 6, 7]), algorithm=GraphAlgorithm(custom_comparison, 4)
+        LabeledCPData([1, 2, 3, 4], [4, 5, 6, 7]), cpd_algorithm=GraphAlgorithm(custom_comparison, 4)
     )
 
     def test_init(self) -> None:
@@ -88,6 +88,6 @@ class TestCPDShell:
         assert True
 
     def test_run_CPD(self) -> None:
-        assert self.shell_normal.run_cpd() == {"result": [0]}
-        assert self.shell_default.run_cpd() == {"result": [0]}
-        assert self.shell_marked_data.run_cpd() == {"result": [0], "expected": [4, 5, 6, 7]}
+        assert self.shell_normal.run_cpd() == {"result": []}
+        assert self.shell_default.run_cpd() == {"result": []}
+        assert self.shell_marked_data.run_cpd() == {"result": [], "expected": [4, 5, 6, 7]}

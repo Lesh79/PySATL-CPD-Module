@@ -69,7 +69,7 @@ class CPDShell:
     def __init__(
         self,
         data: Iterable[float],
-        CPDalgorithm: "Algorithm" = GraphAlgorithm(1, 2),
+        cpd_algorithm: "Algorithm" = GraphAlgorithm(1, 2),
         scrubber_class: type[Scrubber] = Scrubber,
     ) -> None:
         """CPDShell object constructor
@@ -80,7 +80,7 @@ class CPDShell:
         """
         self._data: Iterable[float] | LabeledCPData = data
         self.cpd_core: CPDCore = CPDCore(
-            scrubber_class(Scenario(9999999999), data), CPDalgorithm
+            scrubber_class(Scenario(9999999999), data), cpd_algorithm
         )  # if no algo or scrubber was given, then some standard
 
     @property
