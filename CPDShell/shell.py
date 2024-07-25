@@ -1,5 +1,6 @@
 import os.path
 from collections.abc import Iterable, Iterator
+from dataclasses import dataclass
 from pathlib import Path
 
 from CPDShell.Core.algorithms.graph_algorithm import Algorithm, GraphAlgorithm
@@ -60,6 +61,18 @@ class LabeledCPData:
         for data, change_points in datasets:
             labeled_data_list.append(LabeledCPData(data, change_points))
         return labeled_data_list
+
+
+@dataclass
+class CPContainer:
+    """Container for results of CPD algorithms
+
+    :param: result: list, containing change points, that were found by CPD algos
+    :param: expected: list, containing expected change points, if it is needed
+    """
+
+    result: list
+    expected: list | None
 
 
 class CPDShell:
@@ -144,24 +157,24 @@ class CPDShell:
         """
         self.cpd_core.scrubber.scenario = Scenario(change_point_number, to_localize)
 
-    def run_cpd(self) -> dict:  # (?) type of return and the way of printing result
+    def run_cpd(self) -> CPContainer:
         """Execute CPD algorithm, returns its result and prints it
 
-        :return: dict with "result" field and optional "expected_results" field
+        :return: CPContainer object, containing algo result CP and expected CP if needed
         """
         algo_results = self.cpd_core.run()
-        output = {"result": algo_results}
+        output = CPContainer(algo_results, None)
         if isinstance(self._data, LabeledCPData):
-            output["expected"] = self._data.expected_res
+            output.expected = self._data.expected_res
         return output
 
-    def print_cpd_results(self, exec_results: dict) -> None:
+    def print_cpd_results(self, exec_results: CPContainer) -> None:
         """prints results of run_CPD method in a pretty way
 
-        :param: exec_results: output from run_CPD method, dict, containing results and optional expected results
+        :param: exec_results: output from run_cpd method, containing results and optional expected results
         """
 
-        def _find_symm_diff(list1, list2) -> list:
+        def _find_symm_diff(list1: list, list2: list) -> list:
             """helper function. Shows symm diff between two lists
 
             :param: list1: first list
@@ -172,8 +185,8 @@ class CPDShell:
             list1, list2 = set(list1), set(list2)
             return sorted(list(list1.symmetric_difference(list2)))
 
-        result = exec_results.get("result")
-        expected = exec_results.get("expected")
+        result = exec_results.result
+        expected = exec_results.expected
         if result is None:
             raise ValueError("wrong argument was given, result not found")
         result_output = ";".join(result)
@@ -182,8 +195,6 @@ class CPDShell:
             return
         expected_output = ";".join(expected)
         diff = ";".join(_find_symm_diff(result, expected))
-        print(
-            f"""Located change points: ({result_output})
-Expected change point: ({expected_output})
-Difference: ({diff})"""
-        )
+        print(f"Located change points: ({result_output})")
+        print(f"Expected change point: ({expected_output})")
+        print(f"Difference: ({diff})")
