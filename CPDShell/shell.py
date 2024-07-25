@@ -15,7 +15,7 @@ class LabeledCPData:
     needed in CPDShell"""
 
     def __init__(self, raw_data: Iterable[float], expected_res: Iterable[float]) -> None:
-        """labeledCPData object constructor
+        """LabeledCPData object constructor
 
         :param: raw_data: data, that will be passed into CPD algo
         :param: expected_res: expected results after passing raw_data into CPD algo
@@ -144,7 +144,7 @@ class CPDShell:
         """
         self.cpd_core.scrubber.scenario = Scenario(change_point_number, to_localize)
 
-    def run_CPD(self) -> dict:  # (?) type of return and the way of printing result
+    def run_cpd(self) -> dict:  # (?) type of return and the way of printing result
         """Execute CPD algorithm, returns its result and prints it
 
         :return: dict with "result" field and optional "expected_results" field
@@ -155,7 +155,7 @@ class CPDShell:
             output["expected"] = self._data.expected_res
         return output
 
-    def print_CPD_results(self, exec_results: dict) -> None:
+    def print_cpd_results(self, exec_results: dict) -> None:
         """prints results of run_CPD method in a pretty way
 
         :param: exec_results: output from run_CPD method, dict, containing results and optional expected results

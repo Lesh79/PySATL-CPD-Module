@@ -88,6 +88,6 @@ class TestCPDShell:
         assert True
 
     def test_run_CPD(self) -> None:
-        assert self.shell_normal.run_CPD() == {"result": [0]}
-        assert self.shell_default.run_CPD() == {"result": [0]}
-        assert self.shell_marked_data.run_CPD() == {"result": [0], "expected": [4, 5, 6, 7]}
+        assert self.shell_normal.run_cpd() == {"result": [0]}
+        assert self.shell_default.run_cpd() == {"result": [0]}
+        assert self.shell_marked_data.run_cpd() == {"result": [0], "expected": [4, 5, 6, 7]}
