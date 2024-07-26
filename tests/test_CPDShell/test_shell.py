@@ -6,7 +6,7 @@ import pytest
 
 from CPDShell.Core.algorithms.graph_algorithm import GraphAlgorithm
 from CPDShell.Core.scrubber.scrubber import Scrubber
-from CPDShell.shell import CPDShell, LabeledCPData
+from CPDShell.shell import CPContainer, CPDShell, LabeledCPData
 
 
 class TestMarkedCPData:
@@ -55,10 +55,10 @@ def custom_comparison(node1, node2):  # TODO: Remove it everywhere
 
 
 class TestCPDShell:
-    shell_normal = CPDShell([1, 2, 3, 4], algorithm=GraphAlgorithm(custom_comparison, 4), scrubber_class=Scrubber)
-    shell_default = CPDShell([3, 4, 5, 6], algorithm=GraphAlgorithm(custom_comparison, 4))
+    shell_normal = CPDShell([1, 2, 3, 4], cpd_algorithm=GraphAlgorithm(custom_comparison, 4), scrubber_class=Scrubber)
+    shell_default = CPDShell([3, 4, 5, 6], cpd_algorithm=GraphAlgorithm(custom_comparison, 4))
     shell_marked_data = CPDShell(
-        LabeledCPData([1, 2, 3, 4], [4, 5, 6, 7]), algorithm=GraphAlgorithm(custom_comparison, 4)
+        LabeledCPData([1, 2, 3, 4], [4, 5, 6, 7]), cpd_algorithm=GraphAlgorithm(custom_comparison, 4)
     )
 
     def test_init(self) -> None:
@@ -88,6 +88,6 @@ class TestCPDShell:
         assert True
 
     def test_run_CPD(self) -> None:
-        assert self.shell_normal.run_CPD() == {"result": [0]}
-        assert self.shell_default.run_CPD() == {"result": [0]}
-        assert self.shell_marked_data.run_CPD() == {"result": [0], "expected": [4, 5, 6, 7]}
+        assert self.shell_normal.run_cpd() == CPContainer([], None)
+        assert self.shell_default.run_cpd() == CPContainer([], None)
+        assert self.shell_marked_data.run_cpd() == CPContainer([], [4, 5, 6, 7])
