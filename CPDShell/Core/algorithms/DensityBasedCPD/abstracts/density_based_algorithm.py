@@ -1,7 +1,8 @@
-from CPDShell.Core.algorithms.abstract_algorithm import Algorithm
-from sklearn.neighbors import KernelDensity
-from scipy.optimize import minimize
 import numpy as np
+from scipy.optimize import minimize
+from sklearn.neighbors import KernelDensity
+
+from CPDShell.Core.algorithms.abstract_algorithm import Algorithm
 
 
 class DensityBasedAlgorithm(Algorithm):

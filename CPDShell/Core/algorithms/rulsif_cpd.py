@@ -1,5 +1,7 @@
-import numpy as np
 from collections.abc import Iterable
+
+import numpy as np
+
 from CPDShell.Core.algorithms.DensityBasedCPD.abstracts.density_based_algorithm import DensityBasedAlgorithm
 
 
