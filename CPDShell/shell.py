@@ -1,6 +1,6 @@
 import os.path
-from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
+from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
 
 from CPDShell.Core.algorithms.graph_algorithm import Algorithm, GraphAlgorithm
@@ -15,7 +15,7 @@ class LabeledCPData:
     """Class for generating and storing labeled data,
     needed in CPDShell"""
 
-    def __init__(self, raw_data: Iterable[float], expected_res: Iterable[float]) -> None:
+    def __init__(self, raw_data: Sequence[float], expected_res) -> None:  # (?) type of expected_res
         """LabeledCPData object constructor
 
         :param: raw_data: data, that will be passed into CPD algo
@@ -92,8 +92,11 @@ class CPDShell:
         :param: scrubber_class: class of preferable scrubber for splitting data into parts
         """
         self._data: Iterable[float] | LabeledCPData = data
+        scrubber_class = scrubber_class if scrubber_class is not None else Scrubber
+        arg = 5
+        cpd_algorithm = cpd_algorithm if cpd_algorithm is not None else GraphAlgorithm(lambda a, b: abs(a - b) <= arg, 2)
         self.cpd_core: CPDCore = CPDCore(
-            scrubber_class(Scenario(9999999999), data), cpd_algorithm
+            scrubber_class(Scenario(10, True), data.raw_data if isinstance(data, LabeledCPData) else data), cpd_algorithm
         )  # if no algo or scrubber was given, then some standard
 
     @property
@@ -102,13 +105,16 @@ class CPDShell:
         return self._data
 
     @data.setter
-    def data(self, new_data: Iterable[float]) -> None:
+    def data(self, new_data: Sequence[float]) -> None:
         """Setter method for changing data
 
         :param: new_data: new data, to replace the current one
         """
         self._data = new_data
-        self.cpd_core.scrubber.data = new_data
+        if isinstance(new_data, LabeledCPData):
+            self.cpd_core.scrubber.data = new_data.raw_data
+        else:
+            self.cpd_core.scrubber.data = new_data
 
     @property
     def scrubber(self) -> Scrubber:

@@ -16,11 +16,11 @@ class GraphAlgorithm(Algorithm):
         graph = builder.build_graph()
         cpd = GraphCPD(graph)
         num_cpd: list[int] = cpd.find_changepoint(self.threshold)
-        return [len(num_cpd)]
+        return num_cpd
 
-    def detect(self, window: Iterable[float]) -> list[int]:
+    def detect(self, window: Iterable[float]) -> int:
         builder = AdjacencyMatrixBuilder(window, self.compare)
         graph = builder.build_graph()
         cpd = GraphCPD(graph)
         num_cpd: list[int] = cpd.find_changepoint(self.threshold)
-        return num_cpd
+        return len(num_cpd)

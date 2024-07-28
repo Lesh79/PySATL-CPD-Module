@@ -14,8 +14,20 @@ class TestCPDCore:
     @pytest.mark.parametrize(
         "scenario_param,data,alg_class,alg_param,expected",
         (
-            ((1, True), (1, 2, 3, 4, 5, 6, 7), GraphAlgorithm, (custom_comparison, 2), [0]),
-            ((1, False), (1, 2, 3, 4, 5, 6, 7), GraphAlgorithm, (custom_comparison, 2), []),
+            (
+                (1, True),
+                (1, 1, 1, 1, 1, 1, 1, 100, 100, 100, 100, 100, 100, 100),
+                GraphAlgorithm,
+                (custom_comparison, 2),
+                [6],
+            ),
+            (
+                (1, False),
+                (1, 1, 1, 1, 1, 1, 1, 100, 100, 100, 100, 100, 100, 100),
+                GraphAlgorithm,
+                (custom_comparison, 2),
+                [10],
+            ),
         ),
     )
     def test_run(self, scenario_param, data, alg_class, alg_param, expected):

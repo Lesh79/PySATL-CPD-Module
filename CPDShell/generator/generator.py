@@ -47,7 +47,7 @@ class DatasetGenerator(Generic[DT], ABC):
 
     def generate_datasets(
         self, config_path: Path, saver: DatasetSaver | None = None
-    ) -> list[tuple[np.ndarray, list[int]]]:
+    ) -> list[tuple[list[float], list[int]]]:
         """Generate pairs of dataset and change points by config file
 
         :param config_path: path to config file
@@ -67,7 +67,7 @@ class DatasetGenerator(Generic[DT], ABC):
             for length in descr.length[:-1]:
                 current_point += length
                 change_points.append(current_point)
-            datasets.append((sample, change_points))
+            datasets.append((list(sample), change_points))
             if saver:
                 saver.save_sample(sample, descr)
         return datasets
