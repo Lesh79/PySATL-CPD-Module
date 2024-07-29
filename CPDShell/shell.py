@@ -1,6 +1,6 @@
 import os.path
-from dataclasses import dataclass
 from collections.abc import Iterable, Iterator, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 
 from CPDShell.Core.algorithms.graph_algorithm import Algorithm, GraphAlgorithm
@@ -94,9 +94,12 @@ class CPDShell:
         self._data: Iterable[float] | LabeledCPData = data
         scrubber_class = scrubber_class if scrubber_class is not None else Scrubber
         arg = 5
-        cpd_algorithm = cpd_algorithm if cpd_algorithm is not None else GraphAlgorithm(lambda a, b: abs(a - b) <= arg, 2)
+        cpd_algorithm = (
+            cpd_algorithm if cpd_algorithm is not None else GraphAlgorithm(lambda a, b: abs(a - b) <= arg, 2)
+        )
         self.cpd_core: CPDCore = CPDCore(
-            scrubber_class(Scenario(10, True), data.raw_data if isinstance(data, LabeledCPData) else data), cpd_algorithm
+            scrubber_class(Scenario(10, True), data.raw_data if isinstance(data, LabeledCPData) else data),
+            cpd_algorithm,
         )  # if no algo or scrubber was given, then some standard
 
     @property

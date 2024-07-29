@@ -91,4 +91,3 @@ class TestCPDShell:
         assert self.shell_normal.run_cpd() == CPContainer([], None)
         assert self.shell_default.run_cpd() == CPContainer([], None)
         assert self.shell_marked_data.run_cpd() == CPContainer([], [4, 5, 6, 7])
-
