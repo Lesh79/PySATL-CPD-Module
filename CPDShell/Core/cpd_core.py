@@ -26,6 +26,7 @@ class CPDCore:
             if self.scrubber.scenario.to_localize:
                 window_change_points = self.algorithm.localize(window)
             else:
-                window_change_points = self.algorithm.detect(window)
+                change_points_number = self.algorithm.detect(window)
+                window_change_points = [self.scrubber.window_length] * change_points_number
             self.scrubber.add_change_points(window_change_points)
         return self.scrubber.change_points

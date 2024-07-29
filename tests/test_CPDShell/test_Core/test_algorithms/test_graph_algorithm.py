@@ -11,7 +11,7 @@ def custom_comparison(node1, node2):
 class TestGraphAlgorithm:
     @pytest.mark.parametrize(
         "alg_param,data,expected",
-        (((custom_comparison, 1.5), (50, 55, 60, 48, 52, 70, 75, 80, 90, 85, 95, 100, 50), [1]),),
+        (((custom_comparison, 1.5), (50, 55, 60, 48, 52, 70, 75, 80, 90, 85, 95, 100, 50), [5]),),
     )
     def test_localize(self, alg_param, data, expected):
         algorithm = GraphAlgorithm(*alg_param)
@@ -19,7 +19,7 @@ class TestGraphAlgorithm:
 
     @pytest.mark.parametrize(
         "alg_param,data,expected",
-        (((custom_comparison, 1.5), (50, 55, 60, 48, 52, 70, 75, 80, 90, 85, 95, 100, 50), [5]),),
+        (((custom_comparison, 1.5), (50, 55, 60, 48, 52, 70, 75, 80, 90, 85, 95, 100, 50), 1),),
     )
     def test_detect(self, alg_param, data, expected):
         algorithm = GraphAlgorithm(*alg_param)
