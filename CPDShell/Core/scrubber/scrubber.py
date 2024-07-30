@@ -10,11 +10,11 @@ class Scrubber:
     """
 
     def __init__(
-            self,
-            scenario: Scenario,
-            data,
-            window_length: int = 10,
-            movement_k: float = 1 / 3,
+        self,
+        scenario: Scenario,
+        data,
+        window_length: int = 10,
+        movement_k: float = 1 / 3,
     ) -> None:
         """A scrubber for dividing data into windows
         and subsequent processing of data windows
