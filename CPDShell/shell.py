@@ -64,25 +64,35 @@ class LabeledCPData:
 
 
 class CPContainer:
-    """Container for results of CPD algorithms
-
-    :param: result: list, containing change points, that were found by CPD algos
-    :param: expected: list, containing expected change points, if it is needed
-    """
+    """Container for results of CPD algorithms"""
 
     def __init__(self, result: list[float], expected_result: list[float] | None, time_ms: float) -> None:
+        """Object constructor
+
+        :param: result: list, containing change points, that were found by CPD algos
+        :param: expected_result: list, containing expected change points, if it is needed
+        :param: time_ms: a float number, time of CPD algo execution in milliseconds
+        """
         self.result = result
         self.expected_result = expected_result
         self.time_ms = time_ms
 
     @property
     def result_diff(self) -> list:
+        """method for calculation symmetrical diff between results and expected results (if its granted)
+
+        :return: symmetrical difference between results and expected results
+        """
         if self.expected_result is None:
             raise ValueError("this object is not provided with expected result, thus diff cannot be calculated.")
         first, second = set(self.result), set(self.expected_result)
         return sorted(list(first.symmetric_difference(second)))
 
     def __str__(self) -> str:
+        """method for printing results of CPD algo results in a convenient way
+
+        :return: string with brief CPD algo execution results
+        """
         cp_results = ";".join(map(str, self.result))
         method_output = f"Located change points: ({cp_results})\n"
         if self.expected_result is not None:
