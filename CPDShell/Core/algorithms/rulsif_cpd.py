@@ -43,8 +43,7 @@ class RulsifAlgorithm(DensityBasedAlgorithm):
             window,
             self.bandwidth,
             self.regularization_coef,
-            lambda density_ratio, alpha: np.mean((density_ratio - 1) ** 2)
-            + self.regularization_coef * np.sum(alpha**2),
+            lambda density_ratio, alpha: np.mean((density_ratio - 1) ** 2) + self.regularization_coef * np.sum(alpha**2),
         )
 
         change_points = 0
@@ -69,8 +68,7 @@ class RulsifAlgorithm(DensityBasedAlgorithm):
             window,
             self.bandwidth,
             self.regularization_coef,
-            lambda density_ratio, alpha: np.mean((density_ratio - 1) ** 2)
-            + self.regularization_coef * np.sum(alpha**2),
+            lambda density_ratio, alpha: np.mean((density_ratio - 1) ** 2) + self.regularization_coef * np.sum(alpha**2),
         )
 
         change_points = []

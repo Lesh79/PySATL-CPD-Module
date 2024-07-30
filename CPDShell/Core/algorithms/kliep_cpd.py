@@ -43,8 +43,7 @@ class KliepAlgorithm(DensityBasedAlgorithm):
             window,
             self.bandwidth,
             self.regularization_coef,
-            lambda w, alpha: -np.mean(w)
-            + self.regularization_coef * np.sum(alpha**2),
+            lambda w, alpha: -np.mean(w) + self.regularization_coef * np.sum(alpha**2),
         )
 
         change_points = 0
@@ -68,8 +67,7 @@ class KliepAlgorithm(DensityBasedAlgorithm):
             window,
             self.bandwidth,
             self.regularization_coef,
-            lambda w, alpha: -np.mean(w)
-            + self.regularization_coef * np.sum(alpha**2),
+            lambda w, alpha: -np.mean(w) + self.regularization_coef * np.sum(alpha**2),
         )
 
         change_points = []
