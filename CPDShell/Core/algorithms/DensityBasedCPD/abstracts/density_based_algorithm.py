@@ -17,10 +17,14 @@ class DensityBasedAlgorithm(Algorithm):
         reference_density = DensityBasedAlgorithm._kernel_density_estimation(reverence_value, bandwidth)
 
         def obj(alpha):
-            density_ratio = np.exp(test_density.score_samples(test_value) - reference_density.score_samples(test_value) - alpha)
+            density_ratio = np.exp(
+                test_density.score_samples(test_value) - reference_density.score_samples(test_value) - alpha
+                )
             return objective_function(density_ratio, alpha)
 
         res = minimize(obj, np.zeros(len(test_value)), method="L-BFGS-B")
         alpha = res.x
-        density_ratio = np.exp(test_density.score_samples(test_value) - reference_density.score_samples(test_value) - alpha)
+        density_ratio = np.exp(
+            test_density.score_samples(test_value) - reference_density.score_samples(test_value) - alpha
+            )
         return density_ratio / np.mean(density_ratio)
