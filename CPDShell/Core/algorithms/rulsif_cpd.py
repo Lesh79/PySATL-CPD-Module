@@ -2,9 +2,7 @@ from collections.abc import Iterable
 
 import numpy as np
 
-from CPDShell.Core.algorithms.DensityBasedCPD.abstracts import (
-    DensityBasedAlgorithm
-)
+from CPDShell.Core.algorithms.DensityBasedCPD.abstracts import DensityBasedAlgorithm
 
 
 class RulsifAlgorithm(DensityBasedAlgorithm):
