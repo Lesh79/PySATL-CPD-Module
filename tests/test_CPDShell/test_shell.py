@@ -6,7 +6,7 @@ import pytest
 
 from CPDShell.Core.algorithms.graph_algorithm import GraphAlgorithm
 from CPDShell.Core.scrubber.scrubber import Scrubber
-from CPDShell.shell import CPContainer, CPDShell, LabeledCPData
+from CPDShell.shell import CPDShell, LabeledCPData
 
 
 class TestMarkedCPData:
@@ -88,6 +88,15 @@ class TestCPDShell:
         assert True
 
     def test_run_CPD(self) -> None:
-        assert self.shell_normal.run_cpd() == CPContainer([], None)
-        assert self.shell_default.run_cpd() == CPContainer([], None)
-        assert self.shell_marked_data.run_cpd() == CPContainer([], [4, 5, 6, 7])
+        res_normal = self.shell_normal.run_cpd()
+        res_def = self.shell_default.run_cpd()
+        res_marked = self.shell_marked_data.run_cpd()
+        assert res_normal.result == []
+        assert res_normal.expected_result is None
+
+        assert res_def.result == []
+        assert res_def.expected_result is None
+
+        assert res_marked.result == []
+        assert res_marked.expected_result == [4, 5, 6, 7]
+        assert res_marked.result_diff == [4, 5, 6, 7]
