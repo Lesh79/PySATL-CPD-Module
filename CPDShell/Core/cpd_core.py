@@ -21,6 +21,7 @@ class CPDCore:
 
         :return: list of change points
         """
+        self.scrubber.restart()
         while self.scrubber.is_running:
             window = self.scrubber.generate_window()
             if self.scrubber.scenario.to_localize:

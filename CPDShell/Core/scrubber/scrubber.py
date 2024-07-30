@@ -26,15 +26,13 @@ class Scrubber:
         :param movement_k: how far will the window move relative to the length
         """
 
-        # data: list or numpy.array
+        self.window_length = window_length
+        self._movement_k = movement_k
         self.scenario = scenario
         self.data: Sequence[float] = data
-        self.window_length = window_length
-        self._delta = int(window_length * movement_k)
-
         self.is_running = True
         self.change_points: list[int] = []
-        self._next_window: tuple[int, int] | None = (0, window_length)
+        self._next_window: tuple[int, int] | None = (0, self.window_length)
 
     def generate_window(self) -> Sequence[float]:
         """Function for dividing data into parts to feed into the change point detection algorithm
@@ -68,9 +66,15 @@ class Scrubber:
             start, end = self.change_points[-1], self.change_points[-1] + self.window_length
             self._next_window = (start, end)
         else:
-            start, end = self._next_window[0] + self._delta, self._next_window[1] + self._delta
+            delta = int(self._movement_k * self.window_length)
+            start, end = self._next_window[0] + delta, self._next_window[1] + delta
             if end >= len(self.data):
                 self._next_window = None
                 self.is_running = False
             else:
                 self._next_window = (start, end)
+
+    def restart(self) -> None:
+        self._next_window = (0, self.window_length)
+        self.is_running = True
+        self.change_points = []

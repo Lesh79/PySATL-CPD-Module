@@ -1,6 +1,6 @@
 import os.path
+import time
 from collections.abc import Iterable, Iterator, Sequence
-from dataclasses import dataclass
 from pathlib import Path
 
 from CPDShell.Core.algorithms.graph_algorithm import Algorithm, GraphAlgorithm
@@ -63,16 +63,45 @@ class LabeledCPData:
         return labeled_data_list
 
 
-@dataclass
 class CPContainer:
-    """Container for results of CPD algorithms
+    """Container for results of CPD algorithms"""
 
-    :param: result: list, containing change points, that were found by CPD algos
-    :param: expected: list, containing expected change points, if it is needed
-    """
+    def __init__(self, result: list[float], expected_result: list[float] | None, time_ms: float) -> None:
+        """Object constructor
 
-    result: list
-    expected: list | None
+        :param: result: list, containing change points, that were found by CPD algos
+        :param: expected_result: list, containing expected change points, if it is needed
+        :param: time_ms: a float number, time of CPD algo execution in milliseconds
+        """
+        self.result = result
+        self.expected_result = expected_result
+        self.time_ms = time_ms
+
+    @property
+    def result_diff(self) -> list:
+        """method for calculation symmetrical diff between results and expected results (if its granted)
+
+        :return: symmetrical difference between results and expected results
+        """
+        if self.expected_result is None:
+            raise ValueError("this object is not provided with expected result, thus diff cannot be calculated.")
+        first, second = set(self.result), set(self.expected_result)
+        return sorted(list(first.symmetric_difference(second)))
+
+    def __str__(self) -> str:
+        """method for printing results of CPD algo results in a convenient way
+
+        :return: string with brief CPD algo execution results
+        """
+        cp_results = ";".join(map(str, self.result))
+        method_output = f"Located change points: ({cp_results})\n"
+        if self.expected_result is not None:
+            expected_cp_results = ";".join(map(str, self.expected_result))
+            diff = ";".join(map(str, self.result_diff))
+            method_output += f"Expected change point: ({expected_cp_results})\n"
+            method_output += f"Difference: ({diff})\n"
+        method_output += f"Computation time (ms): {round(self.time_ms, 2)}"
+        return method_output
 
 
 class CPDShell:
@@ -167,43 +196,12 @@ class CPDShell:
         self.cpd_core.scrubber.scenario = Scenario(change_point_number, to_localize)
 
     def run_cpd(self) -> CPContainer:
-        """Execute CPD algorithm, returns its result and prints it
+        """Execute CPD algorithm, returns ifrom dataclasses import dataclassts result and prints it
 
         :return: CPContainer object, containing algo result CP and expected CP if needed
         """
+        time_start = time.perf_counter()
         algo_results = self.cpd_core.run()
-        output = CPContainer(algo_results, None)
-        if isinstance(self._data, LabeledCPData):
-            output.expected = self._data.expected_res
-        return output
-
-    def print_cpd_results(self, exec_results: CPContainer) -> None:
-        """prints results of run_CPD method in a pretty way
-
-        :param: exec_results: output from run_cpd method, containing results and optional expected results
-        """
-
-        def _find_symm_diff(list1: list, list2: list) -> list:
-            """helper function. Shows symm diff between two lists
-
-            :param: list1: first list
-            :param: list2: second list
-
-            :return: list with symm diff of two lists
-            """
-            list1, list2 = set(list1), set(list2)
-            return sorted(list(list1.symmetric_difference(list2)))
-
-        result = exec_results.result
-        expected = exec_results.expected
-        if result is None:
-            raise ValueError("wrong argument was given, result not found")
-        result_output = ";".join(result)
-        if expected is None:
-            print(f"Located change points: ({result_output})")
-            return
-        expected_output = ";".join(expected)
-        diff = ";".join(_find_symm_diff(result, expected))
-        print(f"Located change points: ({result_output})")
-        print(f"Expected change point: ({expected_output})")
-        print(f"Difference: ({diff})")
+        time_end = time.perf_counter()
+        expected_res = self._data.expected_res if isinstance(self._data, LabeledCPData) else None
+        return CPContainer(algo_results, expected_res, time_end - time_start)
