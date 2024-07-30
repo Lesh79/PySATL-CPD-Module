@@ -47,18 +47,18 @@ class DatasetGenerator(Generic[DT], ABC):
 
     def generate_datasets(
         self, config_path: Path, saver: DatasetSaver | None = None
-    ) -> list[tuple[list[float], list[int]]]:
+    ) -> dict[str, tuple[list[float], list[int]]]:
         """Generate pairs of dataset and change points by config file
 
         :param config_path: path to config file
         :param saver: saver of saving files (if saver is None, then the data does not need to be saved),
          defaults to None
 
-        :return: pairs of dataset and change points
+        :return: dictionary with names and pairs of dataset and change points
         """
         config_parser: ConfigParser = ConfigParser(config_path)
 
-        datasets = []
+        datasets = dict()
 
         for descr in config_parser:
             sample = self.generate_sample(descr.distributions, descr.length)
@@ -67,7 +67,7 @@ class DatasetGenerator(Generic[DT], ABC):
             for length in descr.length[:-1]:
                 current_point += length
                 change_points.append(current_point)
-            datasets.append((list(sample), change_points))
+            datasets[descr.name] = (list(sample), change_points)
             if saver:
                 saver.save_sample(sample, descr)
         return datasets

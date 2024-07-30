@@ -1,8 +1,10 @@
+import numpy
+
 from CPDShell.Core.algorithms.GpraphCPD.abstracts.igraph import IGraph
 
 
 class GraphList(IGraph):
-    def __init__(self, graph, data: list[float], num_of_edges: int):
+    def __init__(self, graph, data: list[float | numpy.float64], num_of_edges: int):
         """
         Initialize the GraphList with the adjacency list, data, and number of edges.
 

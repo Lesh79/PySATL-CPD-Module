@@ -1,5 +1,7 @@
 from collections.abc import Sequence
 
+import numpy
+
 from ..scenario import Scenario
 
 
@@ -29,12 +31,12 @@ class Scrubber:
         self.window_length = window_length
         self._movement_k = movement_k
         self.scenario = scenario
-        self.data: Sequence[float] = data
+        self.data: Sequence[float | numpy.float64] = data
         self.is_running = True
         self.change_points: list[int] = []
         self._next_window: tuple[int, int] | None = (0, self.window_length)
 
-    def generate_window(self) -> Sequence[float]:
+    def generate_window(self) -> Sequence[float | numpy.float64]:
         """Function for dividing data into parts to feed into the change point detection algorithm
 
         :raises ValueError: all data has already been given
