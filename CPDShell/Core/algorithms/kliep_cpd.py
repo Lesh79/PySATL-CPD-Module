@@ -2,15 +2,17 @@ from collections.abc import Iterable
 
 import numpy as np
 
-from CPDShell.Core.algorithms.DensityBasedCPD.abstracts.density_based_algorithm import (
-    DensityBasedAlgorithm,
+from CPDShell.Core.algorithms.DensityBasedCPD.abstracts import (
+    DensityBasedAlgorithm
 )
 
 
 class KliepAlgorithm(DensityBasedAlgorithm):
-    """Kullback-Leibler Importance Estimation Procedure (KLIEP) algorithm for change point detection.
+    """Kullback-Leibler Importance Estimation Procedure (KLIEP) algorithm
+    for change point detection.
 
-    KLIEP estimates the density ratio between two distributions and uses the importance weights for detecting changes in the data distribution.
+    KLIEP estimates the density ratio between two distributions and uses
+    the importance weights for detecting changes in the data distribution.
     """
 
     def __init__(self, bandwidth, regularization_coef, threshold):
@@ -19,14 +21,16 @@ class KliepAlgorithm(DensityBasedAlgorithm):
         Args:
             bandwidth (float): bandwidth parameter for density estimation.
             regularization_coef (float): regularization parameter.
-            threshold (float, optional): threshold for detecting change points. Defaults to 1.1.
+            threshold (float, optional): threshold for detecting change points.
+            Defaults to 1.1.
         """
         self.bandwidth = bandwidth
         self.regularization_coef = regularization_coef
         self.threshold = threshold
 
     def detect(self, window: Iterable[float]) -> int:
-        """Detect the number of change points in the given data window using KLIEP.
+        """Detect the number of change points in the given data window
+        using KLIEP.
 
         Args:
             window (Iterable[float]): the data window to detect change points.
@@ -39,7 +43,8 @@ class KliepAlgorithm(DensityBasedAlgorithm):
             window,
             self.bandwidth,
             self.regularization_coef,
-            lambda w, alpha: -np.mean(w) + self.regularization_coef * np.sum(alpha**2),
+            lambda w, alpha: -np.mean(w)
+            + self.regularization_coef * np.sum(alpha**2),
         )
 
         change_points = 0
@@ -52,7 +57,8 @@ class KliepAlgorithm(DensityBasedAlgorithm):
         """Localize the change points in the given data window using KLIEP.
 
         Args:
-            window (Iterable[float]): the data window to localize change points.
+            window (Iterable[float]): the data window to localize
+            change points.
 
         Returns:
             list[int]: the indices of the detected change points.
@@ -62,7 +68,8 @@ class KliepAlgorithm(DensityBasedAlgorithm):
             window,
             self.bandwidth,
             self.regularization_coef,
-            lambda w, alpha: -np.mean(w) + self.regularization_coef * np.sum(alpha**2),
+            lambda w, alpha: -np.mean(w)
+            + self.regularization_coef * np.sum(alpha**2),
         )
 
         change_points = []

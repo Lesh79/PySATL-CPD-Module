@@ -2,15 +2,17 @@ from collections.abc import Iterable
 
 import numpy as np
 
-from CPDShell.Core.algorithms.DensityBasedCPD.abstracts.density_based_algorithm import (
-    DensityBasedAlgorithm,
+from CPDShell.Core.algorithms.DensityBasedCPD.abstracts import (
+    DensityBasedAlgorithm
 )
 
 
 class RulsifAlgorithm(DensityBasedAlgorithm):
-    """Relative Unconstrained Least-Squares Importance Fitting (RULSIF) algorithm for change point detection.
+    """Relative Unconstrained Least-Squares Importance Fitting (RULSIF)
+    algorithm for change point detection.
 
-    RULSIF estimates the density ratio between two distributions and uses the importance weights for detecting changes in the data distribution.
+    RULSIF estimates the density ratio between two distributions and uses
+    the importance weights for detecting changes in the data distribution.
     """
 
     def __init__(self, bandwidth, regularization_coef, threshold):
@@ -19,14 +21,16 @@ class RulsifAlgorithm(DensityBasedAlgorithm):
         Args:
             bandwidth (float): bandwidth parameter for density estimation.
             regularization_coef (float): regularization parameter.
-            threshold (float, optional): threshold for detecting change points. Defaults to 1.1.
+            threshold (float, optional): threshold for detecting change points.
+            Defaults to 1.1.
         """
         self.bandwidth = bandwidth
         self.regularization_coef = regularization_coef
         self.threshold = threshold
 
     def detect(self, window: Iterable[float]) -> int:
-        """Detect the number of change points in the given data window using RULSIF.
+        """Detect the number of change points in the given data window
+        using RULSIF.
 
         Args:
             window (Iterable[float]): the data window to detect change points.
@@ -54,7 +58,8 @@ class RulsifAlgorithm(DensityBasedAlgorithm):
         Localize the change points in the given data window using RULSIF.
 
         Args:
-            window (Iterable[float]): the data window to localize change points.
+            window (Iterable[float]): the data window to localize
+            change points.
 
         Returns:
             list[int]: the indices of the detected change points.
