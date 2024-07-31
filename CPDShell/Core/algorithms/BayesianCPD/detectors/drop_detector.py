@@ -6,7 +6,6 @@ __author__ = "Alexey Tatyanenko"
 __copyright__ = "Copyright (c) 2024 Alexey Tatyanenko"
 __license__ = "SPDX-License-Identifier: MIT"
 
-
 import numpy as np
 
 from CPDShell.Core.algorithms.BayesianCPD.abstracts.idetector import IDetector
@@ -24,8 +23,9 @@ class DropDetector(IDetector):
         :param threshold: threshold for a drop of the maximum run length's probability.
         """
         self.__previous_growth_prob: None | float = None
-        self.__threshold = threshold
-        assert 0.0 <= self.__threshold <= 1.0
+
+        self._threshold = threshold
+        assert 0.0 <= self._threshold <= 1.0
 
     def detect(self, growth_probs: np.ndarray) -> bool:
         """
@@ -44,7 +44,7 @@ class DropDetector(IDetector):
         drop = float(self.__previous_growth_prob - last_growth_prob)
         assert drop >= 0.0
 
-        return drop >= self.__threshold
+        return drop >= self._threshold
 
     def clear(self) -> None:
         """

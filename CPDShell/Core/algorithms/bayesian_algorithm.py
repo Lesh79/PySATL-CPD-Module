@@ -38,7 +38,7 @@ class BayesianAlgorithm(Algorithm):
         :param detector: detector for change point detection from a run lengths distribution at the moment.
         :param localizer: localizer for change point localization from a run lengths distribution at the moment.
         """
-        self.__learning_steps = learning_steps
+        self._learning_steps = learning_steps
 
         self.__likelihood = likelihood
         self.__hazard = hazard
@@ -87,7 +87,7 @@ class BayesianAlgorithm(Algorithm):
         self.__growth_probs[0] = 1.0
         self.__time = 0
 
-        while self.__time + self.__learning_steps < sample_size:
+        while self.__time + self._learning_steps < sample_size:
             self.__learning_stage(sample)
 
             self.__bayesian_stage(sample)
@@ -100,8 +100,8 @@ class BayesianAlgorithm(Algorithm):
         Performs a likelihood's parameter learning stage.
         :param sample: an overall sample the model working with.
         """
-        self.__likelihood.learn(sample[self.__time : self.__time + self.__learning_steps])
-        self.__shift_time(self.__learning_steps - 1)
+        self.__likelihood.learn(sample[self.__time : self.__time + self._learning_steps])
+        self.__shift_time(self._learning_steps - 1)
 
     def __bayesian_stage(self, sample: list[float | np.float64]) -> None:
         """

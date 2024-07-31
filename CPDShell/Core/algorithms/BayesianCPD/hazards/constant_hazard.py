@@ -23,7 +23,7 @@ class ConstantHazard(IHazard):
         Initializes the constant hazard function with a given rate of an underlying exponential distribution.
         :param rate: rate of an underlying exponential distribution.
         """
-        self.__rate = rate
+        self._rate = rate
 
     def hazard(self, run_lengths: np.ndarray) -> np.ndarray:
         """
@@ -31,4 +31,4 @@ class ConstantHazard(IHazard):
         :param run_lengths: run lengths at the time.
         :return: hazard function's values for given run lengths.
         """
-        return np.ones(len(run_lengths)) / self.__rate
+        return np.ones(len(run_lengths)) / self._rate
