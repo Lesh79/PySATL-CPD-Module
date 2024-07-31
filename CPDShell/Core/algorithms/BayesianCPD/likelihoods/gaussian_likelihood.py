@@ -46,7 +46,7 @@ class GaussianLikelihood(ILikelihood):
         self.__means = np.append(self.__means, new_mean)
         self.__standard_deviations = np.append(self.__standard_deviations, new_standard_deviation)
 
-    def learn(self, learning_sample: list[float]) -> None:
+    def learn(self, learning_sample: list[float | np.float64]) -> None:
         """
         Learns first mean and stander deviations from a given sample.
         :param learning_sample: a sample for parameter learning.
@@ -64,7 +64,7 @@ class GaussianLikelihood(ILikelihood):
 
         self.__update_parameters_lists()
 
-    def update(self, observation: float) -> None:
+    def update(self, observation: float | np.float64) -> None:
         """
         Updates the means and standard deviations lists according to the given observation.
         :param observation: an observation from a sample.
@@ -76,7 +76,7 @@ class GaussianLikelihood(ILikelihood):
 
         self.__update_parameters_lists()
 
-    def predict(self, observation: float) -> npt.ArrayLike:
+    def predict(self, observation: float | np.float64) -> npt.ArrayLike:
         """
         Returns predictive probabilities for a given observation based on stored means and standard deviations.
         :param observation: an observation from a sample.

@@ -54,7 +54,7 @@ class BayesianAlgorithm(Algorithm):
         self.__change_points: list[int] = []
         self.__change_points_count = 0
 
-    def detect(self, window: Iterable[float]) -> int:
+    def detect(self, window: Iterable[float | np.float64]) -> int:
         """Finds change points in window.
 
         :param window: part of global data for finding change points.
@@ -63,7 +63,7 @@ class BayesianAlgorithm(Algorithm):
         self.__process_data(False, window)
         return self.__change_points_count
 
-    def localize(self, window: Iterable[float]) -> list[int]:
+    def localize(self, window: Iterable[float | np.float64]) -> list[int]:
         """Finds coordinates of change points (localizes them) in window.
 
         :param window: part of global data for finding change points.
@@ -72,7 +72,7 @@ class BayesianAlgorithm(Algorithm):
         self.__process_data(True, window)
         return self.__change_points.copy()
 
-    def __process_data(self, with_localization: bool, window: Iterable[float]) -> None:
+    def __process_data(self, with_localization: bool, window: Iterable[float | np.float64]) -> None:
         """
         Processes a window of data to detect/localize all change points depending on working mode.
         :param with_localization: boolean flag representing whether function needs to localize a change point.
@@ -95,7 +95,7 @@ class BayesianAlgorithm(Algorithm):
             if self.__time < sample_size - 1:
                 self.__process_change_point(sample_size, with_localization)
 
-    def __learning_stage(self, sample: list[float]) -> None:
+    def __learning_stage(self, sample: list[float | np.float64]) -> None:
         """
         Performs a likelihood's parameter learning stage.
         :param sample: an overall sample the model working with.
@@ -103,7 +103,7 @@ class BayesianAlgorithm(Algorithm):
         self.__likelihood.learn(sample[self.__time : self.__time + self.__learning_steps])
         self.__shift_time(self.__learning_steps - 1)
 
-    def __bayesian_stage(self, sample: list[float]) -> None:
+    def __bayesian_stage(self, sample: list[float | np.float64]) -> None:
         """
         Performs a Bayesian statistics (run lengths distribution) evaluating stage.
         :param sample: an overall sample the model working with.
@@ -154,7 +154,7 @@ class BayesianAlgorithm(Algorithm):
             and not self.__detector.detect(self.__growth_probs[: self.__gap_size + 1])
         )
 
-    def __bayesian_update(self, observation: float) -> None:
+    def __bayesian_update(self, observation: float | np.float64) -> None:
         """
         Performs a Bayesian update of statistics (run lengths distribution).
         :param observation: an observation from a sample.
