@@ -49,10 +49,9 @@ class KliepAlgorithm(DensityBasedAlgorithm):
             int: the number of detected change points.
         """
         weights = self._calculate_weights(
-            data=window,
-            reference=window,
+            test_value=window,
+            reference_value=window,
             bandwidth=self.bandwidth,
-            regularization_coef=self.regularization_coef,
             loss_function=self._loss_function,
         )
 
@@ -69,16 +68,16 @@ class KliepAlgorithm(DensityBasedAlgorithm):
             List[int]: the indices of the detected change points.
         """
         weights = self._calculate_weights(
-            data=window,
-            reference=window,
+            test_value=window,
+            reference_value=window,
             bandwidth=self.bandwidth,
-            regularization_coef=self.regularization_coef,
             loss_function=self._loss_function,
         )
 
         return np.where(weights > self.threshold)[0].tolist()
 
-    def evaluate_detection_accuracy(self, true_change_points: list[int], detected_change_points: list[int]) -> dict:
+    @staticmethod
+    def evaluate_detection_accuracy(true_change_points: list[int], detected_change_points: list[int]) -> dict:
         """Evaluate the accuracy of change point detection.
 
         Args:
