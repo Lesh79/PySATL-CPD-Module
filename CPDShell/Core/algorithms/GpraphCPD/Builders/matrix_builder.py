@@ -1,6 +1,7 @@
 from collections.abc import Callable, Iterable
 from typing import Any
 
+import numpy
 import numpy as np
 
 from CPDShell.Core.algorithms.GpraphCPD.abstracts.ibuilder import IBuilder
@@ -9,7 +10,7 @@ from CPDShell.Core.algorithms.GpraphCPD.graph_matrix import GraphMatrix
 
 
 class AdjacencyMatrixBuilder(IBuilder):
-    def __init__(self, data: Iterable[float], comparing_function: Callable[[Any, Any], bool]):
+    def __init__(self, data: Iterable[float | numpy.float64], comparing_function: Callable[[Any, Any], bool]):
         super().__init__(data, comparing_function)
 
     def build_matrix(self) -> np.ndarray:  # Adjacency Matrix

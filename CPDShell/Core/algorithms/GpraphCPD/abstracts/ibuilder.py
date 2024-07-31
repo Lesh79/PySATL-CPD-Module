@@ -2,11 +2,13 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from typing import Any
 
+import numpy
+
 from CPDShell.Core.algorithms.GpraphCPD.abstracts.igraph import IGraph
 
 
 class IBuilder(ABC):
-    def __init__(self, data: Iterable[float], compare: Callable[[Any, Any], bool]):
+    def __init__(self, data: Iterable[float | numpy.float64], compare: Callable[[Any, Any], bool]):
         """
         Initialize the builder with data and a comparison function.
 

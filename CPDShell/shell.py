@@ -1,66 +1,14 @@
-import os.path
 import time
-from collections.abc import Iterable, Iterator, Sequence
-from pathlib import Path
+from collections.abc import Iterable, Sequence
+from typing import Optional
+
+import numpy
 
 from CPDShell.Core.algorithms.graph_algorithm import Algorithm, GraphAlgorithm
 from CPDShell.Core.cpd_core import CPDCore
 from CPDShell.Core.scenario import Scenario
 from CPDShell.Core.scrubber.scrubber import Scrubber
-from CPDShell.generator.generator import DatasetGenerator, ScipyDatasetGenerator
-from CPDShell.generator.saver import DatasetSaver
-
-
-class LabeledCPData:
-    """Class for generating and storing labeled data,
-    needed in CPDShell"""
-
-    def __init__(self, raw_data: Sequence[float], expected_res) -> None:  # (?) type of expected_res
-        """LabeledCPData object constructor
-
-        :param: raw_data: data, that will be passed into CPD algo
-        :param: expected_res: expected results after passing raw_data into CPD algo
-        """
-        self.raw_data = raw_data
-        self.expected_res = expected_res
-
-    def __iter__(self) -> Iterator:
-        """labeledCPData iterator"""
-        return self.raw_data.__iter__()
-
-    def __str__(self) -> str:
-        """Shows main info about LabeledCPData object"""
-        return f"data={self.raw_data}, change_points={self.expected_res}"
-
-    @staticmethod
-    def generate_cp_dataset(
-        config_path: Path,
-        generator: DatasetGenerator = ScipyDatasetGenerator(),
-        to_save: bool = False,
-        output_directory: Path = Path(),
-        to_replace: bool = True,
-    ) -> list["LabeledCPData"]:
-        """Method for generating labeled data, that contains CP with specific
-        distribution
-
-        :param config_path: path to config file
-        :param generator: DataGenerator object, defaults to ScipyDatasetGenerator()
-        :param to_save: is it necessary to save the data, defaults to False
-        :param output_directory: directory to save data, defaults to Path()
-        :param to_replace: is it necessary to replace the files in directory
-
-        :return: list of LabeledCPData (pairs of data and change points)"""
-        # maybe create default config
-        if not os.path.exists(config_path):
-            raise ValueError("Incorrect config path")
-        if to_save:
-            datasets = generator.generate_datasets(config_path, DatasetSaver(output_directory, to_replace))
-        else:
-            datasets = generator.generate_datasets(config_path)
-        labeled_data_list = []
-        for data, change_points in datasets:
-            labeled_data_list.append(LabeledCPData(data, change_points))
-        return labeled_data_list
+from CPDShell.labeled_data import LabeledCPData
 
 
 class CPContainer:
@@ -110,8 +58,8 @@ class CPDShell:
 
     def __init__(
         self,
-        data: Iterable[float],
-        cpd_algorithm: "Algorithm" = GraphAlgorithm(1, 2),
+        data: Iterable[float | numpy.float64] | LabeledCPData,
+        cpd_algorithm: Optional["Algorithm"] = None,
         scrubber_class: type[Scrubber] = Scrubber,
     ) -> None:
         """CPDShell object constructor
@@ -120,7 +68,7 @@ class CPDShell:
         :param: CPDalgorithm: CPD algorithm, that will search for change points
         :param: scrubber_class: class of preferable scrubber for splitting data into parts
         """
-        self._data: Iterable[float] | LabeledCPData = data
+        self._data: Iterable[float | numpy.float64] | LabeledCPData = data
         scrubber_class = scrubber_class if scrubber_class is not None else Scrubber
         arg = 5
         cpd_algorithm = (
@@ -132,12 +80,12 @@ class CPDShell:
         )  # if no algo or scrubber was given, then some standard
 
     @property
-    def data(self) -> Iterable[float]:
+    def data(self) -> Iterable[float | numpy.float64]:
         """Getter method for data param"""
         return self._data
 
     @data.setter
-    def data(self, new_data: Sequence[float]) -> None:
+    def data(self, new_data: Sequence[float | numpy.float64]) -> None:
         """Setter method for changing data
 
         :param: new_data: new data, to replace the current one
@@ -203,5 +151,5 @@ class CPDShell:
         time_start = time.perf_counter()
         algo_results = self.cpd_core.run()
         time_end = time.perf_counter()
-        expected_res = self._data.expected_res if isinstance(self._data, LabeledCPData) else None
-        return CPContainer(algo_results, expected_res, time_end - time_start)
+        expected_change_points = self._data.change_points if isinstance(self._data, LabeledCPData) else None
+        return CPContainer(algo_results, expected_change_points, time_end - time_start)
