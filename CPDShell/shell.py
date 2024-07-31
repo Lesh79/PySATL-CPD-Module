@@ -151,5 +151,5 @@ class CPDShell:
         time_start = time.perf_counter()
         algo_results = self.cpd_core.run()
         time_end = time.perf_counter()
-        expected_res = self._data.expected_res if isinstance(self._data, LabeledCPData) else None
-        return CPContainer(algo_results, expected_res, time_end - time_start)
+        expected_change_points = self._data.change_points if isinstance(self._data, LabeledCPData) else None
+        return CPContainer(algo_results, expected_change_points, time_end - time_start)

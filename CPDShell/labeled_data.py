@@ -16,7 +16,7 @@ class LabeledCPData:
         """LabeledCPData object constructor
 
         :param: raw_data: data, that will be passed into CPD algo
-        :param: expected_res: expected results after passing raw_data into CPD algo
+        :param: change_points: expected results after passing raw_data into CPD algo
         """
         self.raw_data = raw_data
         self.change_points = change_points
