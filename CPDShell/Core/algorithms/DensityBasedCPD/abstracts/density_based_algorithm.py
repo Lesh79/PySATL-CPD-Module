@@ -27,7 +27,7 @@ class DensityBasedAlgorithm(Algorithm):
         reference_value: np.ndarray,
         bandwidth: float,
         regularization_coef: float,
-        objective_function: Callable[[np.ndarray, np.ndarray], float]
+        objective_function: Callable[[np.ndarray, np.ndarray], float],
     ) -> np.ndarray:
         """Calculate the weights based on the density ratio between test and reference values.
 

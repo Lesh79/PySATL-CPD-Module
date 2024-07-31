@@ -98,10 +98,10 @@ class KliepAlgorithm(DensityBasedAlgorithm):
         f1_score = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0
 
         return {
-            'precision': precision,
-            'recall': recall,
-            'f1_score': f1_score,
-            'true_positive': true_positive,
-            'false_positive': false_positive,
-            'false_negative': false_negative,
+            "precision": precision,
+            "recall": recall,
+            "f1_score": f1_score,
+            "true_positive": true_positive,
+            "false_positive": false_positive,
+            "false_negative": false_negative,
         }
