@@ -26,7 +26,7 @@ class RulsifAlgorithm(DensityBasedAlgorithm):
         self.regularization_coef = regularization_coef
         self.threshold = threshold
 
-    def _loss_function(self, density_ratio: np.ndarray, alpha: np.ndarray) -> float:
+    def _loss_function(self, density_ratio: np.ndarray, alpha: np.ndarray) -> float:    
         """Loss function for RULSIF.
 
         Args:
@@ -52,7 +52,7 @@ class RulsifAlgorithm(DensityBasedAlgorithm):
             test_value=window,
             reference_value=window,
             bandwidth=self.bandwidth,
-            loss_function=self._loss_function,
+            objective_function=self._loss_function,
         )
 
         return np.count_nonzero(weights > self.threshold)
@@ -70,7 +70,7 @@ class RulsifAlgorithm(DensityBasedAlgorithm):
             test_value=window,
             reference_value=window,
             bandwidth=self.bandwidth,
-            loss_function=self._loss_function,
+            objective_function=self._loss_function,
         )
 
         return np.where(weights > self.threshold)[0].tolist()

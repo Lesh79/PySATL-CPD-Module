@@ -26,7 +26,7 @@ class KliepAlgorithm(DensityBasedAlgorithm):
         self.regularization_coef = regularization_coef
         self.threshold = threshold
 
-    def _loss_function(self, weights: np.ndarray, alpha: np.ndarray) -> float:
+    def _loss_function(self, density_ratio: np.ndarray, alpha: np.ndarray) -> float:
         """Loss function for KLIEP.
 
         Args:
@@ -36,7 +36,7 @@ class KliepAlgorithm(DensityBasedAlgorithm):
         Returns:
             float: the computed loss value.
         """
-        return -np.mean(weights) + self.regularization_coef * np.sum(alpha**2)
+        return -np.mean(density_ratio) + self.regularization_coef * np.sum(alpha**2)
 
     def detect(self, window: Iterable[float]) -> int:
         """Detect the number of change points in the given data window
@@ -52,7 +52,7 @@ class KliepAlgorithm(DensityBasedAlgorithm):
             test_value=window,
             reference_value=window,
             bandwidth=self.bandwidth,
-            loss_function=self._loss_function,
+            objective_function=self._loss_function,
         )
 
         return np.count_nonzero(weights > self.threshold)
@@ -71,7 +71,7 @@ class KliepAlgorithm(DensityBasedAlgorithm):
             test_value=window,
             reference_value=window,
             bandwidth=self.bandwidth,
-            loss_function=self._loss_function,
+            objective_function=self._loss_function,
         )
 
         return np.where(weights > self.threshold)[0].tolist()

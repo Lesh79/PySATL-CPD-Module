@@ -10,21 +10,28 @@ from CPDShell.Core.algorithms.abstract_algorithm import Algorithm
 
 class DensityBasedAlgorithm(Algorithm):
     @staticmethod
-    def _kernel_density_estimation(observation: np.ndarray, bandwidth: float) -> KernelDensity:
-        """Perform kernel density estimation on the given observations.
+    def _kernel_density_estimation(observation: np.ndarray, bandwidth: float) -> np.ndarray:
+        """Perform kernel density estimation on the given observations without fitting a model.
 
         Args:
             observation (np.ndarray): the data points for which to estimate the density.
             bandwidth (float): the bandwidth parameter for the kernel density estimation.
 
         Returns:
-            KernelDensity: a fitted KernelDensity object.
+            np.ndarray: estimated density values for the observations.
         """
-        kde = KernelDensity(kernel="gaussian", bandwidth=bandwidth).fit(observation)
-        return kde
+        n = len(observation)
+        x_grid = np.linspace(np.min(observation) - 3 * bandwidth, np.max(observation) + 3 * bandwidth, 1000)
+        kde_values = np.zeros_like(x_grid)
+        for x in observation:
+            kde_values += np.exp(-0.5 * ((x_grid - x) / bandwidth) ** 2)
+
+        kde_values /= (n * bandwidth * np.sqrt(2 * np.pi))
+        return kde_values
 
     @staticmethod
     def _calculate_weights(
+        self,
         test_value: np.ndarray,
         reference_value: np.ndarray,
         bandwidth: float,
@@ -41,8 +48,8 @@ class DensityBasedAlgorithm(Algorithm):
         Returns:
             np.ndarray: the calculated density ratios normalized to their mean.
         """
-        test_density = DensityBasedAlgorithm._kernel_density_estimation(test_value, bandwidth)
-        reference_density = DensityBasedAlgorithm._kernel_density_estimation(reference_value, bandwidth)
+        test_density = self._kernel_density_estimation(test_value, bandwidth)
+        reference_density = self._kernel_density_estimation(reference_value, bandwidth)
 
         def objective_function_wrapper(alpha: np.ndarray) -> float:
             """Wrapper for the objective function to calculate the density ratio.
@@ -55,14 +62,14 @@ class DensityBasedAlgorithm(Algorithm):
                 float: the value of the objective function to minimize.
             """
             objective_density_ratio = np.exp(
-                test_density.score_samples(test_value) - reference_density.score_samples(test_value) - alpha
+                test_density - reference_density - alpha
             )
             return objective_function(objective_density_ratio, alpha)
 
         res = minimize(objective_function_wrapper, np.zeros(len(test_value)), method="L-BFGS-B")
         alpha = res.x
         objective_density_ratio = np.exp(
-            test_density.score_samples(test_value) - reference_density.score_samples(test_value) - alpha
+            test_density - reference_density - alpha
         )
         return objective_density_ratio / np.mean(objective_density_ratio)
 
@@ -74,7 +81,7 @@ class DensityBasedAlgorithm(Algorithm):
         :param window: part of global data for finding change points
         :return: list of right borders of window change points
         """
-        ...
+        raise NotImplementedError
 
     @abstractmethod
     def localize(self, window: Iterable[float]) -> list[int]:
@@ -83,4 +90,4 @@ class DensityBasedAlgorithm(Algorithm):
         :param window: part of global data for finding change points
         :return: list of window change points
         """
-        ...
+        raise NotImplementedError
