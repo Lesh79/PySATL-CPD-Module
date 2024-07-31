@@ -48,7 +48,7 @@ class DensityBasedAlgorithm(Algorithm):
             """Wrapper for the objective function to calculate the density ratio.
 
             Args:
-                alpha (np.ndarray): relative parameter that controls the weighting between the numerator distribution 
+                alpha (np.ndarray): relative parameter that controls the weighting between the numerator distribution
                 and the denominator distribution in the density ratio estimation.
 
             Returns:
@@ -65,7 +65,6 @@ class DensityBasedAlgorithm(Algorithm):
             test_density.score_samples(test_value) - reference_density.score_samples(test_value) - alpha
         )
         return objective_density_ratio / np.mean(objective_density_ratio)
-
 
     @abstractmethod
     def detect(self, window: Iterable[float]) -> list[int]:
