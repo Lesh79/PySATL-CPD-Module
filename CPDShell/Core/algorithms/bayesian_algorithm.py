@@ -73,7 +73,7 @@ class BayesianAlgorithm(Algorithm):
         self.__process_data(True, window)
         return self.__change_points.copy()
 
-    def __process_data(self, with_localization: bool, window: Iterable[float]):
+    def __process_data(self, with_localization: bool, window: Iterable[float]) -> None:
         """
         Processes a window of data to detect/localize all change points depending on working mode.
         :param with_localization: boolean flag representing whether function needs to localize a change point.
