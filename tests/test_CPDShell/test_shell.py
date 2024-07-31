@@ -1,3 +1,5 @@
+import pytest
+
 from CPDShell.Core.algorithms.graph_algorithm import GraphAlgorithm
 from CPDShell.Core.scenario import Scenario
 from CPDShell.Core.scrubber.scrubber import Scrubber
