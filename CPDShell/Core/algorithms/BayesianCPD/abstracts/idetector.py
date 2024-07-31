@@ -24,7 +24,7 @@ class IDetector(ABC):
         :param growth_probs: growth probabilities for run lengths at the time.
         :return: boolean indicating whether a changepoint occurred
         """
-        ...
+        raise NotImplementedError
 
     @abstractmethod
     def clear(self) -> None:
