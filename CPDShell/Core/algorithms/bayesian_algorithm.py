@@ -6,7 +6,6 @@ __author__ = "Alexey Tatyanenko"
 __copyright__ = "Copyright (c) 2024 Alexey Tatyanenko"
 __license__ = "SPDX-License-Identifier: MIT"
 
-
 from collections.abc import Iterable
 
 import numpy as np
@@ -146,8 +145,12 @@ class BayesianAlgorithm(Algorithm):
         self.__clear(sample_size)
 
     def __bayesian_condition(self, sample_size: int) -> bool:
-        """A helper function checking conditions (time boundaries, zero predictive probabilities case,
-        existence of detected change point) to continue Bayesian statistics evaluation."""
+        """
+        A helper function checking conditions (time boundaries, zero predictive probabilities case,
+        existence of detected change point) to continue Bayesian statistics evaluation.
+        :param sample_size: an overall size of the sample.
+        :return:
+        """
         return (
             self.__time < sample_size - 1
             and not self.__pred_probs_are_zero
