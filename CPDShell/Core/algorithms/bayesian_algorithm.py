@@ -99,7 +99,6 @@ class BayesianAlgorithm(Algorithm):
         """
         Performs a likelihood's parameter learning stage.
         :param sample: an overall sample the model working with.
-        :return:
         """
         self.__likelihood.learn(sample[self.__time : self.__time + self.__learning_steps])
         self.__shift_time(self.__learning_steps - 1)
@@ -108,7 +107,6 @@ class BayesianAlgorithm(Algorithm):
         """
         Performs a Bayesian statistics (run lengths distribution) evaluating stage.
         :param sample: an overall sample the model working with.
-        :return:
         """
         sample_size = len(sample)
         self.__gap_size = 0
@@ -128,7 +126,6 @@ class BayesianAlgorithm(Algorithm):
         distribution.
         :param sample_size: an overall size of the sample.
         :param with_localization: boolean flag representing whether function needs to localize a change point.
-        :return:
         """
         self.__change_points_count += 1
         if with_localization:
@@ -149,7 +146,6 @@ class BayesianAlgorithm(Algorithm):
         A helper function checking conditions (time boundaries, zero predictive probabilities case,
         existence of detected change point) to continue Bayesian statistics evaluation.
         :param sample_size: an overall size of the sample.
-        :return:
         """
         return (
             self.__time < sample_size - 1
@@ -162,7 +158,6 @@ class BayesianAlgorithm(Algorithm):
         """
         Performs a Bayesian update of statistics (run lengths distribution).
         :param observation: an observation from a sample.
-        :return:
         """
         assert not self.__pred_probs_are_zero
 
@@ -207,7 +202,6 @@ class BayesianAlgorithm(Algorithm):
         """
         A helper function performing a time shift (adding a shift to current time).
         :param shift: a time shift to add to the current time.
-        :return:
         """
         self.__time += shift
 
@@ -215,7 +209,6 @@ class BayesianAlgorithm(Algorithm):
         """
         A helper function clearing a state of the model after a change point occurs.
         :param sample_size: an overall size of the sample.
-        :return:
         """
         self.__pred_probs_are_zero = False
         self.__likelihood.clear()

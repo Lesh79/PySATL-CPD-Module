@@ -30,6 +30,5 @@ class IDetector(ABC):
     def clear(self) -> None:
         """
         Clears the detector's state.
-        :return:
         """
         ...

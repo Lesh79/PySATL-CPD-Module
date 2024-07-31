@@ -37,6 +37,5 @@ class SimpleDetector(IDetector):
     def clear(self) -> None:
         """
         Clears the detector's state (for this detector it does nothing).
-        :return:
         """
         pass

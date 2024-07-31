@@ -22,7 +22,6 @@ class ILikelihood(ABC):
         """
         Learns first parameters of a likelihood function on a given sample.
         :param learning_sample: a sample for parameter learning.
-        :return:
         """
         ...
 
@@ -40,7 +39,6 @@ class ILikelihood(ABC):
         """
         Updates parameters of a likelihood function according to the given observation.
         :param observation: an observation from a sample.
-        :return:
         """
         ...
 
@@ -48,6 +46,5 @@ class ILikelihood(ABC):
     def clear(self) -> None:
         """
         Clears likelihood function's state.
-        :return:
         """
         ...

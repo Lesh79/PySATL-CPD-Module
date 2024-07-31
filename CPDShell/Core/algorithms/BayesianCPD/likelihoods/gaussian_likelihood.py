@@ -31,10 +31,9 @@ class GaussianLikelihood(ILikelihood):
         self.__squared_sample_sum = 0.0
         self.__gap_size = 0
 
-    def __update_parameters_lists(self):
+    def __update_parameters_lists(self) -> None:
         """
         Updates the parameters lists based on accumulated sums, assuming we have at least 2 observations.
-        :return:
         """
         assert self.__gap_size > 1
         new_mean = self.__sample_sum / self.__gap_size

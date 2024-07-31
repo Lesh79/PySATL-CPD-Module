@@ -49,6 +49,5 @@ class DropDetector(IDetector):
     def clear(self) -> None:
         """
         Clears the detector's state.
-        :return:
         """
         self.__previous_growth_prob = None
