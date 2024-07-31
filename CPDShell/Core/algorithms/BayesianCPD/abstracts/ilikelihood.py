@@ -41,11 +41,11 @@ class ILikelihood(ABC):
         Updates parameters of a likelihood function according to the given observation.
         :param observation: an observation from a sample.
         """
-        ...
+        raise NotImplementedError
 
     @abstractmethod
     def clear(self) -> None:
         """
         Clears likelihood function's state.
         """
-        ...
+        raise NotImplementedError

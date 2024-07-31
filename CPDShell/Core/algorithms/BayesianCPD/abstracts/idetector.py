@@ -31,4 +31,4 @@ class IDetector(ABC):
         """
         Clears the detector's state.
         """
-        ...
+        raise NotImplementedError

@@ -24,4 +24,4 @@ class IHazard(ABC):
         :param run_lengths: run lengths at the time.
         :return: hazard function's values for given run lengths.
         """
-        ...
+        raise NotImplementedError

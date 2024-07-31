@@ -24,4 +24,4 @@ class ILocalizer(ABC):
         :param growth_probs: growth probabilities for run lengths at the time.
         :return: run length corresponding with a change point.
         """
-        ...
+        raise NotImplementedError
