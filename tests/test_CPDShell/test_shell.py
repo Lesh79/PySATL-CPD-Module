@@ -1,3 +1,7 @@
+import tempfile
+from os import walk
+from pathlib import Path
+
 import pytest
 
 from CPDShell.Core.algorithms.graph_algorithm import GraphAlgorithm
@@ -88,9 +92,9 @@ class TestCPDShell:
 
 
 class TestCPContainer:
-    cont_default1 = CPContainer([1, 2, 3], [2, 3, 4], 10)
-    cont_default2 = CPContainer([1, 2, 3, 6, 8], [2, 3, 4, 6], 20)
-    cont_no_expected = CPContainer([1, 2, 3], None, 5)
+    cont_default1 = CPContainer([1] * 15, [1, 2, 3], [2, 3, 4], 10)
+    cont_default2 = CPContainer([1] * 15, [1, 2, 3, 6, 8], [2, 3, 4, 6], 20)
+    cont_no_expected = CPContainer([1] * 15, [1, 2, 3], None, 5)
 
     def test_result_diff(self) -> None:
         assert self.cont_default1.result_diff == [1, 4]
@@ -122,3 +126,16 @@ Computation time (ms): 20"""
             == """Located change points: (1;2;3)
 Computation time (ms): 5"""
         )
+
+    @pytest.mark.parametrize(
+        "data,name",
+        (
+            (cont_default1, "d_1"),
+            (cont_default2, "d_2"),
+            (cont_no_expected, "cne"),
+        ),
+    )
+    def test_visualize(self, data, name) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            data.visualize(False, Path(tempdir), name)
+            assert [f"{name}.png"] in [file_names for (_, _, file_names) in walk(tempdir)]
