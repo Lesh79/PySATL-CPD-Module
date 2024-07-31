@@ -1,5 +1,6 @@
 """
-Module for implementation of Bayesian CPD algorithm detector comparing maximal run length's probability with a threshold.
+Module for implementation of Bayesian CPD algorithm detector comparing maximal run length's probability with
+a threshold.
 """
 
 __author__ = "Alexey Tatyanenko"
