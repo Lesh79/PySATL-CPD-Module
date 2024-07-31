@@ -1,5 +1,5 @@
+from abc import abstractmethod
 from collections.abc import Callable, Iterable
-from abc import ABC, abstractmethod
 
 import numpy as np
 from scipy.optimize import minimize
