@@ -1,5 +1,4 @@
 from collections.abc import Iterable
-from typing import List, Callable
 
 import numpy as np
 
@@ -59,7 +58,7 @@ class KliepAlgorithm(DensityBasedAlgorithm):
 
         return np.count_nonzero(weights > self.threshold)
 
-    def localize(self, window: Iterable[float]) -> List[int]:
+    def localize(self, window: Iterable[float]) -> list[int]:
         """Localize the change points in the given data window using KLIEP.
 
         Args:
@@ -79,7 +78,7 @@ class KliepAlgorithm(DensityBasedAlgorithm):
 
         return np.where(weights > self.threshold)[0].tolist()
 
-    def evaluate_detection_accuracy(self, true_change_points: List[int], detected_change_points: List[int]) -> dict:
+    def evaluate_detection_accuracy(self, true_change_points: list[int], detected_change_points: list[int]) -> dict:
         """Evaluate the accuracy of change point detection.
 
         Args:

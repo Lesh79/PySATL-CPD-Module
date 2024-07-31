@@ -1,7 +1,8 @@
+from collections.abc import Callable
+
 import numpy as np
 from scipy.optimize import minimize
 from sklearn.neighbors import KernelDensity
-from typing import Callable, Union
 
 from CPDShell.Core.algorithms.abstract_algorithm import Algorithm
 
