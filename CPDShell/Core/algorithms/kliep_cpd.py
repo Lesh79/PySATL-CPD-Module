@@ -1,8 +1,9 @@
 from collections.abc import Iterable
+from typing import List, Callable
 
 import numpy as np
 
-from CPDShell.Core.algorithms.DensityBasedCPD.abstracts import DensityBasedAlgorithm
+from CPDShell.Core.algorithms.DensityBasedCPD.abstracts.density_based_algorithm import DensityBasedAlgorithm
 
 
 class KliepAlgorithm(DensityBasedAlgorithm):
@@ -13,7 +14,7 @@ class KliepAlgorithm(DensityBasedAlgorithm):
     the importance weights for detecting changes in the data distribution.
     """
 
-    def __init__(self, bandwidth, regularization_coef, threshold):
+    def __init__(self, bandwidth: float, regularization_coef: float, threshold: float = 1.1):
         """Initialize the KLIEP algorithm.
 
         Args:
@@ -26,6 +27,18 @@ class KliepAlgorithm(DensityBasedAlgorithm):
         self.regularization_coef = regularization_coef
         self.threshold = threshold
 
+    def _loss_function(self, weights: np.ndarray, alpha: np.ndarray) -> float:
+        """Loss function for KLIEP.
+
+        Args:
+            weights (np.ndarray): weights for the density estimation.
+            alpha (np.ndarray): coefficients for the density ratio.
+
+        Returns:
+            float: the computed loss value.
+        """
+        return -np.mean(weights) + self.regularization_coef * np.sum(alpha**2)
+
     def detect(self, window: Iterable[float]) -> int:
         """Detect the number of change points in the given data window
         using KLIEP.
@@ -37,20 +50,16 @@ class KliepAlgorithm(DensityBasedAlgorithm):
             int: the number of detected change points.
         """
         weights = self._calculate_weights(
-            window,
-            window,
-            self.bandwidth,
-            self.regularization_coef,
-            lambda w, alpha: -np.mean(w) + self.regularization_coef * np.sum(alpha**2),
+            data=window,
+            reference=window,
+            bandwidth=self.bandwidth,
+            regularization_coef=self.regularization_coef,
+            loss_function=self._loss_function,
         )
 
-        change_points = 0
-        for time, weight in enumerate(weights):
-            if weight > self.threshold:
-                change_points += 1
-        return change_points
+        return np.count_nonzero(weights > self.threshold)
 
-    def localize(self, window: Iterable[float]) -> list[int]:
+    def localize(self, window: Iterable[float]) -> List[int]:
         """Localize the change points in the given data window using KLIEP.
 
         Args:
@@ -58,18 +67,41 @@ class KliepAlgorithm(DensityBasedAlgorithm):
             change points.
 
         Returns:
-            list[int]: the indices of the detected change points.
+            List[int]: the indices of the detected change points.
         """
         weights = self._calculate_weights(
-            window,
-            window,
-            self.bandwidth,
-            self.regularization_coef,
-            lambda w, alpha: -np.mean(w) + self.regularization_coef * np.sum(alpha**2),
+            data=window,
+            reference=window,
+            bandwidth=self.bandwidth,
+            regularization_coef=self.regularization_coef,
+            loss_function=self._loss_function,
         )
 
-        change_points = []
-        for time, weight in enumerate(weights):
-            if weight > self.threshold:
-                change_points.append(time)
-        return change_points
+        return np.where(weights > self.threshold)[0].tolist()
+
+    def evaluate_detection_accuracy(self, true_change_points: List[int], detected_change_points: List[int]) -> dict:
+        """Evaluate the accuracy of change point detection.
+
+        Args:
+            true_change_points (List[int]): list of true change point indices.
+            detected_change_points (List[int]): list of detected change point indices.
+
+        Returns:
+            dict: a dictionary with evaluation metrics (precision, recall, F1 score).
+        """
+        true_positive = len(set(true_change_points) & set(detected_change_points))
+        false_positive = len(set(detected_change_points) - set(true_change_points))
+        false_negative = len(set(true_change_points) - set(detected_change_points))
+
+        precision = true_positive / (true_positive + false_positive) if true_positive + false_positive > 0 else 0
+        recall = true_positive / (true_positive + false_negative) if true_positive + false_negative > 0 else 0
+        f1_score = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0
+
+        return {
+            'precision': precision,
+            'recall': recall,
+            'f1_score': f1_score,
+            'true_positive': true_positive,
+            'false_positive': false_positive,
+            'false_negative': false_negative,
+        }
