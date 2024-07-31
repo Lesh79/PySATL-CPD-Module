@@ -1,8 +1,10 @@
 import time
 from collections.abc import Iterable, Sequence
+from pathlib import Path
 from typing import Optional
 
 import numpy
+from matplotlib import pyplot as plt
 
 from CPDShell.Core.algorithms.graph_algorithm import Algorithm, GraphAlgorithm
 from CPDShell.Core.cpd_core import CPDCore
@@ -14,13 +16,20 @@ from CPDShell.labeled_data import LabeledCPData
 class CPContainer:
     """Container for results of CPD algorithms"""
 
-    def __init__(self, result: list[float], expected_result: list[float] | None, time_ms: float) -> None:
+    def __init__(
+        self,
+        data: Sequence[float | numpy.float64],
+        result: list[int],
+        expected_result: list[int] | None,
+        time_ms: float,
+    ) -> None:
         """Object constructor
 
         :param: result: list, containing change points, that were found by CPD algos
         :param: expected_result: list, containing expected change points, if it is needed
         :param: time_ms: a float number, time of CPD algo execution in milliseconds
         """
+        self.data = data
         self.result = result
         self.expected_result = expected_result
         self.time_ms = time_ms
@@ -50,6 +59,36 @@ class CPContainer:
             method_output += f"Difference: ({diff})\n"
         method_output += f"Computation time (ms): {round(self.time_ms, 2)}"
         return method_output
+
+    def visualize(self, to_show: bool = True, output_directory: Path | None = None, name: str = "Graph") -> None:
+        """method for building and analyzing graph
+
+        :param to_show: is it necessary to show a graph
+        :param output_directory: If necessary, the path to the directory to save the graph
+        :param name: If necessary, graph name for saving
+        """
+        plt.plot(self.data)
+        if self.expected_result is None:
+            plt.vlines(x=self.result, ymin=min(self.data), ymax=max(self.data), colors="orange", ls="--")
+            plt.gca().legend(("data", "detected"))
+        else:
+            correct, incorrect, undetected = set(), set(), set(self.expected_result)
+            for point in self.result:
+                if point in self.expected_result:
+                    correct.add(point)
+                    undetected.remove(point)
+                elif point not in undetected:
+                    incorrect.add(point)
+            plt.vlines(x=list(correct), ymin=min(self.data), ymax=max(self.data), colors="green", ls="--")
+            plt.vlines(x=list(incorrect), ymin=min(self.data), ymax=max(self.data), colors="red", ls="--")
+            plt.vlines(x=list(undetected), ymin=min(self.data), ymax=max(self.data), colors="orange", ls="--")
+            plt.gca().legend(("data", "correct detected", "incorrect detected", "undetected"))
+        if output_directory:
+            if not output_directory.exists():
+                output_directory.mkdir()
+            plt.savefig(output_directory.joinpath(Path(name)))
+        if to_show:
+            plt.show()
 
 
 class CPDShell:
@@ -152,4 +191,5 @@ class CPDShell:
         algo_results = self.cpd_core.run()
         time_end = time.perf_counter()
         expected_change_points = self._data.change_points if isinstance(self._data, LabeledCPData) else None
-        return CPContainer(algo_results, expected_change_points, time_end - time_start)
+        data = self._data.raw_data if isinstance(self._data, LabeledCPData) else self._data
+        return CPContainer(data, algo_results, expected_change_points, time_end - time_start)
