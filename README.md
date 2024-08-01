@@ -81,4 +81,4 @@ poetry run pre-commit run --all-files --color always --verbose --show-diff-on-fa
 
 ## License
 
-This project is licensed under the terms of the **MIT** license. See the [LICENSE](LICENSE.md) for more information.
+This project is licensed under the terms of the **MIT** license. See the [LICENSE](LICENSE) for more information.
