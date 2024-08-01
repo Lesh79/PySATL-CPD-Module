@@ -6,7 +6,7 @@ class Algorithm(ABC):
     """Abstract class for change point detection algorithms"""
 
     @abstractmethod
-    def detect(self, window: Iterable[float]) -> list[int]:
+    def detect(self, window: Iterable[float]) -> int:
         # maybe rtype tuple[int]
         """Function for finding change points in window
 

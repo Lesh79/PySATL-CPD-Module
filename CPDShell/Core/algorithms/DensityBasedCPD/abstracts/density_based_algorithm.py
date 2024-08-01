@@ -3,7 +3,6 @@ from collections.abc import Callable, Iterable
 
 import numpy as np
 from scipy.optimize import minimize
-from sklearn.neighbors import KernelDensity
 
 from CPDShell.Core.algorithms.abstract_algorithm import Algorithm
 
@@ -74,7 +73,7 @@ class DensityBasedAlgorithm(Algorithm):
         return objective_density_ratio / np.mean(objective_density_ratio)
 
     @abstractmethod
-    def detect(self, window: Iterable[float]) -> list[int]:
+    def detect(self, window: Iterable[float]) -> int:
         # maybe rtype tuple[int]
         """Function for finding change points in window
 
