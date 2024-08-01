@@ -38,7 +38,7 @@ class RulsifAlgorithm(DensityBasedAlgorithm):
         """
         return np.mean((density_ratio - 1) ** 2) + self.regularization_coef * np.sum(alpha**2)
 
-    def detect(self, window: Iterable[float]) -> int:
+    def detect(self, window: Iterable[float | np.float64]) -> int:
         """Detect the number of change points in the given data window
         using RULSIF.
 
@@ -48,17 +48,18 @@ class RulsifAlgorithm(DensityBasedAlgorithm):
         Returns:
             int: the number of detected change points.
         """
+        window_sample = np.array(window)
         weights = self._calculate_weights(
             self=self,
-            test_value=window,
-            reference_value=window,
+            test_value=window_sample,
+            reference_value=window_sample,
             bandwidth=self.bandwidth,
             objective_function=self._loss_function,
         )
 
         return np.count_nonzero(weights > self.threshold)
 
-    def localize(self, window: Iterable[float]) -> list[int]:
+    def localize(self, window: Iterable[float | np.float64]) -> list[int]:
         """Localize the change points in the given data window using RULSIF.
 
         Args:
@@ -67,10 +68,11 @@ class RulsifAlgorithm(DensityBasedAlgorithm):
         Returns:
             List[int]: the indices of the detected change points.
         """
+        window_sample = np.array(window)
         weights = self._calculate_weights(
             self=self,
-            test_value=window,
-            reference_value=window,
+            test_value=window_sample,
+            reference_value=window_sample,
             bandwidth=self.bandwidth,
             objective_function=self._loss_function,
         )

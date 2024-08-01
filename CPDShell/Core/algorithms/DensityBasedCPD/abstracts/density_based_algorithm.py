@@ -64,12 +64,12 @@ class DensityBasedAlgorithm(Algorithm):
             return objective_function(objective_density_ratio, alpha)
 
         res = minimize(objective_function_wrapper, np.zeros(len(test_value)), method="L-BFGS-B")
-        alpha = res.x
-        objective_density_ratio = np.exp(test_density - reference_density - alpha)
-        return objective_density_ratio / np.mean(objective_density_ratio)
+        optimized_alpha = res.x
+        density_ratio = np.exp(test_density - reference_density - optimized_alpha)
+        return density_ratio / np.mean(density_ratio)
 
     @abstractmethod
-    def detect(self, window: Iterable[float]) -> int:
+    def detect(self, window: Iterable[float | np.float64]) -> int:
         # maybe rtype tuple[int]
         """Function for finding change points in window
 
@@ -79,7 +79,7 @@ class DensityBasedAlgorithm(Algorithm):
         raise NotImplementedError
 
     @abstractmethod
-    def localize(self, window: Iterable[float]) -> list[int]:
+    def localize(self, window: Iterable[float | np.float64]) -> list[int]:
         """Function for finding coordinates of change points in window
 
         :param window: part of global data for finding change points
@@ -102,9 +102,9 @@ class DensityBasedAlgorithm(Algorithm):
         false_positive = len(set(detected_change_points) - set(true_change_points))
         false_negative = len(set(true_change_points) - set(detected_change_points))
 
-        precision = true_positive / (true_positive + false_positive) if true_positive + false_positive > 0 else 0
-        recall = true_positive / (true_positive + false_negative) if true_positive + false_negative > 0 else 0
-        f1_score = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0
+        precision = true_positive / (true_positive + false_positive) if true_positive + false_positive > 0 else 0.0
+        recall = true_positive / (true_positive + false_negative) if true_positive + false_negative > 0 else 0.0
+        f1_score = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
 
         return {
             "precision": precision,
