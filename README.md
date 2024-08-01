@@ -1,6 +1,9 @@
 # PySATL-CPD-Module
 
-PLACE FOR BADGES
+<a href="https://github.com/Lesh79/PySATL-CPD-Module/actions"><img alt="Lint" src="https://github.com/Lesh79/PySATL-CPD-Module/actions/workflows/build-and-test.yaml/badge.svg"></a>
+<a href="https://github.com/Lesh79/PySATL-CPD-Module/actions"><img alt="Test" src="https://github.com/Lesh79/PySATL-CPD-Module/actions/workflows/check.yaml/badge.svg"></a>
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+<a href="https://github.com/Lesh79/PySATL-CPD-Module/blob/main/LICENSE"><img alt="License: MIT" src="https://black.readthedocs.io/en/stable/_static/license.svg"></a>
 
 **Change point detection module** (*abbreviated CPD module*) is a module, designed for detecting anomalies in time series data, which refer to significant deviations from expected patterns or trends. Anomalies can indicate unusual events or changes in a system, making them crucial for monitoring and analysis in various fields such as finance, healthcare, and network security.
 
@@ -56,6 +59,7 @@ print(change_points)
 # visualize data with located changepoints
 change_points.visualize()
 ```
+![example_of_output](assets/exam1.png)
 
 ## Development
 
