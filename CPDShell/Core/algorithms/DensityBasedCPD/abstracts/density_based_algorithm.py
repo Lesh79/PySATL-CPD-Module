@@ -86,3 +86,31 @@ class DensityBasedAlgorithm(Algorithm):
         :return: list of window change points
         """
         raise NotImplementedError
+
+    @staticmethod
+    def evaluate_detection_accuracy(true_change_points: list[int], detected_change_points: list[int]) -> dict:
+        """Evaluate the accuracy of change point detection.
+
+        Args:
+            true_change_points (List[int]): list of true change point indices.
+            detected_change_points (List[int]): list of detected change point indices.
+
+        Returns:
+            dict: a dictionary with evaluation metrics (precision, recall, F1 score).
+        """
+        true_positive = len(set(true_change_points) & set(detected_change_points))
+        false_positive = len(set(detected_change_points) - set(true_change_points))
+        false_negative = len(set(true_change_points) - set(detected_change_points))
+
+        precision = true_positive / (true_positive + false_positive) if true_positive + false_positive > 0 else 0
+        recall = true_positive / (true_positive + false_negative) if true_positive + false_negative > 0 else 0
+        f1_score = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0
+
+        return {
+            "precision": precision,
+            "recall": recall,
+            "f1_score": f1_score,
+            "true_positive": true_positive,
+            "false_positive": false_positive,
+            "false_negative": false_negative,
+        }
