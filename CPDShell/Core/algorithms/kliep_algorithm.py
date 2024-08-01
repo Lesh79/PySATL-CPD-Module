@@ -30,7 +30,7 @@ class KliepAlgorithm(DensityBasedAlgorithm):
         """Loss function for KLIEP.
 
         Args:
-            weights (np.ndarray): weights for the density estimation.
+            density_ratio (np.ndarray): estimated density ratio.
             alpha (np.ndarray): coefficients for the density ratio.
 
         Returns:
