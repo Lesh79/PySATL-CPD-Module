@@ -25,7 +25,7 @@ class DensityBasedAlgorithm(Algorithm):
         for x in observation:
             kde_values += np.exp(-0.5 * ((x_grid - x) / bandwidth) ** 2)
 
-        kde_values /= (n * bandwidth * np.sqrt(2 * np.pi))
+        kde_values /= n * bandwidth * np.sqrt(2 * np.pi)
         return kde_values
 
     @staticmethod
@@ -60,16 +60,12 @@ class DensityBasedAlgorithm(Algorithm):
             Returns:
                 float: the value of the objective function to minimize.
             """
-            objective_density_ratio = np.exp(
-                test_density - reference_density - alpha
-            )
+            objective_density_ratio = np.exp(test_density - reference_density - alpha)
             return objective_function(objective_density_ratio, alpha)
 
         res = minimize(objective_function_wrapper, np.zeros(len(test_value)), method="L-BFGS-B")
         alpha = res.x
-        objective_density_ratio = np.exp(
-            test_density - reference_density - alpha
-        )
+        objective_density_ratio = np.exp(test_density - reference_density - alpha)
         return objective_density_ratio / np.mean(objective_density_ratio)
 
     @abstractmethod

@@ -26,7 +26,7 @@ class RulsifAlgorithm(DensityBasedAlgorithm):
         self.regularization_coef = regularization_coef
         self.threshold = threshold
 
-    def _loss_function(self, density_ratio: np.ndarray, alpha: np.ndarray) -> float:    
+    def _loss_function(self, density_ratio: np.ndarray, alpha: np.ndarray) -> float:
         """Loss function for RULSIF.
 
         Args:
