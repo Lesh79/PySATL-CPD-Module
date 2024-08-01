@@ -14,7 +14,7 @@ class Algorithm(ABC):
         :param window: part of global data for finding change points
         :return: the number of change points in the window
         """
-        ...
+        raise NotImplementedError
 
     @abstractmethod
     def localize(self, window: Iterable[float | numpy.float64]) -> list[int]:
@@ -23,4 +23,4 @@ class Algorithm(ABC):
         :param window: part of global data for finding change points
         :return: list of window change points
         """
-        ...
+        raise NotImplementedError
