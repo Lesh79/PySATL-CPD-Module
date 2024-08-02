@@ -6,6 +6,13 @@
 
 **Change point detection module** (*abbreviated CPD module*) is a module, designed for detecting anomalies in time series data, which refer to significant deviations from expected patterns or trends. Anomalies can indicate unusual events or changes in a system, making them crucial for monitoring and analysis in various fields such as finance, healthcare, and network security.
 
+At the moment, the module implements the following CPD algorithms:
+* Bayesian algorithm
+* Density based algorithms:
+    * KLIEP
+    * RuLSIF
+* Graph algorithm
+
 ---
 
 ## Requirements
