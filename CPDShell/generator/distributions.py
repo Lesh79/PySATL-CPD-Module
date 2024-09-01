@@ -7,6 +7,7 @@ import scipy.stats as ss
 
 class Distributions(Enum):
     NORMAL = "normal"
+    EXPONENTIAL = "exponential"
 
     def __str__(self):
         return self.value
@@ -37,6 +38,8 @@ class Distribution(Protocol):
         match name:
             case Distributions.NORMAL.value:
                 return NormalDistribution.from_params(params)
+            case Distributions.EXPONENTIAL.value:
+                return ExponentialDistribution.from_params(params)
             case _:
                 raise NotImplementedError()
 
@@ -97,3 +100,40 @@ class NormalDistribution(ScipyDistribution):
         if var < 0:
             raise ValueError("Variance cannot be less than 0")
         return NormalDistribution(mean, var)
+
+
+class ExponentialDistribution(ScipyDistribution):
+    """
+    Description of exponential distribution with intensity parameter.
+    """
+    RATE_KEY: Final[str] = "rate"
+
+    rate: float
+
+    def __init__(self, rate: float = 1.0):
+        if rate <= 0:
+            raise ValueError("Rate must be greater than 0")
+        self.rate = rate
+
+    @property
+    def name(self) -> str:
+        return str(Distributions.EXPONENTIAL)
+
+    @property
+    def params(self) -> dict[str, str]:
+        return {
+            ExponentialDistribution.RATE_KEY: str(self.rate),
+        }
+
+    def scipy_sample(self, length: int) -> np.ndarray:
+        return ss.expon.rvs(scale=1 / self.rate, size=length)
+
+    @staticmethod
+    def from_params(params: dict[str, str]) -> "ExponentialDistribution":
+        if len(params) != 1:
+            raise ValueError(
+                "Exponential distribution must have 1 parameters: " + f"{ExponentialDistribution.RATE_KEY}")
+        rate: float = float(params[ExponentialDistribution.RATE_KEY])
+        if rate <= 0:
+            raise ValueError("Rate must be greater than 0")
+        return ExponentialDistribution(rate)
