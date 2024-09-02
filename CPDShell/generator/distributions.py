@@ -8,6 +8,7 @@ import scipy.stats as ss
 class Distributions(Enum):
     NORMAL = "normal"
     EXPONENTIAL = "exponential"
+    WEIBULL = "weibull"
 
     def __str__(self):
         return self.value
@@ -40,6 +41,8 @@ class Distribution(Protocol):
                 return NormalDistribution.from_params(params)
             case Distributions.EXPONENTIAL.value:
                 return ExponentialDistribution.from_params(params)
+            case Distributions.WEIBULL.value:
+                return WeibullDistribution.from_params(params)
             case _:
                 raise NotImplementedError()
 
@@ -137,3 +140,43 @@ class ExponentialDistribution(ScipyDistribution):
         if rate <= 0:
             raise ValueError("Rate must be greater than 0")
         return ExponentialDistribution(rate)
+
+
+class WeibullDistribution(ScipyDistribution):
+    SHAPE_KEY: Final[str] = "shape"
+    SCALE_KEY: Final[str] = "scale"
+
+    shape: float
+    scale: float
+
+    def __init__(self, shape: float = 1.0, scale: float = 1.0):
+        if shape <= 0 or scale <= 0:
+            raise ValueError("Shape and scale must be greater than 0")
+        self.shape = shape
+        self.scale = scale
+
+    @property
+    def name(self) -> str:
+        return str(Distributions.WEIBULL)
+
+    @property
+    def params(self) -> dict[str, str]:
+        return {
+            WeibullDistribution.SHAPE_KEY: str(self.shape),
+            WeibullDistribution.SCALE_KEY: str(self.scale),
+        }
+
+    def scipy_sample(self, length: int) -> np.ndarray:
+        return ss.weibull_min(c=self.shape, scale=1 / self.scale).rvs(size=length)
+
+    @staticmethod
+    def from_params(params: dict[str, str]) -> "WeibullDistribution":
+        if len(params) != 2:
+            raise ValueError(
+                "Exponential distribution must have 2 parameters: " + f"{WeibullDistribution.SHAPE_KEY}" +
+                f"{WeibullDistribution.SCALE_KEY}")
+        shape: float = float(params[WeibullDistribution.SHAPE_KEY])
+        scale: float = float(params[WeibullDistribution.SCALE_KEY])
+        if shape <= 0 or scale <= 0:
+            raise ValueError("Parameters must be greater than 0")
+        return WeibullDistribution(shape, scale)
