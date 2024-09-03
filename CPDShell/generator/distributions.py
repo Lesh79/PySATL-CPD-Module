@@ -10,6 +10,7 @@ class Distributions(Enum):
     EXPONENTIAL = "exponential"
     WEIBULL = "weibull"
     UNIFORM = "uniform"
+    BETA = "beta"
 
     def __str__(self):
         return self.value
@@ -46,6 +47,8 @@ class Distribution(Protocol):
                 return WeibullDistribution.from_params(params)
             case Distributions.UNIFORM.value:
                 return UniformDistribution.from_params(params)
+            case Distributions.BETA.value:
+                return BetaDistribution.from_params(params)
             case _:
                 raise NotImplementedError()
 
@@ -146,6 +149,9 @@ class ExponentialDistribution(ScipyDistribution):
 
 
 class WeibullDistribution(ScipyDistribution):
+    """
+    Description of weibull distribution with intensity parameter.
+    """
     SHAPE_KEY: Final[str] = "shape"
     SCALE_KEY: Final[str] = "scale"
 
@@ -186,6 +192,9 @@ class WeibullDistribution(ScipyDistribution):
 
 
 class UniformDistribution(ScipyDistribution):
+    """
+    Description of uniform distribution with intensity parameter.
+    """
     MIN_KEY: Final[str] = "min"
     MAX_KEY: Final[str] = "max"
 
@@ -204,22 +213,65 @@ class UniformDistribution(ScipyDistribution):
 
     @property
     def params(self) -> dict[str, str]:
-        return{
+        return {
             UniformDistribution.MIN_KEY: str(self.min),
             UniformDistribution.MAX_KEY: str(self.max),
         }
 
     def scipy_sample(self, length: int) -> np.ndarray:
-        return ss.uniform(loc=self.min, scale=self.max-self.min).rvs(size=length)
+        return ss.uniform(loc=self.min, scale=self.max - self.min).rvs(size=length)
 
     @staticmethod
     def from_params(params: dict[str, str]) -> "UniformDistribution":
         if len(params) != 2:
             raise ValueError(
-                "Exponential distribution must have 2 parameters: " + f"{UniformDistribution.min}" +
+                "Uniform distribution must have 2 parameters: " + f"{UniformDistribution.min}" +
                 f"{UniformDistribution.max}")
         min_value: float = float(params[UniformDistribution.MIN_KEY])
         max_value: float = float(params[UniformDistribution.MAX_KEY])
         if min_value >= max_value:
             raise "Max must be greater than min value"
         return UniformDistribution(min_value, max_value)
+
+
+class BetaDistribution(ScipyDistribution):
+    """
+    Description of beta distribution with intensity parameter.
+    """
+    ALPHA_KEY: Final[str] = "alpha"
+    BETA_KEY: Final[str] = "beta"
+
+    alpha: float
+    beta: float
+
+    def __init__(self, alpha_value: float, beta_value: float):
+        if alpha_value <= 0 or beta_value <= 0:
+            raise ValueError("Alpha and beta must be greater than zero")
+        self.alpha = alpha_value
+        self.beta = beta_value
+
+    @property
+    def name(self) -> str:
+        return str(Distributions.BETA)
+
+    @property
+    def params(self) -> dict[str, str]:
+        return {
+            BetaDistribution.ALPHA_KEY: str(self.alpha),
+            BetaDistribution.BETA_KEY: str(self.beta),
+        }
+
+    def scipy_sample(self, length: int) -> np.ndarray:
+        return ss.beta(a=self.alpha, b=self.beta).rvs(size=length)
+
+    @staticmethod
+    def from_params(params: dict[str, str]) -> "BetaDistribution":
+        if len(params) != 2:
+            raise ValueError(
+                f"Beta distribution must have 2 parameters: {BetaDistribution.ALPHA_KEY}, {BetaDistribution.BETA_KEY}"
+            )
+        alpha: float = float(params[BetaDistribution.ALPHA_KEY])
+        beta: float = float(params[BetaDistribution.BETA_KEY])
+        if alpha <= 0 or beta <= 0:
+            raise ValueError("Alpha and beta must be greater than zero")
+        return BetaDistribution(alpha, beta)
