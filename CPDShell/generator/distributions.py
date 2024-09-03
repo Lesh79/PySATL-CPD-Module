@@ -115,6 +115,7 @@ class ExponentialDistribution(ScipyDistribution):
     """
     Description of exponential distribution with intensity parameter.
     """
+
     RATE_KEY: Final[str] = "rate"
 
     rate: float
@@ -141,7 +142,8 @@ class ExponentialDistribution(ScipyDistribution):
     def from_params(params: dict[str, str]) -> "ExponentialDistribution":
         if len(params) != 1:
             raise ValueError(
-                "Exponential distribution must have 1 parameters: " + f"{ExponentialDistribution.RATE_KEY}")
+                "Exponential distribution must have 1 parameters: " + f"{ExponentialDistribution.RATE_KEY}"
+            )
         rate: float = float(params[ExponentialDistribution.RATE_KEY])
         if rate <= 0:
             raise ValueError("Rate must be greater than 0")
@@ -152,6 +154,7 @@ class WeibullDistribution(ScipyDistribution):
     """
     Description of weibull distribution with intensity parameter.
     """
+
     SHAPE_KEY: Final[str] = "shape"
     SCALE_KEY: Final[str] = "scale"
 
@@ -180,10 +183,13 @@ class WeibullDistribution(ScipyDistribution):
 
     @staticmethod
     def from_params(params: dict[str, str]) -> "WeibullDistribution":
-        if len(params) != 2:
+        num_params = 2
+        if len(params) != num_params:
             raise ValueError(
-                "Exponential distribution must have 2 parameters: " + f"{WeibullDistribution.SHAPE_KEY}" +
-                f"{WeibullDistribution.SCALE_KEY}")
+                "Exponential distribution must have 2 parameters: "
+                + f"{WeibullDistribution.SHAPE_KEY}"
+                + f"{WeibullDistribution.SCALE_KEY}"
+            )
         shape: float = float(params[WeibullDistribution.SHAPE_KEY])
         scale: float = float(params[WeibullDistribution.SCALE_KEY])
         if shape <= 0 or scale <= 0:
@@ -195,6 +201,7 @@ class UniformDistribution(ScipyDistribution):
     """
     Description of uniform distribution with intensity parameter.
     """
+
     MIN_KEY: Final[str] = "min"
     MAX_KEY: Final[str] = "max"
 
@@ -223,10 +230,13 @@ class UniformDistribution(ScipyDistribution):
 
     @staticmethod
     def from_params(params: dict[str, str]) -> "UniformDistribution":
-        if len(params) != 2:
+        num_params = 2
+        if len(params) != num_params:
             raise ValueError(
-                "Uniform distribution must have 2 parameters: " + f"{UniformDistribution.min}" +
-                f"{UniformDistribution.max}")
+                "Uniform distribution must have 2 parameters: "
+                + f"{UniformDistribution.min}"
+                + f"{UniformDistribution.max}"
+            )
         min_value: float = float(params[UniformDistribution.MIN_KEY])
         max_value: float = float(params[UniformDistribution.MAX_KEY])
         if min_value >= max_value:
@@ -238,6 +248,7 @@ class BetaDistribution(ScipyDistribution):
     """
     Description of beta distribution with intensity parameter.
     """
+
     ALPHA_KEY: Final[str] = "alpha"
     BETA_KEY: Final[str] = "beta"
 
@@ -266,7 +277,8 @@ class BetaDistribution(ScipyDistribution):
 
     @staticmethod
     def from_params(params: dict[str, str]) -> "BetaDistribution":
-        if len(params) != 2:
+        num_params = 2
+        if len(params) != num_params:
             raise ValueError(
                 f"Beta distribution must have 2 parameters: {BetaDistribution.ALPHA_KEY}, {BetaDistribution.BETA_KEY}"
             )
