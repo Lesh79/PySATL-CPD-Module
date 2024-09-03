@@ -9,6 +9,7 @@ class Distributions(Enum):
     NORMAL = "normal"
     EXPONENTIAL = "exponential"
     WEIBULL = "weibull"
+    UNIFORM = "uniform"
 
     def __str__(self):
         return self.value
@@ -43,6 +44,8 @@ class Distribution(Protocol):
                 return ExponentialDistribution.from_params(params)
             case Distributions.WEIBULL.value:
                 return WeibullDistribution.from_params(params)
+            case Distributions.UNIFORM.value:
+                return UniformDistribution.from_params(params)
             case _:
                 raise NotImplementedError()
 
@@ -180,3 +183,43 @@ class WeibullDistribution(ScipyDistribution):
         if shape <= 0 or scale <= 0:
             raise ValueError("Parameters must be greater than 0")
         return WeibullDistribution(shape, scale)
+
+
+class UniformDistribution(ScipyDistribution):
+    MIN_KEY: Final[str] = "min"
+    MAX_KEY: Final[str] = "max"
+
+    max: float
+    min: float
+
+    def __init__(self, min_value: float, max_value: float):
+        if min_value >= max_value:
+            raise ValueError("Max must be greater than min value")
+        self.min = min_value
+        self.max = max_value
+
+    @property
+    def name(self) -> str:
+        return str(Distributions.UNIFORM)
+
+    @property
+    def params(self) -> dict[str, str]:
+        return{
+            UniformDistribution.MIN_KEY: str(self.min),
+            UniformDistribution.MAX_KEY: str(self.max),
+        }
+
+    def scipy_sample(self, length: int) -> np.ndarray:
+        return ss.uniform(loc=self.min, scale=self.max-self.min).rvs(size=length)
+
+    @staticmethod
+    def from_params(params: dict[str, str]) -> "UniformDistribution":
+        if len(params) != 2:
+            raise ValueError(
+                "Exponential distribution must have 2 parameters: " + f"{UniformDistribution.min}" +
+                f"{UniformDistribution.max}")
+        min_value: float = float(params[UniformDistribution.MIN_KEY])
+        max_value: float = float(params[UniformDistribution.MAX_KEY])
+        if min_value >= max_value:
+            raise "Max must be greater than min value"
+        return UniformDistribution(min_value, max_value)
