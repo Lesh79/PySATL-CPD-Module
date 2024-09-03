@@ -1,17 +1,17 @@
+import tempfile
 from pathlib import Path
 
-from CPDShell.Core.algorithms.graph_algorithm import GraphAlgorithm
-from CPDShell.Core.cpd_core import CPDCore, Scrubber
-from CPDShell.Core.scenario import Scenario
-from CPDShell.shell import LabeledCPData
+from CPDShell.generator.generator import ScipyDatasetGenerator
+from CPDShell.generator.saver import DatasetSaver
+from CPDShell.shell import CPDShell
 
-scenario = Scenario(10, True)
-scrubber = Scrubber(scenario, [1, 1.2, 12, 13, 11, 12, 1, 1, 1, 1, 1])
-arg = 5
-core = CPDCore(scrubber, GraphAlgorithm(lambda a, b: abs(a - b) <= arg, 2))
+with tempfile.TemporaryDirectory() as tempdir:
+    saver = DatasetSaver(Path(), True)
+    generated = ScipyDatasetGenerator().generate_datasets(
+        Path("tests/test_CPDShell/test_configs/test_config_exp.yml"), saver
+    )
 
-data = LabeledCPData.generate_cp_datasets(
-    Path("tests/test_CPDShell/test_configs/test_config_1.yml"), to_save=True, output_directory=Path("data")
-)
-for labeled_data in data:
-    print(labeled_data)
+    cpd = CPDShell(generated["exp"][0])
+    res = cpd.run_cpd()
+    res.visualize(True)
+    print(res)
