@@ -141,9 +141,7 @@ class ExponentialDistribution(ScipyDistribution):
     @staticmethod
     def from_params(params: dict[str, str]) -> "ExponentialDistribution":
         if len(params) != 1:
-            raise ValueError(
-                "Exponential distribution must have 1 parameters: " + f"{ExponentialDistribution.RATE_KEY}"
-            )
+            raise ValueError("Exponential distribution must have 1 parameter: " + f"{ExponentialDistribution.RATE_KEY}")
         rate: float = float(params[ExponentialDistribution.RATE_KEY])
         if rate <= 0:
             raise ValueError("Rate must be greater than 0")

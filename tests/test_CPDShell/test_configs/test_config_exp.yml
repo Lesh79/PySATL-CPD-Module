@@ -1,5 +1,5 @@
 - name: exp
-  all_distributions:
+  distributions:
     - type: exponential
       length: 1000
       parameters:
