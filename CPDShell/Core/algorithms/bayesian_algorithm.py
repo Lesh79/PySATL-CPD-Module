@@ -81,11 +81,11 @@ class BayesianAlgorithm(Algorithm):
         """
         sample = list(window)
         sample_size = len(sample)
-        assert sample_size > 0
+        # assert sample_size > 0
+        if sample_size == 0:
+            return
 
-        self.__growth_probs = np.zeros(sample_size)
-        self.__growth_probs[0] = 1.0
-        self.__time = 0
+        self.__prepare(sample_size)
 
         while self.__time + self._learning_steps < sample_size:
             self.__learning_stage(sample)
@@ -204,6 +204,19 @@ class BayesianAlgorithm(Algorithm):
         :param shift: a time shift to add to the current time.
         """
         self.__time += shift
+
+    def __prepare(self, sample_size: int) -> None:
+        """
+        Clear algorithm's state (including change points and time related information) before data processing.
+        :param sample_size: an overall size of the sample.
+        """
+        self.__time = 0
+        self.__gap_size = 0
+
+        self.__change_points = []
+        self.__change_points_count = 0
+
+        self.__clear(sample_size)
 
     def __clear(self, sample_size: int) -> None:
         """

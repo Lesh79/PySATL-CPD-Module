@@ -26,4 +26,4 @@ class SimpleLocalizer(ILocalizer):
         if len(growth_probs) == 0:
             return 0
 
-        return int(np.argmax(growth_probs[0 : len(growth_probs) - 1]))
+        return int(growth_probs[0 : len(growth_probs) - 1].argmax())
