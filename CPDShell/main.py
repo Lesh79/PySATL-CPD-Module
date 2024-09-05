@@ -1,4 +1,5 @@
 import tempfile
+import time
 from pathlib import Path
 
 from CPDShell.Core.algorithms.bayesian_algorithm import BayesianAlgorithm
@@ -59,3 +60,8 @@ with tempfile.TemporaryDirectory() as tempdir_graph:
     res_bayes.visualize(True)
     print("Bayesian algorithm")
     print(res_bayes)
+
+    start_without_shell = time.perf_counter()
+    print("Result without a shell:", bayesian_algorithm.localize(data))
+    end_without_shell = time.perf_counter()
+    print("Time in seconds without a shell:", end_without_shell - start_without_shell)
