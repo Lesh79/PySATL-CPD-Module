@@ -110,7 +110,7 @@ class TestCPContainer:
             == """Located change points: (1;2;3)
 Expected change point: (2;3;4)
 Difference: (1;4)
-Computation time (ms): 10"""
+Computation time (sec): 10"""
         )
 
         assert (
@@ -118,13 +118,13 @@ Computation time (ms): 10"""
             == """Located change points: (1;2;3;6;8)
 Expected change point: (2;3;4;6)
 Difference: (1;4;8)
-Computation time (ms): 20"""
+Computation time (sec): 20"""
         )
 
         assert (
             str(self.cont_no_expected)
             == """Located change points: (1;2;3)
-Computation time (ms): 5"""
+Computation time (sec): 5"""
         )
 
     @pytest.mark.parametrize(
