@@ -17,23 +17,23 @@ with tempfile.TemporaryDirectory() as tempdir_graph:
 
     saver = DatasetSaver(Path(), True)
     generated = ScipyDatasetGenerator().generate_datasets(Path(path_string), saver)
+    data, actual_change_points = generated[distributions_name]
 
-    graph_cpd = CPDShell(generated[distributions_name][0])
-    graph_cpd.scrubber.window_length = 200
+    graph_cpd = CPDShell(data)
+    graph_cpd.scrubber.window_length = 150
     graph_cpd.scrubber.movement_k = 2.0 / 3.0
 
-    res = graph_cpd.run_cpd()
-    res.visualize(True)
+    print("Actual change points:", actual_change_points)
+
+    res_graph = graph_cpd.run_cpd()
+    res_graph.visualize(True)
     print("Graph algorithm")
-    print(res)
+    print(res_graph)
 
     HAZARD_RATE = 200
     LEARNING_WINDOW_SIZE = 30
     THRESHOLD = 0.5
     DROP_THRESHOLD = 0.7
-
-    saver = DatasetSaver(Path(), True)
-    generated = ScipyDatasetGenerator().generate_datasets(Path(path_string), saver)
 
     constant_hazard = ConstantHazard(HAZARD_RATE)
     gaussian_likelihood = GaussianLikelihood()
@@ -42,6 +42,7 @@ with tempfile.TemporaryDirectory() as tempdir_graph:
     drop_detector = DropDetector(DROP_THRESHOLD)
 
     simple_localizer = SimpleLocalizer()
+
     bayesian_algorithm = BayesianAlgorithm(
         learning_steps=LEARNING_WINDOW_SIZE,
         likelihood=gaussian_likelihood,
@@ -50,11 +51,11 @@ with tempfile.TemporaryDirectory() as tempdir_graph:
         localizer=simple_localizer,
     )
 
-    bayesian_cpd = CPDShell(generated[distributions_name][0])
+    bayesian_cpd = CPDShell(data)
     bayesian_cpd.scrubber.window_length = 200
     bayesian_cpd.scrubber.movement_k = 2.0 / 3.0
 
-    res = bayesian_cpd.run_cpd()
-    res.visualize(True)
+    res_bayes = bayesian_cpd.run_cpd()
+    res_bayes.visualize(True)
     print("Bayesian algorithm")
-    print(res)
+    print(res_bayes)
