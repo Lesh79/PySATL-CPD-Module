@@ -81,7 +81,6 @@ class BayesianAlgorithm(Algorithm):
         """
         sample = list(window)
         sample_size = len(sample)
-        # assert sample_size > 0
         if sample_size == 0:
             return
 
