@@ -15,13 +15,13 @@ distributions_name = "exp"
 
 saver = DatasetSaver(Path(), True)
 generated = ScipyDatasetGenerator().generate_datasets(Path(path_string), saver)
-data, actual_change_points = generated[distributions_name]
+data, expected_change_points = generated[distributions_name]
 
 graph_cpd = CPDShell(data)
 graph_cpd.scrubber.window_length = 150
 graph_cpd.scrubber.movement_k = 2.0 / 3.0
 
-print("Actual change points:", actual_change_points)
+print("Expected change points:", expected_change_points)
 
 res_graph = graph_cpd.run_cpd()
 res_graph.visualize(True)
