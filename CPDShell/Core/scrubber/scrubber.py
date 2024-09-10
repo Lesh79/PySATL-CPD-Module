@@ -16,7 +16,7 @@ class Scrubber:
         scenario: Scenario,
         data,
         window_length: int = 10,
-        movement_k: float = 1 / 3,
+        movement_k: float = 1.0 / 3.0,
     ) -> None:
         """A scrubber for dividing data into windows
         and subsequent processing of data windows
@@ -29,7 +29,7 @@ class Scrubber:
         """
 
         self.window_length = window_length
-        self._movement_k = movement_k
+        self.movement_k = movement_k
         self.scenario = scenario
         self.data: Sequence[float | numpy.float64] = data
         self.is_running = True
@@ -68,7 +68,7 @@ class Scrubber:
             start, end = self.change_points[-1], self.change_points[-1] + self.window_length
             self._next_window = (start, end)
         else:
-            delta = int(self._movement_k * self.window_length)
+            delta = int(self.movement_k * self.window_length)
             start, end = self._next_window[0] + delta, self._next_window[1] + delta
             if end >= len(self.data):
                 self._next_window = None

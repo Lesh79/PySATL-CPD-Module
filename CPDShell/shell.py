@@ -21,18 +21,18 @@ class CPContainer:
         data: Sequence[float | numpy.float64],
         result: list[int],
         expected_result: list[int] | None,
-        time_ms: float,
+        time_sec: float,
     ) -> None:
         """Object constructor
 
         :param: result: list, containing change points, that were found by CPD algos
         :param: expected_result: list, containing expected change points, if it is needed
-        :param: time_ms: a float number, time of CPD algo execution in milliseconds
+        :param: time_sec: a float number, time of CPD algo execution in fractional seconds
         """
         self.data = data
         self.result = result
         self.expected_result = expected_result
-        self.time_ms = time_ms
+        self.time_sec = time_sec
 
     @property
     def result_diff(self) -> list:
@@ -57,7 +57,7 @@ class CPContainer:
             diff = ";".join(map(str, self.result_diff))
             method_output += f"Expected change point: ({expected_cp_results})\n"
             method_output += f"Difference: ({diff})\n"
-        method_output += f"Computation time (ms): {round(self.time_ms, 2)}"
+        method_output += f"Computation time (sec): {round(self.time_sec, 2)}"
         return method_output
 
     def visualize(self, to_show: bool = True, output_directory: Path | None = None, name: str = "Graph") -> None:
