@@ -9,7 +9,7 @@ from CPDShell.generator.saver import DatasetSaver
 SAMPLE_SIZE = 500
 CP_LOCATION = 250
 
-NUM_OF_SAMPLES = 1
+NUM_OF_SAMPLES = 1000
 
 DIR_PATH = "/experiment/stage_1/"
 CONFIG_NAME = "config.yml"
