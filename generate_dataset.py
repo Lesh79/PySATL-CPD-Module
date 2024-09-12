@@ -9,7 +9,7 @@ from CPDShell.generator.saver import DatasetSaver
 SAMPLE_SIZE = 500
 CP_LOCATION = 250
 
-NUM_OF_SAMPLES = 1000
+NUM_OF_SAMPLES = 1
 
 DIR_PATH = "/experiment/stage_1/"
 CONFIG_NAME = "config.yml"
@@ -40,9 +40,9 @@ add_distribution(distributions_left, "beta", {"alpha": 0.5, "beta": 0.5})
 distributions_right = {}
 add_distribution(distributions_right, "normal", {"mean": 10.0, "variance": 5.0})
 add_distribution(distributions_right, "exponential", {"rate": 5.0})
-add_distribution(distributions_right, "uniform", {"min": -10.0, "max": -5.0})
-add_distribution(distributions_right, "weibull", {"shape": 2.0, "scale": 2.0})
-add_distribution(distributions_right, "beta", {"alpha": 0.5, "beta": 0.5})
+add_distribution(distributions_right, "uniform", {"min": 1.0, "max": 4.0})
+add_distribution(distributions_right, "weibull", {"shape": 1.0, "scale": 5.0})
+add_distribution(distributions_right, "beta", {"alpha": 5.0, "beta": 5.0})
 
 distributions_no_cp = {}
 add_distribution(distributions_no_cp, "normal", {"mean": 0.0, "variance": 1.0}, SAMPLE_SIZE)
