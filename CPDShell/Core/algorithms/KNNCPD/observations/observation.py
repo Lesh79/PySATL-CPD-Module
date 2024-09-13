@@ -1,16 +1,13 @@
-from numpy import ndarray
+import numpy as np 
 from dataclasses import dataclass, field
 from collections import deque
 from typing import TypeAlias
-
-Observation: TypeAlias = ndarray
-Observations: TypeAlias = deque[Observation]
 
 
 @dataclass(order=True)
 class Observation:
     time: int
-    value: ndarray = field(compare=False)
+    value: float | np.float64 = field(compare=False)
 
 
 @dataclass(order=True)

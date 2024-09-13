@@ -1,7 +1,7 @@
 import heapq
 import typing as tp
 
-from observations.observation import Observation, Neighbour, Observations
+from observations.observation import Observation, Neighbour
 
 
 class NNHeap:
@@ -14,7 +14,7 @@ class NNHeap:
         self._heap: list[Neighbour] = []
         self._auxiliary_heap: list[Neighbour] = []
 
-    def build(self, neighbours: Observations) -> None:
+    def build(self, neighbours: list[Observation]) -> None:
         for neighbour in neighbours:
             self.add(neighbour)
 
@@ -38,30 +38,6 @@ class NNHeap:
             heapq.heapreplace(self._auxiliary_heap, neighbour)
         elif len(self._auxiliary_heap) < self._size:
             heapq.heappush(self._auxiliary_heap, neighbour)
-
-    def remove(self, observation: Observation, observations: Observations) -> None:
-        if not self._heap:
-            return
-
-        neg_distance = -self._metric(self._main_observation, observation)
-        neighbour = Neighbour(neg_distance, observation)
-
-        if neg_distance >= self._heap[0].distance and neighbour in self._heap:
-            self._heap.remove(neighbour)
-            heapq.heapify(self._heap)
-
-            if self._auxiliary_heap:
-                new_neighbour = heapq.nlargest(1, self._auxiliary_heap)[0]
-                self._auxiliary_heap.remove(new_neighbour)
-                heapq.heapify(self._auxiliary_heap)
-                heapq.heappush(self._heap, new_neighbour)
-            else:
-                self.build(observations)
-        elif (self._auxiliary_heap
-              and neg_distance >= self._auxiliary_heap[0].distance
-              and neighbour in self._auxiliary_heap):
-            self._auxiliary_heap.remove(neighbour)
-            heapq.heapify(self._auxiliary_heap)
 
     def find_in_heap(self, observation: Observation) -> bool:
         def predicate(x: Neighbour) -> bool:

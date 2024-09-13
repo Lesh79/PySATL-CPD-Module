@@ -1,97 +1,101 @@
 import typing as tp
 import numpy as np
-from statistics import mean
+
 from math import sqrt
 from collections import deque
+from collections.abc import Iterable
 
 import knn_graph as knngraph
 from observations.observation import Observation, Observations
 
-
 class KNNCPD:
-    def __init__(self, window_size: int, metric: tp.Callable[[Observation, Observation], float],
-                 observations: Observations | None = None, k=3,
-                 threshold: float = 0.5) -> None:
-        self._k = k
-        self._metric = metric
-        self._threshold = threshold
-        self._observations = observations
-        self._window_size = window_size
-        self._statistics: float = 0.0
-        if observations is not None and len(observations) >= window_size:
-            self._knngraph = knngraph.KNNGraph(window_size, observations, metric)
-            self._knngraph.build()
-        else:
-            self._knngraph = None
+    def __init__(
+        self, metric: tp.Callable[[float, float], float] | tp.Callable[[np.float64, np.float64], float], k=3, threshold: float = 0.5
+    ) -> None:
+        self.__k = k
+        self.__metric = metric
+        self.__threshold = threshold
+
+        self.__change_points: list[int] = []
+        self.__change_points_count = 0
+
+        self.__knngraph: knngraph.KNNGraph | None = None
 
     @property
-    def statistics(self) -> float:
-        """
-        Get the statistics of the current model
-        :return: The statistics value
-        """
-        return self._statistics
+    def change_points_count(self) -> int:
+        return self.__change_points_count
+    
+    @property
+    def change_points(self) -> list[int]:
+        return self.__change_points
 
-    def update(self, observation: Observation) -> None:
-        """
-        Add an observation to the KNN graph
-        :param observation: New observation
-        """
-        if self._observations is None:
-            self._observations = deque([observation])
+    def process_sample(self, window: Iterable[float | np.float64]) -> None:
+        if len(self.window) == 0:
             return
-        else:
-            self._observations.append(observation)
 
-        if self._knngraph is None and len(self._observations) >= self._window_size:
-            self._knngraph = knngraph.KNNGraph(self._window_size, self._observations, self._metric)
-            self._knngraph.build()
-            self._statistics = self.calculate_statistics()
-        elif self._knngraph is not None:
-            self._knngraph.update(observation)
-            self._statistics = self.calculate_statistics()
+        self.__knngraph = knngraph.KNNGraph(window, self.__metric, self.__k)
+        self.__knngraph.build()
 
-    def calculate_random_variable(self, permutation: np.array, t: int) -> int:
+        # Boundaries are always change points
+        for time in range(1, len(window) - 1):
+            statistics = self.__calculate_statistics_in_point(time, len(window))
+
+            if self.__check_change_point(statistics):
+                self.__change_points.append(time)
+                self.__change_points_count += 1
+
+    def __calculate_statistics_in_point(self, time: int, window_size: int) -> float:
         """
-        Calculate a random variable from a permutation and a fixed point
-        :param permutation: permutation of observations
-        :param t: fixed point that splits the permutation
-        :return: value of the random variable
+        Calculate the statistics of the KNN graph in specified point.
+        """
+        assert self.__knngraph is not None, "Graph should not be None."
+
+        k = self.__k
+        n = window_size
+        n_1 = time
+        n_2 = n - time
+
+        h = 4 * (n_1 - 1) * (n_2 - 1) / ((n - 2) * (n - 3))
+
+        sum_1 = (1 / n) * sum(self.__knngraph.check_for_neighbourhood(i, j) * self.__knngraph.check_for_neighbourhood(j, i)
+                     for i in range(window_size) for j in range(window_size))
+        
+        sum_2 = (1 / n) * sum(self.__knngraph.check_for_neighbourhood(j, i) * self.__knngraph.check_for_neighbourhood(l, i)
+                     for i in range(window_size)
+                       for j in range(window_size)
+                         for l in range (window_size))
+        
+        expectation = 4 * k * n_1 * (n_2) / (n - 1)
+        variance = (expectation / k) * (h * (sum_1 + k - (2 * k**2 / (n-1))) + (1 - h) * (sum_2 - k**2))
+        deviation = sqrt(variance)
+
+        permutation: np.array = np.arange(window_size)
+        np.random.shuffle(permutation)
+
+        statistics = -(self.__calculate_random_variable(permutation, time) - expectation) / deviation
+
+        return statistics
+
+    def __check_change_point(self, statistics) -> bool:
+        """
+        Check if change point occurs in current sequence.
+        :return: True if change point occurs, False otherwise.
+        """
+        return statistics > self.__threshold
+
+    def __calculate_random_variable(self, permutation: np.array, t: int, window_size: int) -> int:
+        """
+        Calculate a random variable from a permutation and a fixed point.
+        :param permutation: permutation of observations.
+        :param t: fixed point that splits the permutation.
+        :return: value of the random variable.
         """
         def b(i: int, j: int) -> bool:
             pi = permutation[i]
             pj = permutation[j]
             return (pi <= t < pj) or (pj <= t < pi)
 
-        s = 0
-
-        for i in range(self._window_size):
-            for j in range(self._window_size):
-                s += (self._knngraph.check_neighbour(i, j) + self._knngraph.check_neighbour(j, i)) * b(i, j)
+        s = sum((self.__knngraph.check_for_neighbourhood(i, j) + self.__knngraph.check_for_neighbourhood(j, i)) * b(i, j)
+                     for i in range(window_size) for j in range(window_size))
 
         return s
-
-    def calculate_statistics(self) -> float:
-        """
-        Calculate the statistics of the KNN graph in specified window
-        :return: statistics value
-        """
-        if self._observations is None or len(self._observations) < self._window_size:
-            return 0.0
-
-        permutation: np.array = np.arange(self._window_size)
-        np.random.shuffle(permutation)
-
-        expectation = mean(self.calculate_random_variable(permutation, i) for i in range(self._window_size))
-        expectation_sqr = mean(self.calculate_random_variable(permutation, i)**2 for i in range(self._window_size))
-        deviation = sqrt(expectation_sqr - expectation**2)
-        statistics = -(self.calculate_random_variable(permutation, self._window_size // 2) - expectation) / deviation
-
-        return statistics
-
-    def check_change_point(self) -> bool:
-        """
-        Check if change point occurs in current sequence
-        :return: True if change point occurs, False otherwise
-        """
-        return self._statistics > self._threshold

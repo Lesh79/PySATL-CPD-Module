@@ -1,56 +1,38 @@
+import numpy as np
 import typing as tp
 from collections import deque
-from itertools import islice
+from collections.abc import Iterable
 
-from observations.observation import Observation, Observations
+from observations.observation import Observation
 from observations.observation_heap import NNHeap
 
 
 class KNNGraph:
     def __init__(
-        self, observations_count: int, observations: Observations, metric: tp.Callable[[Observation, Observation], float], k=3
+        self, window: Iterable[float | np.float64], metric: tp.Callable[[float, float], float] | tp.Callable[[np.float64, np.float64], float], k=3
     ) -> None:
-        self._window_size = observations_count
-        self._observations = observations
-        self._window = deque(islice(self._observations,
-                                    len(self._observations) - self._window_size,
-                                    len(self._observations)), maxlen=self._window_size)
-        self._metric = metric
-        self._graph: deque[NNHeap] = deque(maxlen=self._window_size)
-        self._k = k
+        self.__window: list[Observation] = [Observation(t, v) for t, v in enumerate(window)]
+        self.__metric: tp.Callable[[Observation, Observation], float] = lambda obs1, obs2: metric(obs1.value, obs2.value) 
+        self.__k = k
+
+        self.__window_size = len(window)
+        self.__graph: deque[NNHeap] = deque(maxlen=self.__window_size)
 
     def build(self) -> None:
         """
-        Build KNN graph according to the given parameters
+        Build KNN graph according to the given parameters.
         """
-        for i in range(self._window_size):
-            heap = NNHeap(self._k, self._metric, self._observations[-i - 1])
-            heap.build(self._window)
-            self._graph.appendleft(heap)
+        for i in range(self.__window_size):
+            heap = NNHeap(self.__k, self.__metric, self.__window[-i - 1])
+            heap.build(self.__window)
+            self.__graph.appendleft(heap)
 
-    def update(self, observation: Observation) -> None:
+    def check_for_neighbourhood(self, first_index: int, second_index: int) -> bool:
         """
-        Add observation to KNN graph
-        :param observation: New observation
-        """
-        obsolete_obs = self._window[0]
-        self._window.append(observation)
-        self._graph.popleft()
-
-        for heap in self._graph:
-            heap.remove(obsolete_obs, self._window)
-            heap.add(observation)
-
-        new_heap = NNHeap(self._k, self._metric, observation)
-        new_heap.build(self._window)
-        self._graph.append(new_heap)
-
-    def check_neighbour(self, first_index: int, second_index: int) -> bool:
-        """
-        Checks if the second observation is among the k nearest neighbours of the first observation
+        Checks if the second observation is among the k nearest neighbours of the first observation.
         :param first_index:
         :param second_index:
         :return:
         """
-        neighbour = self._window[second_index]
-        return self._graph[first_index].find_in_heap(neighbour)
+        neighbour = self.__window[second_index]
+        return self.__graph[first_index].find_in_heap(neighbour)
