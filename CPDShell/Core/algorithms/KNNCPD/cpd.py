@@ -33,10 +33,16 @@ class KNNCPD:
         if len(self.window) == 0:
             return
 
+        # Preparing.
+        self.__change_points: list[int] = []
+        self.__change_points_count = 0
+
+        # Building graph.
         self.__knngraph = knngraph.KNNGraph(window, self.__metric, self.__k)
         self.__knngraph.build()
 
-        # Boundaries are always change points
+        # Examining each point.
+        # Boundaries are always change points.
         for time in range(1, len(window) - 1):
             statistics = self.__calculate_statistics_in_point(time, len(window))
 
@@ -64,7 +70,7 @@ class KNNCPD:
                      for i in range(window_size)
                        for j in range(window_size)
                          for l in range (window_size))
-        
+
         expectation = 4 * k * n_1 * (n_2) / (n - 1)
         variance = (expectation / k) * (h * (sum_1 + k - (2 * k**2 / (n-1))) + (1 - h) * (sum_2 - k**2))
         deviation = sqrt(variance)

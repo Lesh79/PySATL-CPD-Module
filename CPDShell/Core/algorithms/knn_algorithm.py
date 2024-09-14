@@ -24,12 +24,10 @@ class KNNAlgorithm(Algorithm):
     def __init__(
         self, metric: tp.Callable[[float, float], float] | tp.Callable[[np.float64, np.float64], float], k=3, threshold: float = 0.5
     ) -> None:
-        self.__k = k
-        self.__threshold = threshold
-        self.__metric = metric
-
         self.__change_points: list[int] = []
         self.__change_points_count = 0
+
+        self.__knncpd = KNNCPD(metric, k, threshold)
 
     def detect(self, window: Iterable[float | np.float64]) -> int:
         """Finds change points in window.
@@ -61,11 +59,10 @@ class KNNAlgorithm(Algorithm):
         sample_size = len(sample)
         if sample_size == 0:
             return
-        
-        knncpd = KNNCPD(len(window), self.__metric, window, self.__k, self.__threshold)
-        knncpd.process_sample()
 
-        return knncpd.change_points if with_localization else knncpd.change_points_count
+        self.__knncpd.process_sample(window)
+
+        return self.__knncpd.change_points if with_localization else self.__knncpd.change_points_count
         # build a graph and examine each of the points in sample
         # If the window size will be managed outside algorithm, algorithm should get
         # whole window and build a graph on the whole window not point by point.
