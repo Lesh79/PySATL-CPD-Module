@@ -25,6 +25,13 @@ class KNNAlgorithm(Algorithm):
     def __init__(
         self, metric: tp.Callable[[float, float], float] | tp.Callable[[np.float64, np.float64], float], k=3, threshold: float = 0.5
     ) -> None:
+        """
+        Initializes a new instance of KNN change point algorithm.
+
+        :param metric: function for calculating distance between points in time series.
+        :param k: number of neighbours in graph relative to each point.
+        :param threshold: threshold that statistics should overcome to fix change point.
+        """
         self.__k = k
         self.__metric = metric
         self.__threshold = threshold
@@ -55,6 +62,7 @@ class KNNAlgorithm(Algorithm):
     def __process_data(self, window: Iterable[float | np.float64]) -> None:
         """
         Processes a window of data to detect/localize all change points depending on working mode.
+
         :param window: part of global data for change points analysis.
         """
         sample = deque(window)
@@ -82,6 +90,9 @@ class KNNAlgorithm(Algorithm):
     def __calculate_statistics_in_point(self, time: int, window_size: int) -> float:
         """
         Calculate the statistics of the KNN graph in specified point.
+
+        :param time: index of point in the given sample to calculate statistics relative to it.
+        :param window_size: size of sample to analyze.
         """
         assert self.__knngraph is not None, "Graph should not be None."
 
@@ -111,9 +122,10 @@ class KNNAlgorithm(Algorithm):
 
         return statistics
 
-    def __check_change_point(self, statistics) -> bool:
+    def __check_change_point(self, statistics: float) -> bool:
         """
-        Check if change point occurs in current sequence.
+        Check if calculated statistics is more than a given threshold to find out if it is a change point or not.
+
         :return: True if change point occurs, False otherwise.
         """
         return statistics > self.__threshold
@@ -121,7 +133,8 @@ class KNNAlgorithm(Algorithm):
     def __calculate_random_variable(self, permutation: np.array, t: int, window_size: int) -> int:
         """
         Calculate a random variable from a permutation and a fixed point.
-        :param permutation: permutation of observations.
+
+        :param permutation: random permutation of observations.
         :param t: fixed point that splits the permutation.
         :return: value of the random variable.
         """
