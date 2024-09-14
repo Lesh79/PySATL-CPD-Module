@@ -13,7 +13,7 @@ from math import sqrt
 from collections import deque
 from collections.abc import Iterable
 
-import KNNCPD.knn_graph as knngraph
+import CPDShell.Core.algorithms.KNNCPD.knn_graph as knngraph
 from CPDShell.Core.algorithms.abstract_algorithm import Algorithm
 
 
@@ -56,7 +56,7 @@ class KNNAlgorithm(Algorithm):
         :param window: part of global data for finding change points.
         :return: list of window change points.
         """
-        self.__process_data(True, window)
+        self.__process_data(window)
         return self.__change_points.copy()
 
     def __process_data(self, window: Iterable[float | np.float64]) -> None:
@@ -118,7 +118,7 @@ class KNNAlgorithm(Algorithm):
         permutation: np.array = np.arange(window_size)
         np.random.shuffle(permutation)
 
-        statistics = -(self.__calculate_random_variable(permutation, time) - expectation) / deviation
+        statistics = -(self.__calculate_random_variable(permutation, time, window_size) - expectation) / deviation
 
         return statistics
 

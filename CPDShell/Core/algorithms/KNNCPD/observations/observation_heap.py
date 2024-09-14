@@ -9,7 +9,7 @@ __license__ = "SPDX-License-Identifier: MIT"
 import heapq
 import typing as tp
 
-from observations.observation import Observation, Neighbour
+from .observation import Observation, Neighbour
 
 
 class NNHeap:

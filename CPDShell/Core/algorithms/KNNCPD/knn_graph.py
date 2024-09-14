@@ -11,8 +11,8 @@ import typing as tp
 from collections import deque
 from collections.abc import Iterable
 
-from observations.observation import Observation
-from observations.observation_heap import NNHeap
+from .observations.observation import Observation
+from .observations.observation_heap import NNHeap
 
 
 class KNNGraph:
