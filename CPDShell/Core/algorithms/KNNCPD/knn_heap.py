@@ -8,6 +8,7 @@ __license__ = "SPDX-License-Identifier: MIT"
 
 import heapq
 import typing as tp
+from math import isclose
 
 from .abstracts.observation import Observation, Neighbour
 
@@ -51,7 +52,9 @@ class NNHeap:
         :param observation: observation to test.
         """
         def predicate(x: Neighbour) -> bool:
-            return x.observation.value is observation.value
+            # return abs(x.observation.value - observation.value) < 1e-12
+            # return x.observation.value is observation.value
+            return isclose(x.observation.value, observation.value, rel_tol=1e-12)
 
         return any(predicate(i) for i in self._heap)
 
