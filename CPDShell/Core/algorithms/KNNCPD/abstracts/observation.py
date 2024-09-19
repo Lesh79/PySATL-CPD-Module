@@ -1,5 +1,5 @@
 """
-Module for implementation of nearest neighbours heap.
+Module for abstractions used in heap, needed to clearly distinguish observations made at different times.
 """
 
 __author__ = "Artemii Patov"
@@ -8,8 +8,6 @@ __license__ = "SPDX-License-Identifier: MIT"
 
 import numpy as np 
 from dataclasses import dataclass, field
-from collections import deque
-from typing import TypeAlias
 
 
 @dataclass(order=True)
