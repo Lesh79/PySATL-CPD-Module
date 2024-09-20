@@ -6,10 +6,11 @@ __author__ = "Artemii Patov"
 __copyright__ = "Copyright (c) 2024 Artemii Patov"
 __license__ = "SPDX-License-Identifier: MIT"
 
-import numpy as np
 import typing as tp
 from collections import deque
 from collections.abc import Iterable
+
+import numpy as np
 
 from .abstracts.observation import Observation
 from .knn_heap import NNHeap
@@ -21,7 +22,10 @@ class KNNGraph:
     """
 
     def __init__(
-        self, window: Iterable[float | np.float64], metric: tp.Callable[[float, float], float] | tp.Callable[[np.float64, np.float64], float], k=3
+        self,
+        window: Iterable[float | np.float64],
+        metric: tp.Callable[[float, float], float] | tp.Callable[[np.float64, np.float64], float],
+        k=3,
     ) -> None:
         """
         Initializes a new instance of KNN graph.
@@ -31,7 +35,9 @@ class KNNGraph:
         :param k: number of neighbours in graph relative to each point.
         """
         self.__window: list[Observation] = [Observation(t, v) for t, v in enumerate(window)]
-        self.__metric: tp.Callable[[Observation, Observation], float] = lambda obs1, obs2: metric(obs1.value, obs2.value) 
+        self.__metric: tp.Callable[[Observation, Observation], float] = lambda obs1, obs2: metric(
+            obs1.value, obs2.value
+        )
         self.__k = k
 
         self.__window_size = len(window)
@@ -51,7 +57,7 @@ class KNNGraph:
         Checks if the second observation is among the k nearest neighbours of the first observation.
 
         :param first_index: index of main observation.
-        :param second_index: index of possible neighbour. 
+        :param second_index: index of possible neighbour.
         :return: true if the second point is the neighbour of the first one, false otherwise.
         """
         neighbour = self.__window[second_index]

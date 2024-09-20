@@ -6,12 +6,12 @@ __author__ = "Artemii Patov"
 __copyright__ = "Copyright (c) 2024 Artemii Patov"
 __license__ = "SPDX-License-Identifier: MIT"
 
-import numpy as np
 import typing as tp
-
-from math import sqrt
 from collections import deque
 from collections.abc import Iterable
+from math import sqrt
+
+import numpy as np
 
 import CPDShell.Core.algorithms.KNNCPD.knn_graph as knngraph
 from CPDShell.Core.algorithms.abstract_algorithm import Algorithm
@@ -23,7 +23,10 @@ class KNNAlgorithm(Algorithm):
     """
 
     def __init__(
-        self, metric: tp.Callable[[float, float], float] | tp.Callable[[np.float64, np.float64], float], k=3, threshold: float = 0.5
+        self,
+        metric: tp.Callable[[float, float], float] | tp.Callable[[np.float64, np.float64], float],
+        k=3,
+        threshold: float = 0.5,
     ) -> None:
         """
         Initializes a new instance of KNN change point algorithm.
@@ -103,20 +106,25 @@ class KNNAlgorithm(Algorithm):
 
         h = 4 * (n_1 - 1) * (n_2 - 1) / ((n - 2) * (n - 3))
 
-        sum_1 = (1 / n) * sum(self.__knngraph.check_for_neighbourhood(i, j) * self.__knngraph.check_for_neighbourhood(j, i)
-                     for i in range(window_size) for j in range(window_size))
-        
-        sum_2 = (1 / n) * sum(self.__knngraph.check_for_neighbourhood(j, i) * self.__knngraph.check_for_neighbourhood(l, i)
-                     for i in range(window_size)
-                       for j in range(window_size)
-                         for l in range (window_size))
+        sum_1 = (1 / n) * sum(
+            self.__knngraph.check_for_neighbourhood(i, j) * self.__knngraph.check_for_neighbourhood(j, i)
+            for i in range(window_size)
+            for j in range(window_size)
+        )
+
+        sum_2 = (1 / n) * sum(
+            self.__knngraph.check_for_neighbourhood(j, i) * self.__knngraph.check_for_neighbourhood(l, i)
+            for i in range(window_size)
+            for j in range(window_size)
+            for l in range(window_size)
+        )
 
         expectation = 4 * k * n_1 * (n_2) / (n - 1)
-        variance = (expectation / k) * (h * (sum_1 + k - (2 * k**2 / (n-1))) + (1 - h) * (sum_2 - k**2))
+        variance = (expectation / k) * (h * (sum_1 + k - (2 * k**2 / (n - 1))) + (1 - h) * (sum_2 - k**2))
         deviation = sqrt(variance)
 
         permutation: np.array = np.arange(window_size)
-        # np.random.shuffle(permutation) # It seems that random permutation spoils the results
+        # np.random.shuffle(permutation) # It seems that random permutation spoils the result
 
         statistics = -(self.__calculate_random_variable(permutation, time, window_size) - expectation) / deviation
 
@@ -138,12 +146,16 @@ class KNNAlgorithm(Algorithm):
         :param t: fixed point that splits the permutation.
         :return: value of the random variable.
         """
+
         def b(i: int, j: int) -> bool:
             pi = permutation[i]
             pj = permutation[j]
             return (pi <= t < pj) or (pj <= t < pi)
 
-        s = sum((self.__knngraph.check_for_neighbourhood(i, j) + self.__knngraph.check_for_neighbourhood(j, i)) * b(i, j)
-                     for i in range(window_size) for j in range(window_size))
+        s = sum(
+            (self.__knngraph.check_for_neighbourhood(i, j) + self.__knngraph.check_for_neighbourhood(j, i)) * b(i, j)
+            for i in range(window_size)
+            for j in range(window_size)
+        )
 
         return s
