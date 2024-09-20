@@ -16,7 +16,6 @@ from .abstracts.observation import Neighbour, Observation
 class NNHeap:
     """
     The class implementing nearest neighbours heap --- helper abstraction for KNN graph.
-    Internally uses auxillary heap of the same size as the main one for optimization purposes.
     """
 
     def __init__(
@@ -34,7 +33,6 @@ class NNHeap:
         self._main_observation = main_observation
 
         self._heap: list[Neighbour] = []
-        self._auxiliary_heap: list[Neighbour] = []
 
     def build(self, neighbours: list[Observation]) -> None:
         """
@@ -59,7 +57,7 @@ class NNHeap:
 
     def __add(self, observation: Observation) -> None:
         """
-        Adds observation to heap. Also if the observation is not getting into the main heap it can get into the auxiliary one.
+        Adds observation to heap.
 
         :param observation: observation to add.
         """

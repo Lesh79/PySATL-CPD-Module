@@ -113,10 +113,10 @@ class KNNAlgorithm(Algorithm):
         )
 
         sum_2 = (1 / n) * sum(
-            self.__knngraph.check_for_neighbourhood(j, i) * self.__knngraph.check_for_neighbourhood(l, i)
+            self.__knngraph.check_for_neighbourhood(j, i) * self.__knngraph.check_for_neighbourhood(m, i)
             for i in range(window_size)
             for j in range(window_size)
-            for l in range(window_size)
+            for m in range(window_size)
         )
 
         expectation = 4 * k * n_1 * (n_2) / (n - 1)
