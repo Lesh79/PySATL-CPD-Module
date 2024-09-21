@@ -126,7 +126,14 @@ class KNNAlgorithm(Algorithm):
         permutation: np.array = np.arange(window_size)
         # np.random.shuffle(permutation) # It seems that random permutation spoils the result
 
-        statistics = -(self.__calculate_random_variable(permutation, time, window_size) - expectation) / deviation
+        random_variable_value = self.__calculate_random_variable(permutation, time, window_size)
+
+        if deviation == 0:
+            # if deviation is zero, it likely means that time is 1. This implies that h is 0 and sum_2 = k**2.
+            # In this case we can for sure say that there is no change-point.
+            return -(random_variable_value - expectation)
+
+        statistics = -(random_variable_value - expectation) / deviation
 
         return statistics
 
