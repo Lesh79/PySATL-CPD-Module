@@ -104,6 +104,10 @@ class KNNAlgorithm(Algorithm):
         n_1 = time
         n_2 = n - time
 
+        if n < 3:
+            # Unable to analyze sample due to its size.
+            return -k
+
         h = 4 * (n_1 - 1) * (n_2 - 1) / ((n - 2) * (n - 3))
 
         sum_1 = (1 / n) * sum(
