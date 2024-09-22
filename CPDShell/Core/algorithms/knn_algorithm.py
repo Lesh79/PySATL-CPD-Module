@@ -104,7 +104,7 @@ class KNNAlgorithm(Algorithm):
         n_1 = time
         n_2 = n - time
 
-        if n < 3:
+        if n <= k:
             # Unable to analyze sample due to its size.
             return -k
 
