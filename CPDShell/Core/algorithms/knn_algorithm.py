@@ -83,9 +83,12 @@ class KNNAlgorithm(Algorithm):
 
         # Examining each point.
         # Boundaries are always change points.
-        for time in range(1, len(window) - 1):
-            statistics = self.__calculate_statistics_in_point(time, len(window))
+        first_point = int(len(window) / 4)
+        last_point = int(len(window) * 0.75)
 
+        for time in range(first_point, last_point):
+            statistics = self.__calculate_statistics_in_point(time, len(window))
+            # print(time, statistics)
             if self.__check_change_point(statistics):
                 self.__change_points.append(time)
                 self.__change_points_count += 1

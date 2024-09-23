@@ -20,6 +20,9 @@ for _ in range(20):
     # specify CPD algorithm with parametrs
     shell.CPDalgorithm = KNNAlgorithm(metric, k=5, threshold=4.7)
 
+    shell.scrubber.window_length = 32
+    shell.scrubber.movement_k = 0.5
+
     # then run algorithm
     change_points = shell.run_cpd()
 
