@@ -17,7 +17,7 @@ for _ in range(20):
 
     shell = CPDShell(dataset)
 
-    # specify CPD algorithm with parametrs
+    # specify CPD algorithm with parameters
     shell.CPDalgorithm = KNNAlgorithm(metric, k=5, threshold=4.7)
 
     shell.scrubber.window_length = 32

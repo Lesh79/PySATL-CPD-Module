@@ -42,7 +42,7 @@ class KNNAlgorithm(Algorithm):
         self.__change_points: list[int] = []
         self.__change_points_count = 0
 
-        self.__knngraph: knngraph.KNNGraph | None = None
+        self.__knn_graph: knngraph.KNNGraph | None = None
 
     def detect(self, window: Iterable[float | np.float64]) -> int:
         """Finds change points in window.
@@ -78,17 +78,17 @@ class KNNAlgorithm(Algorithm):
         self.__change_points_count = 0
 
         # Building graph.
-        self.__knngraph = knngraph.KNNGraph(window, self.__metric, self.__k)
-        self.__knngraph.build()
+        self.__knn_graph = knngraph.KNNGraph(window, self.__metric, self.__k)
+        self.__knn_graph.build()
 
         # Examining each point.
         # Boundaries are always change points.
-        first_point = int(len(window) / 4)
+        first_point = int(len(window) * 0.25)
         last_point = int(len(window) * 0.75)
 
         for time in range(first_point, last_point):
             statistics = self.__calculate_statistics_in_point(time, len(window))
-            # print(time, statistics)
+
             if self.__check_change_point(statistics):
                 self.__change_points.append(time)
                 self.__change_points_count += 1
@@ -100,7 +100,7 @@ class KNNAlgorithm(Algorithm):
         :param time: index of point in the given sample to calculate statistics relative to it.
         :param window_size: size of sample to analyze.
         """
-        assert self.__knngraph is not None, "Graph should not be None."
+        assert self.__knn_graph is not None, "Graph should not be None."
 
         k = self.__k
         n = window_size
@@ -109,24 +109,26 @@ class KNNAlgorithm(Algorithm):
 
         if n <= k:
             # Unable to analyze sample due to its size.
+            # Returns negative number that will be less than statistics in this case,
+            # but small enough not to spoil visualization. 
             return -k
 
         h = 4 * (n_1 - 1) * (n_2 - 1) / ((n - 2) * (n - 3))
 
         sum_1 = (1 / n) * sum(
-            self.__knngraph.check_for_neighbourhood(i, j) * self.__knngraph.check_for_neighbourhood(j, i)
+            self.__knn_graph.check_for_neighbourhood(i, j) * self.__knn_graph.check_for_neighbourhood(j, i)
             for i in range(window_size)
             for j in range(window_size)
         )
 
         sum_2 = (1 / n) * sum(
-            self.__knngraph.check_for_neighbourhood(j, i) * self.__knngraph.check_for_neighbourhood(m, i)
+            self.__knn_graph.check_for_neighbourhood(j, i) * self.__knn_graph.check_for_neighbourhood(m, i)
             for i in range(window_size)
             for j in range(window_size)
             for m in range(window_size)
         )
 
-        expectation = 4 * k * n_1 * (n_2) / (n - 1)
+        expectation = 4 * k * n_1 * n_2 / (n - 1)
         variance = (expectation / k) * (h * (sum_1 + k - (2 * k**2 / (n - 1))) + (1 - h) * (sum_2 - k**2))
         deviation = sqrt(variance)
 
@@ -138,6 +140,8 @@ class KNNAlgorithm(Algorithm):
         if deviation == 0:
             # if deviation is zero, it likely means that time is 1. This implies that h is 0 and sum_2 = k**2.
             # In this case we can for sure say that there is no change-point.
+            # Expectation in this case is equal to 4 * k, and random variable less or equal to 2.
+            # Thus returning negative difference of them will be enough not to increase false positive.
             return -(random_variable_value - expectation)
 
         statistics = -(random_variable_value - expectation) / deviation
@@ -167,7 +171,7 @@ class KNNAlgorithm(Algorithm):
             return (pi <= t < pj) or (pj <= t < pi)
 
         s = sum(
-            (self.__knngraph.check_for_neighbourhood(i, j) + self.__knngraph.check_for_neighbourhood(j, i)) * b(i, j)
+            (self.__knn_graph.check_for_neighbourhood(i, j) + self.__knn_graph.check_for_neighbourhood(j, i)) * b(i, j)
             for i in range(window_size)
             for j in range(window_size)
         )

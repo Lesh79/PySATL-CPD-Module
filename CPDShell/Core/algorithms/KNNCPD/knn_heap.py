@@ -38,7 +38,7 @@ class NNHeap:
         """
         Builds a nearest neighbour heap relative to the main observation with the given neighbours.
 
-        :param neigbours: list of neighbours.
+        :param neighbours: list of neighbours.
         """
         for neighbour in neighbours:
             self.__add(neighbour)
@@ -64,10 +64,11 @@ class NNHeap:
         if observation is self._main_observation:
             return
 
+        # Sign conversion is needed to convert smallest element heap to greatest element heap.
         neg_distance = -self._metric(self._main_observation, observation)
         neighbour = Neighbour(neg_distance, observation)
 
-        if len(self._heap) == self._size and neighbour.distance >= self._heap[0].distance:
+        if len(self._heap) == self._size and neighbour.distance > self._heap[0].distance:
             heapq.heapreplace(self._heap, neighbour)
         elif len(self._heap) < self._size:
             heapq.heappush(self._heap, neighbour)
