@@ -27,6 +27,7 @@ class KNNAlgorithm(Algorithm):
         metric: tp.Callable[[float, float], float] | tp.Callable[[np.float64, np.float64], float],
         k=3,
         threshold: float = 0.5,
+        delta: float = 1e-12,
     ) -> None:
         """
         Initializes a new instance of KNN change point algorithm.
@@ -38,6 +39,7 @@ class KNNAlgorithm(Algorithm):
         self.__k = k
         self.__metric = metric
         self.__threshold = threshold
+        self.__delta = delta
 
         self.__change_points: list[int] = []
         self.__change_points_count = 0
@@ -78,7 +80,7 @@ class KNNAlgorithm(Algorithm):
         self.__change_points_count = 0
 
         # Building graph.
-        self.__knn_graph = knngraph.KNNGraph(window, self.__metric, self.__k)
+        self.__knn_graph = knngraph.KNNGraph(window, self.__metric, self.__k, self.__delta)
         self.__knn_graph.build()
 
         # Examining each point.

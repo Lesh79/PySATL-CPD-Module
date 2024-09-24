@@ -19,7 +19,11 @@ class NNHeap:
     """
 
     def __init__(
-        self, size: int, metric: tp.Callable[[Observation, Observation], float], main_observation: Observation
+        self,
+        size: int,
+        metric: tp.Callable[[Observation, Observation], float],
+        main_observation: Observation,
+        delta: float,
     ) -> None:
         """
         Initializes a new instance of NNHeap.
@@ -28,11 +32,12 @@ class NNHeap:
         :param metric: function for calculating distance between two observations.
         :param main_observation: the central point relative to which the nearest neighbours are sought.
         """
-        self._size = size
-        self._metric = metric
-        self._main_observation = main_observation
+        self.__size = size
+        self.__metric = metric
+        self.__main_observation = main_observation
 
-        self._heap: list[Neighbour] = []
+        self.__heap: list[Neighbour] = []
+        self.__delta = delta
 
     def build(self, neighbours: list[Observation]) -> None:
         """
@@ -51,9 +56,11 @@ class NNHeap:
         """
 
         def predicate(x: Neighbour) -> bool:
-            return isclose(x.observation.value, observation.value, rel_tol=1e-12)
+            return isclose(x.observation.value, observation.value, rel_tol=self.__delta) and (
+                x.observation.time == observation.time
+            )
 
-        return any(predicate(i) for i in self._heap)
+        return any(predicate(i) for i in self.__heap)
 
     def __add(self, observation: Observation) -> None:
         """
@@ -61,14 +68,14 @@ class NNHeap:
 
         :param observation: observation to add.
         """
-        if observation is self._main_observation:
+        if observation is self.__main_observation:
             return
 
         # Sign conversion is needed to convert smallest element heap to greatest element heap.
-        neg_distance = -self._metric(self._main_observation, observation)
+        neg_distance = -self.__metric(self.__main_observation, observation)
         neighbour = Neighbour(neg_distance, observation)
 
-        if len(self._heap) == self._size and neighbour.distance > self._heap[0].distance:
-            heapq.heapreplace(self._heap, neighbour)
-        elif len(self._heap) < self._size:
-            heapq.heappush(self._heap, neighbour)
+        if len(self.__heap) == self.__size and neighbour.distance > self.__heap[0].distance:
+            heapq.heapreplace(self.__heap, neighbour)
+        elif len(self.__heap) < self.__size:
+            heapq.heappush(self.__heap, neighbour)

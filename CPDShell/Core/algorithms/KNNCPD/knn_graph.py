@@ -26,6 +26,7 @@ class KNNGraph:
         window: Iterable[float | np.float64],
         metric: tp.Callable[[float, float], float] | tp.Callable[[np.float64, np.float64], float],
         k=3,
+        delta=1e-12,
     ) -> None:
         """
         Initializes a new instance of KNN graph.
@@ -39,6 +40,7 @@ class KNNGraph:
             obs1.value, obs2.value
         )
         self.__k = k
+        self.__delta = delta
 
         self.__window_size = len(window)
         self.__graph: deque[NNHeap] = deque(maxlen=self.__window_size)
@@ -48,7 +50,7 @@ class KNNGraph:
         Build KNN graph according to the given parameters.
         """
         for i in range(self.__window_size):
-            heap = NNHeap(self.__k, self.__metric, self.__window[-i - 1])
+            heap = NNHeap(self.__k, self.__metric, self.__window[-i - 1], self.__delta)
             heap.build(self.__window)
             self.__graph.appendleft(heap)
 
