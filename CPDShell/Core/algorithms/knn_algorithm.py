@@ -110,7 +110,7 @@ class KNNAlgorithm(Algorithm):
         if n <= k:
             # Unable to analyze sample due to its size.
             # Returns negative number that will be less than statistics in this case,
-            # but small enough not to spoil visualization. 
+            # but big enough not to spoil visualization.
             return -k
 
         h = 4 * (n_1 - 1) * (n_2 - 1) / ((n - 2) * (n - 3))
