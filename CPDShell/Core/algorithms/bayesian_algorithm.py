@@ -54,6 +54,9 @@ class BayesianAlgorithm(Algorithm):
         self.__change_points: list[int] = []
         self.__change_points_count = 0
 
+        self.run_lengths = np.array([])
+        self.gap_sizes = np.array([])
+
     def detect(self, window: Iterable[float | np.float64]) -> int:
         """Finds change points in window.
 
@@ -102,6 +105,9 @@ class BayesianAlgorithm(Algorithm):
         self.__likelihood.learn(sample[self.__time : self.__time + self._learning_steps])
         self.__shift_time(self._learning_steps - 1)
 
+        self.run_lengths[self.__time, :] = 0.0
+        self.gap_sizes[self.__time] = 0
+
     def __bayesian_stage(self, sample: list[float | np.float64]) -> None:
         """
         Performs a Bayesian statistics (run lengths distribution) evaluating stage.
@@ -119,6 +125,9 @@ class BayesianAlgorithm(Algorithm):
 
             self.__bayesian_update(observation)
 
+            self.run_lengths[self.__time, :] = self.__growth_probs
+            self.gap_sizes[self.__time] = int(self.__gap_size)
+
     def __process_change_point(self, sample_size: int, with_localization: bool) -> None:
         """
         Updating a change points data depending on working mode (with or without localization) based on run lengths
@@ -130,6 +139,7 @@ class BayesianAlgorithm(Algorithm):
         if with_localization:
             if self.__pred_probs_are_zero:
                 self.__change_points.append(self.__time)
+                self.__shift_time(1)
             else:
                 run_length = self.__localizer.localize(self.__growth_probs[: self.__gap_size])
                 assert 0 <= run_length <= sample_size
@@ -165,9 +175,9 @@ class BayesianAlgorithm(Algorithm):
 
         # Assuming that an abrupt change in all predictive probabilities to zero corresponds to a change point at this
         # moment.
-        if np.all(predictive_probs == 0.0):
-            self.__pred_probs_are_zero = True
-            return
+        # if np.all(predictive_probs == 0.0):
+        #    self.__pred_probs_are_zero = True
+        #    return
 
         # 4. Evaluate the hazard function for the gap.
         hazard_val = np.array(self.__hazard.hazard(np.array(range(self.__gap_size))))
@@ -185,11 +195,15 @@ class BayesianAlgorithm(Algorithm):
         self.__growth_probs[0] = changepoint_prob
 
         # 6. Evaluate evidence for growth probabilities renormalization.
-        evidence = np.sum(self.__growth_probs[0 : self.__gap_size + 2])
+        evidence = np.sum(self.__growth_probs[0 : self.__gap_size + 1])
 
         # 7. Renormalize growth probabilities.
+        if evidence <= 0.0:
+            self.__pred_probs_are_zero = True
+            return
+
         assert evidence > 0.0
-        self.__growth_probs[0 : self.__gap_size + 2] = self.__growth_probs[0 : self.__gap_size + 2] / evidence
+        self.__growth_probs[0 : self.__gap_size + 1] = self.__growth_probs[0 : self.__gap_size + 1] / evidence
 
         for growth_prob in self.__growth_probs:
             assert 0.0 <= growth_prob <= 1.0
@@ -217,6 +231,9 @@ class BayesianAlgorithm(Algorithm):
 
         self.__clear(sample_size)
 
+        self.gap_sizes = np.zeros(sample_size)
+        self.run_lengths = np.zeros((sample_size, sample_size))
+
     def __clear(self, sample_size: int) -> None:
         """
         A helper function clearing a state of the model after a change point occurs.
@@ -226,8 +243,12 @@ class BayesianAlgorithm(Algorithm):
         self.__likelihood.clear()
         self.__detector.clear()
 
-        new_size = sample_size - self.__time
-        self.__growth_probs = np.zeros(new_size)
+        # new_size = sample_size - self.__time
+        # self.__growth_probs = np.zeros(new_size)
 
-        if new_size > 0:
+        # if new_size > 0:
+        #    self.__growth_probs[0] = 1.0
+
+        self.__growth_probs = np.zeros(sample_size)
+        if sample_size > 0:
             self.__growth_probs[0] = 1.0
