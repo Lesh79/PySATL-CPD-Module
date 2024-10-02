@@ -77,7 +77,6 @@ class BayesianAlgorithm(Algorithm):
         Processes a window of data to detect/localize all change points depending on working mode.
         :param with_localization: boolean flag representing whether function needs to localize a change point.
         :param window: part of global data for change points analysis.
-        :return:
         """
         sample = list(window)
         sample_size = len(sample)
