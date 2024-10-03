@@ -8,7 +8,9 @@ from matplotlib.colors import LogNorm
 from CPDShell.Core.algorithms.bayesian_algorithm import BayesianAlgorithm
 from CPDShell.Core.algorithms.BayesianCPD.detectors.simple_detector import SimpleDetector
 from CPDShell.Core.algorithms.BayesianCPD.hazards.constant_hazard import ConstantHazard
-from CPDShell.Core.algorithms.BayesianCPD.likelihoods.gaussian_likelihood import GaussianLikelihood
+from CPDShell.Core.algorithms.BayesianCPD.likelihoods.gaussian_unknown_mean_and_variance import (
+    GaussianUnknownMeanAndVariance,
+)
 from CPDShell.Core.algorithms.BayesianCPD.localizers.simple_localizer import SimpleLocalizer
 from CPDShell.labeled_data import LabeledCPData
 from CPDShell.shell import CPDShell
@@ -89,7 +91,7 @@ def process_samples(distributions, start, end, experiment_base_dir, results_base
         print(distributions, sample_num)
         reader = LabeledCPData.read_generated_datasets(experiment_base_dir / f"{distributions}\\sample_{sample_num}")
 
-        gaussian_likelihood = GaussianLikelihood()
+        gaussian_likelihood = GaussianUnknownMeanAndVariance()
         constant_hazard = ConstantHazard(HAZARD_RATE)
         simple_detector = SimpleDetector(THRESHOLD)
         simple_localizer = SimpleLocalizer()
@@ -127,8 +129,8 @@ def process_samples(distributions, start, end, experiment_base_dir, results_base
 
 def process_datasets():
     # File paths to datasets and results directories.
-    experiment_base_dir = Path()
-    results_base_dir = Path()
+    experiment_base_dir = Path("D:\\Alexey\\PyCharmProjects\\PySATL-CPD-Module\\CPDShell\\experiment\\stage_1\\")
+    results_base_dir = Path("D:\\Alexey\\PyCharmProjects\\PySATL-CPD-Module\\CPDShell\\result\\stage_1\\")
 
     experiment_description = pd.read_csv(experiment_base_dir / "experiment_description.csv")
     names = experiment_description["name"].tolist()

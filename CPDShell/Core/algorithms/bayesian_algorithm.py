@@ -175,9 +175,9 @@ class BayesianAlgorithm(Algorithm):
 
         # Assuming that an abrupt change in all predictive probabilities to zero corresponds to a change point at this
         # moment.
-        # if np.all(predictive_probs == 0.0):
-        #    self.__pred_probs_are_zero = True
-        #    return
+        if np.count_nonzero(predictive_probs) == 0:
+            self.__pred_probs_are_zero = True
+            return
 
         # 4. Evaluate the hazard function for the gap.
         hazard_val = np.array(self.__hazard.hazard(np.array(range(self.__gap_size))))
@@ -198,15 +198,10 @@ class BayesianAlgorithm(Algorithm):
         evidence = np.sum(self.__growth_probs[0 : self.__gap_size + 1])
 
         # 7. Renormalize growth probabilities.
-        if evidence <= 0.0:
-            self.__pred_probs_are_zero = True
-            return
-
         assert evidence > 0.0
         self.__growth_probs[0 : self.__gap_size + 1] = self.__growth_probs[0 : self.__gap_size + 1] / evidence
 
-        for growth_prob in self.__growth_probs:
-            assert 0.0 <= growth_prob <= 1.0
+        assert np.all(np.logical_and(self.__growth_probs >= 0.0, self.__growth_probs <= 1.0))
 
         # 8. Update parameters of likelihood function for every possible run length (typically appends new values).
         self.__likelihood.update(observation)
