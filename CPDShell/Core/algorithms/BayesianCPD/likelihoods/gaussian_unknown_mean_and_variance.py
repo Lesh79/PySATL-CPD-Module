@@ -61,15 +61,19 @@ class GaussianUnknownMeanAndVariance(ILikelihood):
         Updates 4 parameters arrays of normal-inverse gamma conjugate prior, calculating posterior parameters.
         :param observation: an observation from a sample.
         """
-        new_mu_params = np.append(
-            [self.__mu_0], (self.__mu_params * self.__k_params + observation) / (self.__k_params + 1.0)
-        )
+        mu_divider = self.__k_params + 1.0
+        assert np.count_nonzero(mu_divider) == mu_divider.shape[0]
+
+        beta_divider = 2.0 * self.__k_params + 1.0
+        assert np.count_nonzero(beta_divider) == beta_divider.shape[0]
+
+        new_mu_params = np.append([self.__mu_0], (self.__mu_params * self.__k_params + observation) / mu_divider)
         new_k_params = np.append([self.__k_0], self.__k_params + 1.0)
         new_alpha_params = np.append([self.__alpha_0], self.__alpha_params + 0.5)
         new_beta_params = np.append(
             [self.__beta_0],
             self.__beta_params
-            + self.__k_params * (observation - self.__mu_params) ** 2 / (2.0 * self.__k_params + 1.0),
+            + self.__k_params * (observation - self.__mu_params) ** 2 / beta_divider,
         )
 
         self.__mu_params = new_mu_params
@@ -84,14 +88,21 @@ class GaussianUnknownMeanAndVariance(ILikelihood):
         :param observation: an observation from a sample.
         :return: predictive probabilities for a given observation.
         """
+
+        scales_divider = self.__alpha_params * self.__k_params
+        assert np.count_nonzero(scales_divider) == scales_divider.shape[0]
+
         degrees_of_freedom = 2.0 * self.__alpha_params
-        scales = (self.__beta_params * (self.__k_params + 1.0)) / (self.__alpha_params * self.__k_params)
-        return stats.t.pdf(
+        scales = (self.__beta_params * (self.__k_params + 1.0)) / scales_divider
+
+        predictive_probabilities = stats.t.pdf(
             x=observation,
             df=degrees_of_freedom,
             loc=self.__mu_params,
             scale=scales,
         )
+
+        return predictive_probabilities
 
     def clear(self) -> None:
         """
