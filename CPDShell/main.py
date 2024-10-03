@@ -37,13 +37,14 @@ def metric(obs1: float, obs2: float) -> float:
 
 
 K = 5
-THRESHOLD = 4.0
+KNN_THRESHOLD = 3.5
 
-knn_algorithm = KNNAlgorithm(metric, K, THRESHOLD)
+knn_algorithm = KNNAlgorithm(metric, K, KNN_THRESHOLD)
 knn_cpd = CPDShell(data, knn_algorithm)
 
-knn_cpd.scrubber.window_length = 32
+knn_cpd.scrubber.window_length = 16
 knn_cpd.scrubber.movement_k = 0.5
+knn_cpd.scenario.change_point_number = 4
 
 res_knn = knn_cpd.run_cpd()
 res_knn.visualize(True)
