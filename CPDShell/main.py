@@ -30,19 +30,19 @@ res_graph.visualize(True)
 print("Graph algorithm")
 print(res_graph)
 
-THRESHOLD = 0.1
+BAYESIAN_THRESHOLD = 0.1
 NUM_OF_SAMPLES = 1000
 SAMPLE_SIZE = 500
 BERNOULLI_PROB = 1.0 - 0.5 ** (1.0 / SAMPLE_SIZE)
 HAZARD_RATE = 1 / BERNOULLI_PROB
 LEARNING_SAMPLE_SIZE = 50
-DROP_THRESHOLD = 0.7
+BAYESIAN_DROP_THRESHOLD = 0.7
 
 constant_hazard = ConstantHazard(HAZARD_RATE)
 gaussian_likelihood = GaussianUnknownMeanAndVariance()
 
-simple_detector = SimpleDetector(THRESHOLD)
-drop_detector = DropDetector(DROP_THRESHOLD)
+simple_detector = SimpleDetector(BAYESIAN_THRESHOLD)
+drop_detector = DropDetector(BAYESIAN_DROP_THRESHOLD)
 
 simple_localizer = SimpleLocalizer()
 
