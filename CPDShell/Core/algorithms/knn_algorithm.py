@@ -135,8 +135,6 @@ class KNNAlgorithm(Algorithm):
         deviation = sqrt(variance)
 
         permutation: np.array = np.arange(window_size)
-        # np.random.shuffle(permutation) # It seems that random permutation spoils the result
-
         random_variable_value = self.__calculate_random_variable(permutation, time, window_size)
 
         if deviation == 0:
