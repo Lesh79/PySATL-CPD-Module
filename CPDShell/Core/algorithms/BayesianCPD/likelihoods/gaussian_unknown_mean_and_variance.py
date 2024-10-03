@@ -72,8 +72,7 @@ class GaussianUnknownMeanAndVariance(ILikelihood):
         new_alpha_params = np.append([self.__alpha_0], self.__alpha_params + 0.5)
         new_beta_params = np.append(
             [self.__beta_0],
-            self.__beta_params
-            + self.__k_params * (observation - self.__mu_params) ** 2 / beta_divider,
+            self.__beta_params + self.__k_params * (observation - self.__mu_params) ** 2 / beta_divider,
         )
 
         self.__mu_params = new_mu_params
