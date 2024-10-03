@@ -164,7 +164,7 @@ class BayesianAlgorithm(Algorithm):
 
         # Assuming that an abrupt change in all predictive probabilities to zero corresponds to a change point at this
         # moment.
-        if np.all(predictive_probs == 0.0):
+        if np.count_nonzero(predictive_probs) == 0:
             self.__pred_probs_are_zero = True
             return
 
@@ -190,8 +190,7 @@ class BayesianAlgorithm(Algorithm):
         assert evidence > 0.0
         self.__growth_probs[0 : self.__gap_size + 2] = self.__growth_probs[0 : self.__gap_size + 2] / evidence
 
-        for growth_prob in self.__growth_probs:
-            assert 0.0 <= growth_prob <= 1.0
+        assert np.all(np.logical_and(self.__growth_probs >= 0.0, self.__growth_probs <= 1.0))
 
         # 8. Update parameters of likelihood function for every possible run length (typically appends new values).
         self.__likelihood.update(observation)
