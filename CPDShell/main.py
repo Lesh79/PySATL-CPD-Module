@@ -4,7 +4,9 @@ from CPDShell.Core.algorithms.bayesian_algorithm import BayesianAlgorithm
 from CPDShell.Core.algorithms.BayesianCPD.detectors.drop_detector import DropDetector
 from CPDShell.Core.algorithms.BayesianCPD.detectors.simple_detector import SimpleDetector
 from CPDShell.Core.algorithms.BayesianCPD.hazards.constant_hazard import ConstantHazard
-from CPDShell.Core.algorithms.BayesianCPD.likelihoods.gaussian_likelihood import GaussianLikelihood
+from CPDShell.Core.algorithms.BayesianCPD.likelihoods.gaussian_unknown_mean_and_variance import (
+    GaussianUnknownMeanAndVariance,
+)
 from CPDShell.Core.algorithms.BayesianCPD.localizers.simple_localizer import SimpleLocalizer
 from CPDShell.Core.algorithms.knn_algorithm import KNNAlgorithm
 from CPDShell.generator.generator import ScipyDatasetGenerator
@@ -53,24 +55,27 @@ print(res_knn)
 
 
 # Bayesian algorithm demo
-HAZARD_RATE = 200
-LEARNING_WINDOW_SIZE = 30
-THRESHOLD = 0.5
-DROP_THRESHOLD = 0.7
+BAYESIAN_THRESHOLD = 0.1
+NUM_OF_SAMPLES = 1000
+SAMPLE_SIZE = 500
+BERNOULLI_PROB = 1.0 - 0.5 ** (1.0 / SAMPLE_SIZE)
+HAZARD_RATE = 1 / BERNOULLI_PROB
+LEARNING_SAMPLE_SIZE = 50
+BAYESIAN_DROP_THRESHOLD = 0.7
 
 constant_hazard = ConstantHazard(HAZARD_RATE)
-gaussian_likelihood = GaussianLikelihood()
+gaussian_likelihood = GaussianUnknownMeanAndVariance()
 
-simple_detector = SimpleDetector(THRESHOLD)
-drop_detector = DropDetector(DROP_THRESHOLD)
+simple_detector = SimpleDetector(BAYESIAN_THRESHOLD)
+drop_detector = DropDetector(BAYESIAN_DROP_THRESHOLD)
 
 simple_localizer = SimpleLocalizer()
 
 bayesian_algorithm = BayesianAlgorithm(
-    learning_steps=LEARNING_WINDOW_SIZE,
+    learning_steps=LEARNING_SAMPLE_SIZE,
     likelihood=gaussian_likelihood,
     hazard=constant_hazard,
-    detector=drop_detector,
+    detector=simple_detector,
     localizer=simple_localizer,
 )
 
