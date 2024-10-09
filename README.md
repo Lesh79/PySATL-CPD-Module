@@ -12,6 +12,7 @@ At the moment, the module implements the following CPD algorithms:
     * KLIEP
     * RuLSIF
 * Graph algorithm
+* k-NN based algorithm
 
 ---
 
