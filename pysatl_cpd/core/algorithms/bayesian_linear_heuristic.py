@@ -89,7 +89,7 @@ class BayesianLinearHeuristic(OnlineAlgorithm):
         :param observation: a new observation from a time series. Note: only univariate data is supported for now.
         :return: whether a change point was detected by a main algorithm.
         """
-        if observation is npt.NDArray[np.float64]:
+        if isinstance(observation, np.ndarray):
             raise TypeError("Multivariate observations are not supported")
         assert self.__main_algorithm is not None, "Main algorithm must be initialized"
 
@@ -111,7 +111,7 @@ class BayesianLinearHeuristic(OnlineAlgorithm):
         :param observation: a new observation from a time series. Note: only univariate data is supported for now.
         :return: a change point, if it was localized, None otherwise.
         """
-        if observation is npt.NDArray[np.float64]:
+        if isinstance(observation, np.ndarray):
             raise TypeError("Multivariate observations are not supported")
         assert self.__main_algorithm is not None, "Main algorithm must be initialized"
 

@@ -67,7 +67,7 @@ class RulsifAlgorithm(IDensityBasedAlgorithm):
             objective_function=self._loss_function,
         )
 
-        return np.count_nonzero(weights > self.threshold)
+        return int(np.count_nonzero(weights > self.threshold))
 
     def localize(self, window: npt.NDArray[np.float64]) -> list[int]:
         """Localize the change points in the given data window using RULSIF.

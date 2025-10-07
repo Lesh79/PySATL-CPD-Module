@@ -23,6 +23,7 @@ scipy = "^1.14.0"
 matplotlib = "^3.9.1"
 scikit-learn = "^1.5.2"
 PyQt5 = "^5.15.11"
+statsmodels = "^0.14.5"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"
@@ -60,6 +61,7 @@ ignore = ["PLR0913"]
 files = "pysatl_cpd"
 mypy_path = "pysatl_cpd"
 strict = true
+ignore_missing_imports = true
 
 
 [build-system]
