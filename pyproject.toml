@@ -1,67 +1,98 @@
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = [ "poetry-core" ]
+
 [tool.poetry]
 name = "pysatl_cpd"
 version = "0.1.0"
 description = "Batch module for changepoint detection"
 authors = [
-    "Temerlan Akhmetov <Temerlan.axmetov.75@mail.ru>",
-    "Alexey Tatyanenko <alexdtat@gmail.com>",
-    "Artemii Patov <patov.988@gmail.com>",
-    "Vladimir Kutuev <vladimir.kutuev@gmail.com>",
-    "Aleksei Ivanov <AXSoran47@yandex.ru>",
-    "Artem Romanyuk <wrdxwrdxwrdx@gmail.com>",
-    "Aleksandra Listkova <rsobaken@yandex.ru>",
+  "Temerlan Akhmetov <Temerlan.axmetov.75@mail.ru>",
+  "Alexey Tatyanenko <alexdtat@gmail.com>",
+  "Artemii Patov <patov.988@gmail.com>",
+  "Vladimir Kutuev <vladimir.kutuev@gmail.com>",
+  "Aleksei Ivanov <AXSoran47@yandex.ru>",
+  "Artem Romanyuk <wrdxwrdxwrdx@gmail.com>",
+  "Aleksandra Listkova <rsobaken@yandex.ru>",
 ]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/PySATL/pysatl-cpd"
 
-
 [tool.poetry.dependencies]
-python = "^3.10"
-numpy = "^2.0.0"
-scipy = "^1.14.0"
-matplotlib = "^3.9.1"
-scikit-learn = "^1.5.2"
-PyQt5 = "^5.15.11"
+python = ">=3.12"
+numpy = ">=2.0.0"
+scipy = ">=1.14.0"
+matplotlib = ">=3.9.1"
+scikit-learn = ">=1.5.2"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.2.2"
-mypy = "^1.10.1"
-ruff = "^0.12.0"
-pre-commit = "^4.1.0"
-pyyaml = "^6.0.1"
-matplotlib = "^3.9.1"
-ipykernel = "^6.29.5"
-hypothesis = "^6.122.1"
-scipy-stubs = "^1.15.2"
-types-pyyaml = "^6.0.12"
-microsoft-python-type-stubs = {git = "https://github.com/microsoft/python-type-stubs.git"}
-pytest-cov = "^6.0.0"
+pytest = ">=8.2.2"
+mypy = ">=1.10.1"
+ruff = ">=0.12.0"
+pre-commit = ">=4.1.0"
+hypothesis = ">=6.122.1"
+scipy-stubs = ">=1.15.2"
+pytest-cov = ">=6.0.0"
 
+[tool.poetry.group.docs.dependencies]
+jupyter = ">=1.1.1"
+sphinx = "^9.1.0"
+myst-nb = "^1.4.0"
+sphinxcontrib-napoleon = "^0.7"
+sphinx-autodoc-typehints = "^3.9.8"
+linkify-it-py = "^2.1.0"
 
 [tool.ruff]
+target-version = "py312"
 line-length = 120
-indent-width = 4
-respect-gitignore = true
-exclude = ["*.ipynb"]
 
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-docstring-code-format = true
-skip-magic-trailing-comma = false
-line-ending = "auto"
+format.line-ending = "lf"
 
-[tool.ruff.lint]
-select = ["A", "E", "F", "I", "PL", "RUF", "SIM", "UP", "W"]
-ignore = ["PLR0913"]
+lint.select = [ "B", "C4", "E", "F", "I", "ISC", "PIE", "SIM", "TID", "UP" ]
+lint.ignore = [ "B008", "E203" ]
+lint.per-file-ignores."**/__init__.py" = [ "F403" ]
+lint.fixable = [ "ALL" ]
+lint.unfixable = [  ]
+
+lint.isort.combine-as-imports = true
+lint.isort.force-single-line = false
+lint.isort.known-first-party = [ "pysatl_cpd" ]
+lint.isort.order-by-type = true
+
+[tool.pytest.ini_options]
+addopts = "-q --cov=pysatl_cpd --cov-report=term-missing"
+testpaths = [ "tests" ]
+
+[tool.coverage.run]
+source = [ "pysatl_cpd" ]
+branch = true
+parallel = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+  "pragma: no cover",
+  "if __name__ == .__main__.:",
+]
 
 [tool.mypy]
-files = "pysatl_cpd"
-mypy_path = "pysatl_cpd"
+files = [ "pysatl_cpd", "tests" ]
+python_version = "3.12"
 strict = true
+warn_unused_configs = true
+warn_return_any = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+no_implicit_optional = true
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = [ "pysatl_cpd" ]
 
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[[tool.mypy.overrides]]
+module = [ "tests.*" ]
+disallow_untyped_defs = false
+check_untyped_defs = true
+warn_return_any = false
+implicit_reexport = true
