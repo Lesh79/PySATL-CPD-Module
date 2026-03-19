@@ -7,8 +7,9 @@ expose it through the DataProvider interface.
 """
 
 from collections.abc import Iterator
+from typing import cast
 
-from pysatl_cpd._typing import MultivariateNumericArray, NumPyNumber, UnivariateNumericArray
+from pysatl_cpd._typing import MultivariateNumericArray, NumericArray, NumPyNumber, UnivariateNumericArray
 from pysatl_cpd.data_providers.idata_provider import DataProvider
 
 
@@ -29,10 +30,10 @@ class NDArrayUnivariateProvider(DataProvider[NumPyNumber]):
         univariate time series.
     """
 
-    def __init__(self, data: UnivariateNumericArray) -> None:
+    def __init__(self, data: NumericArray) -> None:
         if data.ndim != 1:
             raise ValueError(f"Expected 1-dimensional array, got {data.ndim} dimensions")
-        self.__data = data
+        self.__data = cast(UnivariateNumericArray, data)
 
     def __iter__(self) -> Iterator[NumPyNumber]:
         """
@@ -69,10 +70,10 @@ class NDArrayMultivariateProvider(DataProvider[UnivariateNumericArray]):
         with the first dimension representing observations.
     """
 
-    def __init__(self, data: MultivariateNumericArray) -> None:
+    def __init__(self, data: NumericArray) -> None:
         if data.ndim != 2:
             raise ValueError(f"Expected at least 2 dimensions, got {data.ndim}")
-        self.__data = data
+        self.__data = cast(MultivariateNumericArray, data)
 
     def __iter__(self) -> Iterator[UnivariateNumericArray]:
         """
