@@ -1,13 +1,70 @@
+default_language_version:
+  python: python3.12
+
+ci:
+  autofix_prs: true
+  autoupdate_schedule: monthly
+
+exclude: >
+  (?x)^(
+    \.git/
+    | \.idea/
+    | \.venv/
+    | venv/
+    | build/
+    | dist/
+    | .*\.egg-info/
+    | docs/_build/
+    | coverage\.xml
+    | \.gitignore$
+    | LICENSE$
+    | .*\.md$
+    | .*\.jpg$
+    | subprojects/.*
+  )$
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
+      - id: check-merge-conflict
+      - id: check-added-large-files
       - id: check-yaml
+      - id: check-toml
       - id: end-of-file-fixer
       - id: trailing-whitespace
+      - id: forbid-new-submodules
+      - id: mixed-line-ending
+        args: [ --fix=lf ]
+
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: 2.3.1
+    hooks:
+      - id: pyproject-fmt
+        files: ^pyproject\.toml$
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
+    hooks:
+      - id: codespell
+        exclude: '.*\.ipynb'
+        args: [ "-L", "crate,te,ba,ans,fo,nd" ]
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.0
+    rev: v0.6.9
     hooks:
       - id: ruff
-        args: [ --fix ]
+        args: ["--fix", "--unsafe-fixes"]
       - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.12.1
+    hooks:
+      - id: mypy
+        args: [ "--config-file=pyproject.toml" ]
+        additional_dependencies:
+          - numpy>=2
+          - scipy>=1.13
+          - pytest>=8
+          - scipy-stubs>=1.13
+          - types-setuptools>=75
