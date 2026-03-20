@@ -19,7 +19,7 @@ class NDArrayUnivariateProvider(DataProvider[NumPyNumber]):
 
     Parameters
     ----------
-    data : UnivariateNumericArray
+    data
         A one-dimensional array of univariate observations. The array must contain
         numeric values and have exactly one dimension.
 
@@ -58,7 +58,7 @@ class NDArrayMultivariateProvider(DataProvider[UnivariateNumericArray]):
 
     Parameters
     ----------
-    data : MultivariateNumericArray
+    data
         An array with ``ndim == 2``. The first axis indexes observations over time,
         while remaining axes represent multivariate components. For standard
         multivariate time series, a 2-D array with observations as rows is expected.
@@ -72,7 +72,7 @@ class NDArrayMultivariateProvider(DataProvider[UnivariateNumericArray]):
 
     def __init__(self, data: NumericArray) -> None:
         if data.ndim != 2:
-            raise ValueError(f"Expected at least 2 dimensions, got {data.ndim}")
+            raise ValueError(f"Expected 2 dimensions, got {data.ndim}")
         self.__data = cast(MultivariateNumericArray, data)
 
     def __iter__(self) -> Iterator[UnivariateNumericArray]:
