@@ -12,13 +12,12 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-         python-version: "3.11"
+         python-version: "3.12"
 
       - name: Install dependencies
         run: |
           pip install poetry
-          poetry add pyqt5-qt5==5.15.2
           poetry install
 
       - name: Run example
-        run: poetry run python example.py
+        run: poetry run python examples/online_detection_example.py

@@ -25,10 +25,11 @@ numpy = ">=2.0.0"
 scipy = ">=1.14.0"
 matplotlib = ">=3.9.1"
 scikit-learn = ">=1.5.2"
+plotly = "^6.6.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.2.2"
-mypy = ">=1.10.1"
+mypy = ">=1.18.1"
 ruff = ">=0.12.0"
 pre-commit = ">=4.1.0"
 hypothesis = ">=6.122.1"

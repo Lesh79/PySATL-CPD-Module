@@ -2,8 +2,9 @@
 Tests for Shewhart control chart algorithm.
 """
 
-import pytest
 import re
+
+import pytest
 
 from pysatl_cpd.online.shewhart_control_chart import (
     ShewhartControlChart,

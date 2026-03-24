@@ -65,6 +65,7 @@ repos:
         additional_dependencies:
           - numpy>=2
           - scipy>=1.13
-          - pytest>=8
+          - matplotlib>=3.9.1
           - scipy-stubs>=1.13
+          - pytest>=8
           - types-setuptools>=75
