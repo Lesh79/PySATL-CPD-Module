@@ -40,6 +40,10 @@ class OnlineCpdSolver[T, ConfugrationT: OnlineAlgorithmConfiguration, StateT: On
         If not ``None``, forces a change-point declaration once the run
         length exceeds this value. Must be positive if specified.
         Default is ``None``.
+    collect_states : bool, optional
+        Whether to collect algorithm state snapshots in step results.
+        If False, algorithm_state will be None in all step results.
+        Default is True.
 
     Raises
     ------
@@ -56,6 +60,7 @@ class OnlineCpdSolver[T, ConfugrationT: OnlineAlgorithmConfiguration, StateT: On
         threshold: float = float("nan"),
         skip_period: int = 0,
         max_runlength: int | None = None,
+        collect_states: bool = True,
     ) -> None:
         """
         Initialize the online change-point detection solver.
@@ -72,6 +77,8 @@ class OnlineCpdSolver[T, ConfugrationT: OnlineAlgorithmConfiguration, StateT: On
             Number of steps to skip after each declared change point.
         max_runlength : int or None, optional
             Maximum run length before forcing a change point.
+        collect_states : bool, optional
+            Whether to collect algorithm state snapshots.
         """
         # Validate skip_period is non-negative
         if skip_period < 0:
@@ -86,6 +93,7 @@ class OnlineCpdSolver[T, ConfugrationT: OnlineAlgorithmConfiguration, StateT: On
         self.__threshold = threshold
         self.__skip_period = skip_period
         self.__max_runlength = max_runlength
+        self.__collect_states = collect_states
 
         self.__in_skip_period = False
 
@@ -119,11 +127,15 @@ class OnlineCpdSolver[T, ConfugrationT: OnlineAlgorithmConfiguration, StateT: On
             if self.__in_skip_period:
                 if skip_period_counter < self.__skip_period:
                     skip_period_counter += 1
-                    yield OnlineDetectionStepResult(step_num=step, is_in_skip_period=True)
+                    yield OnlineDetectionStepResult(
+                        step_num=step,
+                        is_in_skip_period=True,
+                        algorithm_state=self.__algorithm.state if self.__collect_states else None,
+                    )
+                    continue
                 if skip_period_counter == self.__skip_period:
                     self.__in_skip_period = False
                     skip_period_counter = 0
-                continue
 
             # Process observation normally
             step_start_time: float = time.perf_counter()
@@ -136,6 +148,9 @@ class OnlineCpdSolver[T, ConfugrationT: OnlineAlgorithmConfiguration, StateT: On
             is_change_point: bool = self._is_change_point(detection_func, run_length)
             is_forced: bool = self._is_forced_changepoint(run_length)
 
+            # Get algorithm state if collecting
+            algorithm_state = self.__algorithm.state if self.__collect_states else None
+
             yield OnlineDetectionStepResult(
                 step_num=step,
                 is_in_skip_period=False,
@@ -143,7 +158,7 @@ class OnlineCpdSolver[T, ConfugrationT: OnlineAlgorithmConfiguration, StateT: On
                 is_force_change_point=is_forced,
                 detection_function=detection_func,
                 processing_time=step_finish_time - step_start_time,
-                algorithm_state=self.__algorithm.state,
+                algorithm_state=algorithm_state,
             )
 
             # Handle change point detection
