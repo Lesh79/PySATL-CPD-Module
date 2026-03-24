@@ -8,17 +8,14 @@ per-step results.
 
 import time
 from collections.abc import Iterator
-from typing import TypeVar
 
 from pysatl_cpd._typing import Number
 from pysatl_cpd.data_providers import DataProvider
-from pysatl_cpd.online.ionline_algorithm import OnlineAlgorithm
+from pysatl_cpd.online.ionline_algorithm import OnlineAlgorithm, OnlineAlgorithmConfiguration, OnlineAlgorithmState
 from pysatl_cpd.online.online_detection_trace import OnlineDetectionStepResult
 
-T = TypeVar("T")
 
-
-class OnlineCpdSolver[T]:
+class OnlineCpdSolver[T, ConfugrationT: OnlineAlgorithmConfiguration, StateT: OnlineAlgorithmState]:
     """
     Sequential executor for online change-point detection.
 
@@ -55,7 +52,7 @@ class OnlineCpdSolver[T]:
     def __init__(
         self,
         data_provider: DataProvider[T],
-        algorithm: OnlineAlgorithm[T],
+        algorithm: OnlineAlgorithm[T, ConfugrationT, StateT],
         threshold: float = float("nan"),
         skip_period: int = 0,
         max_runlength: int | None = None,
@@ -92,7 +89,7 @@ class OnlineCpdSolver[T]:
 
         self.__in_skip_period = False
 
-    def run(self) -> Iterator[OnlineDetectionStepResult]:
+    def run(self) -> Iterator[OnlineDetectionStepResult[StateT]]:
         """
         Execute the detection loop over all observations.
 

@@ -12,7 +12,7 @@ from pysatl_cpd.online.ionline_algorithm import (
 )
 
 
-class ConcreteAlgorithm(OnlineAlgorithm[float]):
+class ConcreteAlgorithm(OnlineAlgorithm[float, OnlineAlgorithmConfiguration, OnlineAlgorithmState]):
     """Concrete implementation of OnlineAlgorithm for testing."""
 
     def __init__(

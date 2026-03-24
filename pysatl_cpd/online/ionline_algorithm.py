@@ -7,11 +7,8 @@ solvers and concrete detector implementations.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TypeVar
 
 from pysatl_cpd._typing import Number
-
-T = TypeVar("T")
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -51,7 +48,7 @@ class OnlineAlgorithmConfiguration:
     learning_period_size: int = 0
 
 
-class OnlineAlgorithm[T](ABC):
+class OnlineAlgorithm[T, ConfigurationT: OnlineAlgorithmConfiguration, StateT: OnlineAlgorithmState](ABC):
     """
     Abstract base class for online change-point detection algorithms.
 
@@ -103,7 +100,7 @@ class OnlineAlgorithm[T](ABC):
 
     @property
     @abstractmethod
-    def configuration(self) -> OnlineAlgorithmConfiguration:
+    def configuration(self) -> ConfigurationT:
         """
         Configuration parameters of the algorithm.
 
@@ -115,7 +112,7 @@ class OnlineAlgorithm[T](ABC):
         raise NotImplementedError
 
     @property
-    def state(self) -> OnlineAlgorithmState | None:
+    def state(self) -> StateT | None:
         """
         Current internal state snapshot of the algorithm.
 
@@ -147,6 +144,7 @@ class OnlineAlgorithm[T](ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def reset(self) -> None:
         """
         Reset the algorithm to its initial state.

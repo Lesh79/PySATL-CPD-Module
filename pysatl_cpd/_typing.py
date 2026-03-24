@@ -9,11 +9,9 @@ __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
 
-from typing import Any
-
 import numpy as np
 
-type NumPyNumber = np.floating[Any] | np.integer[Any]
+type NumPyNumber = np.float64
 """Type alias for NumPy numeric types."""
 
 type Number = NumPyNumber | int | float
