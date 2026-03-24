@@ -24,7 +24,7 @@ class TestOnlineDetectionStepResult:
 
     def test_default_values(self) -> None:
         """Test default values for all fields."""
-        result = OnlineDetectionStepResult()
+        result = OnlineDetectionStepResult[OnlineAlgorithmState]()
 
         assert result.step_num == 0
         assert result.is_change_point is False
@@ -60,7 +60,7 @@ class TestOnlineDetectionTrace:
     """Test suite for OnlineDetectionTrace."""
 
     @pytest.fixture
-    def sample_steps(self) -> list[OnlineDetectionStepResult]:
+    def sample_steps(self) -> list[OnlineDetectionStepResult[MockAlgorithmState]]:
         """Create sample step results for testing."""
         state1 = MockAlgorithmState()
         state2 = MockAlgorithmState()
@@ -104,7 +104,9 @@ class TestOnlineDetectionTrace:
             ),
         ]
 
-    def test_from_online_detection_steps(self, sample_steps: list[OnlineDetectionStepResult]) -> None:
+    def test_from_online_detection_steps(
+        self, sample_steps: list[OnlineDetectionStepResult[MockAlgorithmState]]
+    ) -> None:
         """Test constructing OnlineDetectionTrace from step results."""
         trace = OnlineDetectionTrace.from_online_detection_steps(threshold=0.5, steps=sample_steps)
 
@@ -126,7 +128,7 @@ class TestOnlineDetectionTrace:
         assert trace.algorithm_states[3] is None
 
     def test_from_online_detection_steps_with_none_threshold(
-        self, sample_steps: list[OnlineDetectionStepResult]
+        self, sample_steps: list[OnlineDetectionStepResult[MockAlgorithmState]]
     ) -> None:
         """Test constructing trace with None threshold."""
         trace = OnlineDetectionTrace.from_online_detection_steps(threshold=None, steps=sample_steps)
@@ -136,7 +138,7 @@ class TestOnlineDetectionTrace:
 
     def test_from_online_detection_steps_empty(self) -> None:
         """Test constructing trace from empty step sequence."""
-        trace = OnlineDetectionTrace.from_online_detection_steps(threshold=0.5, steps=[])
+        trace = OnlineDetectionTrace[MockAlgorithmState].from_online_detection_steps(threshold=0.5, steps=[])
 
         assert trace.threshold == 0.5
         assert isinstance(trace.observation_scores, np.ndarray)
@@ -150,7 +152,7 @@ class TestOnlineDetectionTrace:
 
     def test_from_online_detection_steps_no_detections(self) -> None:
         """Test constructing trace with no changepoints."""
-        steps: list[OnlineDetectionStepResult] = [
+        steps: list[OnlineDetectionStepResult[MockAlgorithmState]] = [
             OnlineDetectionStepResult(
                 step_num=i,
                 is_change_point=False,
@@ -208,7 +210,7 @@ class TestOnlineDetectionTrace:
             UnivariateNumericArray, np.array([0.001, 0.002, 0.003], dtype=np.float64)
         )
 
-        trace = OnlineDetectionTrace(
+        trace = OnlineDetectionTrace[MockAlgorithmState](
             threshold=0.5,
             observation_scores=observation_scores,
             processing_time=processing_times,
@@ -222,7 +224,7 @@ class TestOnlineDetectionTrace:
 
     def test_multiple_detection_types(self) -> None:
         """Test trace with multiple detection types overlapping."""
-        steps: list[OnlineDetectionStepResult] = [
+        steps: list[OnlineDetectionStepResult[MockAlgorithmState]] = [
             OnlineDetectionStepResult(
                 step_num=i,
                 is_change_point=(i == 2),
@@ -244,7 +246,7 @@ class TestOnlineDetectionTrace:
 
     def test_ndarray_dtype_preservation(self) -> None:
         """Test that NumPy arrays preserve float64 dtype."""
-        steps: list[OnlineDetectionStepResult] = [
+        steps: list[OnlineDetectionStepResult[MockAlgorithmState]] = [
             OnlineDetectionStepResult(
                 step_num=i,
                 is_change_point=False,
@@ -271,7 +273,7 @@ class TestOnlineDetectionTrace:
             UnivariateNumericArray, np.array([0.001, 0.002], dtype=np.float64)
         )
 
-        trace1 = OnlineDetectionTrace(
+        trace1 = OnlineDetectionTrace[MockAlgorithmState](
             threshold=0.5,
             observation_scores=observation_scores,
             processing_time=processing_times,
@@ -279,7 +281,7 @@ class TestOnlineDetectionTrace:
             detected_changes=[1],
         )
 
-        trace2 = OnlineDetectionTrace(
+        trace2 = OnlineDetectionTrace[MockAlgorithmState](
             threshold=0.5,
             observation_scores=observation_scores,
             processing_time=processing_times,
@@ -302,7 +304,7 @@ class TestOnlineDetectionTrace:
             UnivariateNumericArray, np.array([0.001, 0.002], dtype=np.float64)
         )
 
-        trace1 = OnlineDetectionTrace(
+        trace1 = OnlineDetectionTrace[MockAlgorithmState](
             threshold=0.5,
             observation_scores=observation_scores,
             processing_time=processing_times,
@@ -310,7 +312,7 @@ class TestOnlineDetectionTrace:
             detected_changes=[1],
         )
 
-        trace2 = OnlineDetectionTrace(
+        trace2 = OnlineDetectionTrace[MockAlgorithmState](
             threshold=0.5,
             observation_scores=observation_scores,
             processing_time=processing_times,

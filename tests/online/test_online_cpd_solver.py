@@ -29,7 +29,7 @@ class MockDataProvider(DataProvider[T]):
         return iter(self._data)
 
 
-class MockOnlineAlgorithm(OnlineAlgorithm[T]):
+class MockOnlineAlgorithm(OnlineAlgorithm[T, OnlineAlgorithmConfiguration, OnlineAlgorithmState]):
     """Mock online algorithm for testing."""
 
     def __init__(

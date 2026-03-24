@@ -17,7 +17,7 @@ from pysatl_cpd.online.ionline_algorithm import OnlineAlgorithmState
 
 
 @dataclass(kw_only=True)
-class OnlineDetectionStepResult:
+class OnlineDetectionStepResult[StateT: OnlineAlgorithmState]:
     """
     Result of processing a single observation in online changepoint detection.
 
@@ -49,11 +49,11 @@ class OnlineDetectionStepResult:
     is_in_skip_period: bool = False
     detection_function: Number = float("nan")
     processing_time: Number = float("nan")
-    algorithm_state: OnlineAlgorithmState | None = None
+    algorithm_state: StateT | None = None
 
 
 @dataclass(kw_only=True)
-class OnlineDetectionTrace(DetectionTrace[Number]):
+class OnlineDetectionTrace[StateT: OnlineAlgorithmState](DetectionTrace[Number]):
     """
     Complete trace of online changepoint detection execution.
 
@@ -85,15 +85,15 @@ class OnlineDetectionTrace(DetectionTrace[Number]):
     threshold: Number | None = None
     processing_time: UnivariateNumericArray
     observation_scores: UnivariateNumericArray
-    algorithm_states: list[OnlineAlgorithmState | None]
+    algorithm_states: list[StateT | None]
     detected_changes: list[int]
     skipped_observation: list[int] = field(default_factory=list)
     forced_change_points: list[int] = field(default_factory=list)
 
     @classmethod
     def from_online_detection_steps(
-        cls, threshold: Number | None, steps: Sequence[OnlineDetectionStepResult]
-    ) -> "OnlineDetectionTrace":
+        cls, threshold: Number | None, steps: Sequence[OnlineDetectionStepResult[StateT]]
+    ) -> "OnlineDetectionTrace[StateT]":
         """
         Construct an OnlineDetectionTrace from a sequence of step results.
 

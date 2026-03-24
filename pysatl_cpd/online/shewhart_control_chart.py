@@ -102,7 +102,7 @@ class ShewhartControlChartConfiguration(OnlineAlgorithmConfiguration):
         return f"w = {self.window_size}"
 
 
-class ShewhartControlChart(OnlineAlgorithm[Number]):
+class ShewhartControlChart(OnlineAlgorithm[Number, ShewhartControlChartConfiguration, ShewhartControlChartState]):
     """
     Shewhart control chart with sliding-window statistic.
 
