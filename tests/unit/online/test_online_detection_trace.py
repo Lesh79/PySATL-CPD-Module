@@ -5,7 +5,6 @@ Tests for online detection trace containers.
 from typing import cast
 
 import numpy as np
-import pytest
 
 from pysatl_cpd._typing import UnivariateNumericArray
 from pysatl_cpd.online.ionline_algorithm import OnlineAlgorithmState
@@ -13,10 +12,7 @@ from pysatl_cpd.online.online_detection_trace import (
     OnlineDetectionStepResult,
     OnlineDetectionTrace,
 )
-
-
-class MockAlgorithmState(OnlineAlgorithmState):
-    """Mock algorithm state for testing."""
+from tests.mocks.online.algorithms import MockAlgorithmState
 
 
 class TestOnlineDetectionStepResult:
@@ -58,51 +54,6 @@ class TestOnlineDetectionStepResult:
 
 class TestOnlineDetectionTrace:
     """Test suite for OnlineDetectionTrace."""
-
-    @pytest.fixture
-    def sample_steps(self) -> list[OnlineDetectionStepResult[MockAlgorithmState]]:
-        """Create sample step results for testing."""
-        state1 = MockAlgorithmState()
-        state2 = MockAlgorithmState()
-
-        return [
-            OnlineDetectionStepResult(
-                step_num=0,
-                is_change_point=False,
-                is_force_change_point=False,
-                is_in_skip_period=False,
-                detection_function=0.1,
-                processing_time=0.001,
-                algorithm_state=state1,
-            ),
-            OnlineDetectionStepResult(
-                step_num=1,
-                is_change_point=True,
-                is_force_change_point=False,
-                is_in_skip_period=False,
-                detection_function=0.9,
-                processing_time=0.002,
-                algorithm_state=state2,
-            ),
-            OnlineDetectionStepResult(
-                step_num=2,
-                is_change_point=False,
-                is_force_change_point=False,
-                is_in_skip_period=True,
-                detection_function=0.0,
-                processing_time=0.0,
-                algorithm_state=None,
-            ),
-            OnlineDetectionStepResult(
-                step_num=3,
-                is_change_point=False,
-                is_force_change_point=True,
-                is_in_skip_period=False,
-                detection_function=1.2,
-                processing_time=0.003,
-                algorithm_state=None,
-            ),
-        ]
 
     def test_from_online_detection_steps(
         self, sample_steps: list[OnlineDetectionStepResult[MockAlgorithmState]]
@@ -221,6 +172,63 @@ class TestOnlineDetectionTrace:
         # Check inherited methods
         assert len(trace) == 2
         assert str(trace) == "DetectionTrace(changes=2, with scores)"
+
+    def test_len_method_with_no_changes(self) -> None:
+        """Test __len__ method returns number of detected changes."""
+        observation_scores: UnivariateNumericArray = cast(
+            UnivariateNumericArray, np.array([0.1, 0.2, 0.3], dtype=np.float64)
+        )
+        processing_times: UnivariateNumericArray = cast(
+            UnivariateNumericArray, np.array([0.001, 0.002, 0.003], dtype=np.float64)
+        )
+
+        trace = OnlineDetectionTrace[MockAlgorithmState](
+            threshold=0.5,
+            observation_scores=observation_scores,
+            processing_time=processing_times,
+            algorithm_states=[],
+            detected_changes=[],
+        )
+
+        assert len(trace) == 0
+
+    def test_len_method_with_single_change(self) -> None:
+        """Test __len__ method with single detected change."""
+        observation_scores: UnivariateNumericArray = cast(
+            UnivariateNumericArray, np.array([0.1, 0.2, 0.3], dtype=np.float64)
+        )
+        processing_times: UnivariateNumericArray = cast(
+            UnivariateNumericArray, np.array([0.001, 0.002, 0.003], dtype=np.float64)
+        )
+
+        trace = OnlineDetectionTrace[MockAlgorithmState](
+            threshold=0.5,
+            observation_scores=observation_scores,
+            processing_time=processing_times,
+            algorithm_states=[],
+            detected_changes=[2],
+        )
+
+        assert len(trace) == 1
+
+    def test_str_representation_format(self) -> None:
+        """Test __str__ method returns correct format."""
+        observation_scores: UnivariateNumericArray = cast(
+            UnivariateNumericArray, np.array([0.1, 0.2, 0.3], dtype=np.float64)
+        )
+        processing_times: UnivariateNumericArray = cast(
+            UnivariateNumericArray, np.array([0.001, 0.002, 0.003], dtype=np.float64)
+        )
+
+        trace = OnlineDetectionTrace[MockAlgorithmState](
+            threshold=0.5,
+            observation_scores=observation_scores,
+            processing_time=processing_times,
+            algorithm_states=[],
+            detected_changes=[1, 2, 3],
+        )
+
+        assert str(trace) == "DetectionTrace(changes=3, with scores)"
 
     def test_multiple_detection_types(self) -> None:
         """Test trace with multiple detection types overlapping."""
