@@ -9,15 +9,12 @@ __license__ = "SPDX-License-Identifier: MIT"
 
 from collections.abc import Collection, Iterator, Sequence
 from dataclasses import dataclass
-from typing import TypeVar
 
-from pysatl_cpd.data_providers import DataProvider
-
-T = TypeVar("T")
+from pysatl_cpd.core.data_providers import DataProvider
 
 
 @dataclass
-class LabeledData(DataProvider[T]):
+class LabeledData[T](DataProvider[T]):
     """
     Container for labeled time series data with known change point locations.
 

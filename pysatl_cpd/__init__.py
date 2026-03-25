@@ -1,7 +1,20 @@
 """
-Module for pysatl-cpd CPD algorithm's customization blocks.
+PySATL CPD - Change Point Detection Library
+
+A comprehensive library for change-point detection in time series data,
+supporting both online and offline algorithms with type safety and
+comprehensive testing.
 """
 
-__author__ = "Loikov Vladislav"
-__copyright__ = "Copyright (c) 2025 PySATL project"
-__license__ = "SPDX-License-Identifier: MIT"
+__version__ = "0.1.0"
+__author__ = "PySATL contributors"
+__license__ = "MIT"
+
+from pysatl_cpd.core import data_providers
+from pysatl_cpd.core.online import online_cpd_solver, online_detection_trace
+
+__all__ = [
+    "data_providers",
+    "online_cpd_solver",
+    "online_detection_trace",
+]

@@ -5,11 +5,11 @@ Example: Online Change-Point Detection with Shewhart Control Chart
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pysatl_cpd._typing import NumericArray
-from pysatl_cpd.data_providers import NDArrayUnivariateProvider
-from pysatl_cpd.online.online_cpd_solver import OnlineCpdSolver
-from pysatl_cpd.online.online_detection_trace import OnlineDetectionTrace
-from pysatl_cpd.online.shewhart_control_chart import ShewhartControlChart
+from pysatl_cpd.algorithms.online.shewhart_control_chart import ShewhartControlChart
+from pysatl_cpd.core.data_providers import NDArrayUnivariateProvider
+from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
+from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
+from pysatl_cpd.core.typedefs import NumericArray
 
 
 def generate_data_with_changes(n_points: int = 200) -> NumericArray:
@@ -70,11 +70,11 @@ def main() -> None:
     print(f"  Forced changes: {forced_changes}")
     print(f"  Skip period observations: {len(skip_periods)}")
 
-    trace = OnlineDetectionTrace.from_online_detection_steps(threshold=2.5, steps=results)
+    trace = OnlineDetectionTrace.from_run(threshold=2.5, data=data_provider, steps=results)
 
     print("\nTrace Summary:")
     print(f"  Number of change points: {len(trace.detected_changes)}")
-    print(f"  Max detection score: {trace.observation_scores.max():.3f}")
+    print(f"  Max detection score: {trace.detection_function.max():.3f}")
     print(f"  Avg processing time: {trace.processing_time.mean():.6f}s")
 
     # Plot results
