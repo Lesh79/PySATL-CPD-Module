@@ -1,9 +1,10 @@
+# -*- coding: ascii -*-
 """
 Module contains wrapper for labeled dataset.
 """
 
 __author__ = "Artem Romanyuk, Vladimir Kutuev, Mikhail Mikhailov"
-__copyright__ = "Copyright (c) 2025 PySATL project"
+__copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
 from collections.abc import Collection, Iterator, Sequence

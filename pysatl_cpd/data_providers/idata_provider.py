@@ -1,3 +1,4 @@
+# -*- coding: ascii -*-
 """
 Data Providers Module - Abstract Interface
 
@@ -7,11 +8,13 @@ implementations of this interface wrap various data sources (NumPy arrays,
 datasets, streams) and expose them as iterables.
 """
 
+__author__ = "Danil Totmyanin, Vladimir Kutuev, Mikhail Mikhailov"
+__copyright__ = "Copyright (c) 2026 PySATL project"
+__license__ = "SPDX-License-Identifier: MIT"
+
+
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
-from typing import TypeVar
-
-T = TypeVar("T")
 
 
 class DataProvider[T](ABC):

@@ -1,3 +1,4 @@
+# -*- coding: ascii -*-
 """
 Data Providers Module - NumPy Array Implementations
 
@@ -5,6 +6,10 @@ This module provides concrete data providers for univariate and multivariate
 time series stored as NumPy arrays. These providers wrap array data and
 expose it through the DataProvider interface.
 """
+
+__author__ = "Danil Totmyanin, Vladimir Kutuev, Mikhail Mikhailov"
+__copyright__ = "Copyright (c) 2026 PySATL project"
+__license__ = "SPDX-License-Identifier: MIT"
 
 from collections.abc import Iterator
 from typing import cast

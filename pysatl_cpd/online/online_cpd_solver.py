@@ -1,3 +1,4 @@
+# -*- coding: ascii -*-
 """
 Online change-point detection solver.
 
@@ -5,6 +6,10 @@ This module implements the core execution loop that feeds observations from a
 data provider into an online change-point detection algorithm and emits
 per-step results.
 """
+
+__author__ = "Alexey Tatyanenko, Vladimir Kutuev, Mikhail Mikhailov"
+__copyright__ = "Copyright (c) 2026 PySATL project"
+__license__ = "SPDX-License-Identifier: MIT"
 
 import time
 from collections.abc import Iterator
