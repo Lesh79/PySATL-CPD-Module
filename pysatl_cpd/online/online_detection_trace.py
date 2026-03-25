@@ -1,9 +1,14 @@
+# -*- coding: ascii -*-
 """
 Module contains online detection trace container for streaming changepoint detection.
 
 This module provides containers for storing step-by-step results and aggregated
 traces from online changepoint detection algorithms.
 """
+
+__author__ = "Vladimir Kutuev, Mikhail Mikhailov"
+__copyright__ = "Copyright (c) 2026 PySATL project"
+__license__ = "SPDX-License-Identifier: MIT"
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field

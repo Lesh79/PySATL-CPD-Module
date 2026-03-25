@@ -1,9 +1,15 @@
+# -*- coding: ascii -*-
 """
 Interface for online change-point detection algorithms.
 
 This module defines the abstract :class:`OnlineAlgorithm` protocol used by
 solvers and concrete detector implementations.
 """
+
+__author__ = "Alexey Tatyanenko, Vladimir Kutuev, Mikhail Mikhailov"
+__copyright__ = "Copyright (c) 2026 PySATL project"
+__license__ = "SPDX-License-Identifier: MIT"
+
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass

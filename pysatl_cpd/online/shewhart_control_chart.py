@@ -1,3 +1,4 @@
+# -*- coding: ascii -*-
 """
 Shewhart control chart algorithm for online change-point detection.
 
@@ -5,6 +6,11 @@ This module provides :class:`ShewhartControlChart`, an online detector that
 tracks running mean and variance, computing a standardized deviation of a
 sliding-window mean from the global running mean.
 """
+
+__author__ = "Andrei Isakov, Mikhail Mikhailov"
+__copyright__ = "Copyright (c) 2026 PySATL project"
+__license__ = "SPDX-License-Identifier: MIT"
+
 
 from collections import deque
 from dataclasses import dataclass, field

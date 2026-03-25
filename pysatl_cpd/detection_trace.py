@@ -1,3 +1,4 @@
+# -*- coding: ascii -*-
 """
 Module contains detection trace container for changepoint detection results.
 
@@ -5,11 +6,13 @@ This module provides a unified container for storing detection results from
 both online and offline changepoint detection algorithms.
 """
 
+__author__ = "Mikhail Mikhailov"
+__copyright__ = "Copyright (c) 2026 PySATL project"
+__license__ = "SPDX-License-Identifier: MIT"
+
+
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass
-from typing import TypeVar
-
-T = TypeVar("T")
 
 
 @dataclass(kw_only=True)

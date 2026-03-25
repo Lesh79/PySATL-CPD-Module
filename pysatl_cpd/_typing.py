@@ -1,3 +1,4 @@
+# -*- coding: ascii -*-
 """
 Core Type Definitions
 
