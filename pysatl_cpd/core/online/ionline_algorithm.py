@@ -109,7 +109,7 @@ class OnlineAlgorithmConfiguration:
     learning_period_size: int = 0
 
 
-class OnlineAlgorithm[T, ConfigurationT: OnlineAlgorithmConfiguration, StateT: OnlineAlgorithmState](ABC):
+class OnlineAlgorithm[DataT, ConfigurationT: OnlineAlgorithmConfiguration, StateT: OnlineAlgorithmState](ABC):
     """
     Abstract base class for online change-point detection algorithms.
 
@@ -119,7 +119,7 @@ class OnlineAlgorithm[T, ConfigurationT: OnlineAlgorithmConfiguration, StateT: O
 
     Parameters
     ----------
-    T : type
+    DataT : type
         Observation type accepted by the algorithm. For univariate data,
         this is typically a numeric scalar. For multivariate data, this is
         typically a one-dimensional array.
@@ -169,9 +169,9 @@ class OnlineAlgorithm[T, ConfigurationT: OnlineAlgorithmConfiguration, StateT: O
         raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
-    def process(self, observation: T) -> Number:
+    def process(self, observation: DataT) -> Number:
         """
-        Process a single observation and return change-point statistic.
+        Process a single observation and return detection function value.
 
         This method updates the algorithm's internal state with the new
         observation and computes the current change-point detection statistic.
@@ -205,7 +205,7 @@ class OnlineAlgorithm[T, ConfigurationT: OnlineAlgorithmConfiguration, StateT: O
     @abstractmethod
     def recreate(
         cls, configuration: ConfigurationT, state: StateT | None = None
-    ) -> "OnlineAlgorithm[T, ConfigurationT, StateT]":
+    ) -> "OnlineAlgorithm[DataT, ConfigurationT, StateT]":
         """
         Recreate an algorithm instance from configuration and optional state.
 
@@ -223,7 +223,7 @@ class OnlineAlgorithm[T, ConfigurationT: OnlineAlgorithmConfiguration, StateT: O
 
         Returns
         -------
-        OnlineAlgorithm[T, ConfigurationT, StateT]
+        OnlineAlgorithm[DataT, ConfigurationT, StateT]
             A new algorithm instance configured with the given parameters
             and optionally restored to the provided state.
         """

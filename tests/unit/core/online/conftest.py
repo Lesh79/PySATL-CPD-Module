@@ -38,8 +38,8 @@ def sample_steps() -> list[OnlineDetectionStepResult[MockAlgorithmState[Number]]
     return [
         OnlineDetectionStepResult(
             step_num=0,
-            is_change_point=False,
-            is_force_change_point=False,
+            is_signal_change_point=False,
+            is_forced_change_point=False,
             is_in_skip_period=False,
             detection_function=0.1,
             processing_time=0.001,
@@ -47,8 +47,8 @@ def sample_steps() -> list[OnlineDetectionStepResult[MockAlgorithmState[Number]]
         ),
         OnlineDetectionStepResult(
             step_num=1,
-            is_change_point=True,
-            is_force_change_point=False,
+            is_signal_change_point=True,
+            is_forced_change_point=False,
             is_in_skip_period=False,
             detection_function=0.9,
             processing_time=0.002,
@@ -56,8 +56,8 @@ def sample_steps() -> list[OnlineDetectionStepResult[MockAlgorithmState[Number]]
         ),
         OnlineDetectionStepResult(
             step_num=2,
-            is_change_point=False,
-            is_force_change_point=False,
+            is_signal_change_point=False,
+            is_forced_change_point=False,
             is_in_skip_period=True,
             detection_function=0.0,
             processing_time=0.0,
@@ -65,8 +65,8 @@ def sample_steps() -> list[OnlineDetectionStepResult[MockAlgorithmState[Number]]
         ),
         OnlineDetectionStepResult(
             step_num=3,
-            is_change_point=False,
-            is_force_change_point=True,
+            is_signal_change_point=False,
+            is_forced_change_point=True,
             is_in_skip_period=False,
             detection_function=1.2,
             processing_time=0.003,
