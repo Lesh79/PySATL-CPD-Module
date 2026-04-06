@@ -46,7 +46,6 @@ def main() -> None:
 
     # Create solver with threshold 2.5
     solver = OnlineCpdSolver(
-        data_provider=data_provider,
         algorithm=algorithm,
         threshold=2.5,
         skip_period=10,  # Skip 10 observations after detection
@@ -55,12 +54,12 @@ def main() -> None:
 
     # Run detection and collect results
     print("\nRunning online change-point detection...")
-    results = list(solver.run())
+    results = list(solver.run(data_provider))
 
     # Extract results
     detection_scores = [r.detection_function for r in results]
     change_points = [r.step_num for r in results if r.is_change_point]
-    forced_changes = [r.step_num for r in results if r.is_force_change_point]
+    forced_changes = [r.step_num for r in results if r.is_forced_change_point]
     skip_periods = [r.step_num for r in results if r.is_in_skip_period]
 
     # Print results
@@ -70,10 +69,10 @@ def main() -> None:
     print(f"  Forced changes: {forced_changes}")
     print(f"  Skip period observations: {len(skip_periods)}")
 
-    trace = OnlineDetectionTrace.from_run(threshold=2.5, data=data_provider, steps=results)
+    trace = OnlineDetectionTrace.from_run(threshold=2.5, steps=results)
 
     print("\nTrace Summary:")
-    print(f"  Number of change points: {len(trace.detected_changes)}")
+    print(f"  Number of change points: {len(trace.detected_change_points)}")
     print(f"  Max detection score: {trace.detection_function.max():.3f}")
     print(f"  Avg processing time: {trace.processing_time.mean():.6f}s")
 

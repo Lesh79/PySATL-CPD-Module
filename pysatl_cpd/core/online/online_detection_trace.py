@@ -10,16 +10,51 @@ __author__ = "Vladimir Kutuev, Mikhail Mikhailov"
 __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
+
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import cast
 
 import numpy as np
 
-from pysatl_cpd.core.data_providers import DataProvider
 from pysatl_cpd.core.detection_trace import DetectionTrace
 from pysatl_cpd.core.online.ionline_algorithm import OnlineAlgorithmState
 from pysatl_cpd.core.typedefs import Number, UnivariateNumericArray
+
+
+def extract_periods(in_periods: Sequence[bool | None]) -> list[tuple[int, int]]:
+    """
+    Extract continuous periods where condition is True.
+
+    Parameters
+    ----------
+    in_periods : Sequence[bool | None]
+        Sequence of boolean values indicating whether each position
+        is in a period. None values are ignored.
+
+    Returns
+    -------
+    list[tuple[int, int]]
+        List of (start, end) indices for each continuous period.
+    """
+    periods: list[tuple[int, int]] = []
+    i = 0
+    n = len(in_periods)
+
+    while i < n:
+        # Skip None values and False
+        if in_periods[i] is not True:
+            i += 1
+            continue
+
+        # Start of a period
+        start = i
+        while i < n and in_periods[i] is True:
+            i += 1
+        # End of period (i-1 is last index)
+        periods.append((start, i - 1))
+
+    return periods
 
 
 @dataclass(kw_only=True)
@@ -50,18 +85,20 @@ class OnlineDetectionStepResult[StateT: OnlineAlgorithmState]:
     """
 
     step_num: int = 0
-    is_change_point: bool = False
-    is_force_change_point: bool = False
+    is_forced_change_point: bool = False
+    is_signal_change_point: bool = False
     is_in_skip_period: bool = False
     detection_function: Number = float("nan")
     processing_time: Number = float("nan")
     algorithm_state: StateT | None = None
 
+    @property
+    def is_change_point(self) -> bool:
+        return self.is_forced_change_point or self.is_signal_change_point
+
 
 @dataclass(kw_only=True)
-class OnlineDetectionTrace[DataProviderT: DataProvider[Any], StateT: OnlineAlgorithmState](
-    DetectionTrace[DataProviderT]
-):
+class OnlineDetectionTrace[StateT: OnlineAlgorithmState](DetectionTrace):
     """
     Complete trace of online changepoint detection execution.
 
@@ -72,8 +109,8 @@ class OnlineDetectionTrace[DataProviderT: DataProvider[Any], StateT: OnlineAlgor
 
     Parameters
     ----------
-    data : DataProviderT
-        The data provider that was used for detection.
+    detected_change_points : list[int]
+        Indices where changepoints were detected.
     threshold : Number | None, optional
         Detection threshold used during the run. Default is None.
     processing_time : UnivariateNumericArray
@@ -82,32 +119,35 @@ class OnlineDetectionTrace[DataProviderT: DataProvider[Any], StateT: OnlineAlgor
         Detection function values for each observation as a 1-D NumPy array.
     algorithm_states : list[StateT | None]
         Algorithm state snapshots after processing each observation.
-    detected_changes : list[int]
-        Indices where changepoints were detected.
-    skipped_observation : list[int], optional
-        Indices where observations were skipped during post-detection periods.
-        Default is empty list.
+    skip_periods : list[tuple[int, int]], optional
+        Indices of beginning and ending of segments where observations were
+        skipped during post-detection periods. Default is empty list.
+    learning_periods : list[tuple[int, int]], optional
+        Indices of beginning and ending of segments where algorithm was
+        learning data distribution before change point. Default is empty list.
     forced_change_points : list[int], optional
         Indices where changepoints were forced due to maximum runlength.
         Default is empty list.
+    forced_change_points : list[int], optional
+        Indices where changepoints were forced due algorithm detection function
+        overcoming threshold. Default is empty list.
     """
 
-    data: DataProviderT
     threshold: Number | None = None
     processing_time: UnivariateNumericArray
     detection_function: UnivariateNumericArray
-    algorithm_states: list[StateT | None]
-    detected_changes: list[int]
-    skipped_observation: list[int] = field(default_factory=list)
     forced_change_points: list[int] = field(default_factory=list)
+    signal_change_points: list[int] = field(default_factory=list)
+    skip_periods: list[tuple[int, int]] = field(default_factory=list)
+    learning_periods: list[tuple[int, int]] = field(default_factory=list)
+    algorithm_states: list[StateT | None]
 
     @classmethod
     def from_run(
         cls,
-        data: DataProviderT,
         steps: Sequence[OnlineDetectionStepResult[StateT]],
         threshold: Number | None = None,
-    ) -> "OnlineDetectionTrace[DataProviderT, StateT]":
+    ) -> "OnlineDetectionTrace[StateT]":
         """
         Construct an OnlineDetectionTrace from a data provider and step results.
 
@@ -116,8 +156,6 @@ class OnlineDetectionTrace[DataProviderT: DataProvider[Any], StateT: OnlineAlgor
 
         Parameters
         ----------
-        data : DataProviderT
-            The data provider that was used for detection.
         steps : Sequence[OnlineDetectionStepResult]
             Sequence of step results from processing each observation.
         threshold : Number | None, optional
@@ -125,19 +163,18 @@ class OnlineDetectionTrace[DataProviderT: DataProvider[Any], StateT: OnlineAlgor
 
         Returns
         -------
-        OnlineDetectionTrace[DataProviderT, StateT]
+        OnlineDetectionTrace[StateT]
             Aggregated trace containing all detection results and metadata.
 
         Examples
         --------
         >>> from pysatl_cpd.core.data_providers import NDArrayUnivariateProvider
         >>> import numpy as np
-        >>> data = NDArrayUnivariateProvider(np.array([1.0, 2.0, 3.0]))
         >>> steps = [
         ...     OnlineDetectionStepResult(step_num=0, detection_function=0.1),
         ...     OnlineDetectionStepResult(step_num=1, detection_function=0.8, is_change_point=True)
         ... ]
-        >>> trace = OnlineDetectionTrace.from_run(data=data, steps=steps, threshold=0.5)
+        >>> trace = OnlineDetectionTrace.from_run(steps=steps, threshold=0.5)
         >>> trace.detected_changes
         [1]
         """
@@ -156,20 +193,23 @@ class OnlineDetectionTrace[DataProviderT: DataProvider[Any], StateT: OnlineAlgor
         )
 
         # Extract algorithm states preserving None values
-        algorithm_states: list[StateT | None] = [step.algorithm_state for step in steps]
+        states: list[StateT | None] = [step.algorithm_state for step in steps]
+        skip_periods = extract_periods([s.is_in_skip_period for s in steps])
+        learning_periods = extract_periods([s.is_in_learning_period if s is not None else None for s in states])
 
         # Identify indices of different detection types
         detected_indices: list[int] = [idx for idx in step_nums if steps[idx].is_change_point]
-        skipped_indices: list[int] = [idx for idx in step_nums if steps[idx].is_in_skip_period]
-        forced_indices: list[int] = [idx for idx in step_nums if steps[idx].is_force_change_point]
+        forced_indices: list[int] = [idx for idx in step_nums if steps[idx].is_forced_change_point]
+        signal_indices: list[int] = [idx for idx in step_nums if steps[idx].is_signal_change_point]
 
         return cls(
-            data=data,
-            detected_changes=detected_indices,
+            detected_change_points=detected_indices,
+            forced_change_points=forced_indices,
+            signal_change_points=signal_indices,
             threshold=threshold,
             detection_function=detection_function,
             processing_time=processing_times,
-            algorithm_states=algorithm_states,
-            skipped_observation=skipped_indices,
-            forced_change_points=forced_indices,
+            algorithm_states=states,
+            skip_periods=skip_periods,
+            learning_periods=learning_periods,
         )

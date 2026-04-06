@@ -165,3 +165,7 @@ cython_debug/
 /benchmarking/execution_logs
 /benchmarking/results
 /experiment_storages
+
+*.png
+*.jpg
+*.jpeg
