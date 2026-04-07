@@ -188,7 +188,7 @@ class BayesianOnline(OnlineAlgorithm):
         :param observation: new observation of a time series. Note: multivariate time series aren't supported for now.
         :return: whether a change point was detected after processing the new observation.
         """
-        if observation is npt.NDArray[np.float64]:
+        if isinstance(observation, np.ndarray):
             raise TypeError("Multivariate observations are not supported")
 
         self.__process_point(np.float64(observation), False)
@@ -203,7 +203,7 @@ class BayesianOnline(OnlineAlgorithm):
         :return: absolute location of a change point, acquired after processing the new observation,
         or None if there wasn't any.
         """
-        if observation is npt.NDArray[np.float64]:
+        if isinstance(observation, np.ndarray):
             raise TypeError("Multivariate observations are not supported")
 
         self.__process_point(np.float64(observation), True)
