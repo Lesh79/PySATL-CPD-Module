@@ -29,7 +29,9 @@ class MockMultivariateDataProvider(DataProvider[list[Number]]):
         All observations must have the same length.
     """
 
-    def __init__(self, data: Sequence[Sequence[Number]]) -> None:
+    def __init__(self, data: Sequence[Sequence[Number]], name: str | None = None) -> None:
+        super().__init__(name)
+
         if not data:
             self._data: list[list[Number]] = []
             self._dimensions = 0
@@ -95,10 +97,10 @@ class MockMultivariateConstantDataProvider(MockMultivariateDataProvider):
         Number of observations to yield.
     """
 
-    def __init__(self, value: list[Number], length: int) -> None:
+    def __init__(self, value: list[Number], length: int, name: str | None = None) -> None:
         self._value = value
         self._length = length
-        super().__init__([value] * length)
+        super().__init__([value] * length, name)
 
 
 class MockMultivariateZeroDataProvider(MockMultivariateConstantDataProvider):
@@ -115,9 +117,9 @@ class MockMultivariateZeroDataProvider(MockMultivariateConstantDataProvider):
         Number of observations to yield.
     """
 
-    def __init__(self, dimensions: int, length: int) -> None:
+    def __init__(self, dimensions: int, length: int, name: str | None = None) -> None:
         value = [0.0] * dimensions
-        super().__init__(value, length)
+        super().__init__(value, length, name)
 
 
 class MockMultivariateNaNDataProvider(MockMultivariateConstantDataProvider):
@@ -134,9 +136,9 @@ class MockMultivariateNaNDataProvider(MockMultivariateConstantDataProvider):
         Number of observations to yield.
     """
 
-    def __init__(self, dimensions: int, length: int) -> None:
+    def __init__(self, dimensions: int, length: int, name: str | None = None) -> None:
         value = [float("nan")] * dimensions
-        super().__init__(value, length)
+        super().__init__(value, length, name)
 
 
 class MockMultivariateInfDataProvider(MockMultivariateConstantDataProvider):
@@ -153,6 +155,6 @@ class MockMultivariateInfDataProvider(MockMultivariateConstantDataProvider):
         Number of observations to yield.
     """
 
-    def __init__(self, dimensions: int, length: int) -> None:
+    def __init__(self, dimensions: int, length: int, name: str | None = None) -> None:
         value = [float("inf")] * dimensions
-        super().__init__(value, length)
+        super().__init__(value, length, name)

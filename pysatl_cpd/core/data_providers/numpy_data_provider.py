@@ -49,7 +49,7 @@ class NDArrayUnivariateProvider(DataProvider[NumPyNumber]):
     [1.0, 2.0, 3.0, 4.0, 5.0]
     """
 
-    def __init__(self, data: NumericArray) -> None:
+    def __init__(self, data: NumericArray, name: str | None = None) -> None:
         """
         Initialize the univariate provider with a NumPy array.
 
@@ -63,6 +63,8 @@ class NDArrayUnivariateProvider(DataProvider[NumPyNumber]):
         ValueError
             If the array is not one-dimensional.
         """
+        super().__init__(name)
+
         if data.ndim != 1:
             raise ValueError(f"Expected 1-dimensional array, got {data.ndim} dimensions")
         self.__data = cast(UnivariateNumericArray, data)
@@ -122,7 +124,7 @@ class NDArrayMultivariateProvider(DataProvider[UnivariateNumericArray]):
     [array([1., 2.]), array([3., 4.]), array([5., 6.])]
     """
 
-    def __init__(self, data: NumericArray) -> None:
+    def __init__(self, data: NumericArray, name: str | None = None) -> None:
         """
         Initialize the multivariate provider with a NumPy array.
 
@@ -136,6 +138,8 @@ class NDArrayMultivariateProvider(DataProvider[UnivariateNumericArray]):
         ValueError
             If the array is not two-dimensional.
         """
+        super().__init__(name)
+
         if data.ndim != 2:
             raise ValueError(f"Expected 2 dimensions, got {data.ndim}")
         self.__data = cast(MultivariateNumericArray, data)

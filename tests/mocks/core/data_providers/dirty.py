@@ -40,7 +40,10 @@ class MockUnivariateDirtyDataProvider(DataProvider[Number]):
         source: DataProvider[Number],
         nan_indices: list[int] | None = None,
         inf_indices: list[int] | None = None,
+        name: str | None = None,
     ) -> None:
+        super().__init__(name)
+
         self._source = source
         self._nan_indices = set(nan_indices or [])
         self._inf_indices = set(inf_indices or [])
@@ -122,7 +125,10 @@ class MockMultivariateDirtyDataProvider(DataProvider[list[Number]]):
         source: DataProvider[list[Number]],
         nan_positions: list[tuple[int, int]] | None = None,
         inf_positions: list[tuple[int, int]] | None = None,
+        name: str | None = None,
     ) -> None:
+        super().__init__(name)
+
         self._source = source
         self._nan_positions = set(nan_positions or [])
         self._inf_positions = set(inf_positions or [])

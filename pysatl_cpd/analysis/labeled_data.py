@@ -8,12 +8,10 @@ __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
 from collections.abc import Collection, Iterator, Sequence
-from dataclasses import dataclass
 
 from pysatl_cpd.core.data_providers import DataProvider
 
 
-@dataclass
 class LabeledData[T](DataProvider[T]):
     """
     Container for labeled time series data with known change point locations.
@@ -51,36 +49,22 @@ class LabeledData[T](DataProvider[T]):
     6
     """
 
-    raw_data: Collection[T]
-    change_points: Sequence[int]
-    name: str | None = None
+    def __init__(self, raw_data: Collection[T], change_points: Sequence[int], name: str | None = None):
+        super().__init__(name)
 
-    def __post_init__(self) -> None:
-        """
-        Validate change point indices after initialization.
-
-        Verifies that all change point indices are positive and within
-        the bounds of the raw data. Change points must be >= 1 because
-        they represent the first observation index after a regime change,
-        and index 0 would imply a change before any data exists.
-
-        Raises
-        ------
-        ValueError
-            If any change point index is <= 0.
-        ValueError
-            If any change point index exceeds the length of raw_data.
-        """
         # Validate that change points are positive
-        if self.change_points and min(self.change_points) <= 0:
-            raise ValueError(f"Change point indices must be positive (>= 1). Found index: {min(self.change_points)}")
+        if change_points and min(change_points) <= 0:
+            raise ValueError(f"Change point indices must be positive (>= 1). Found index: {min(change_points)}")
 
         # Validate that change points are within data bounds
-        max_index = max(self.change_points) if self.change_points else 0
-        if max_index > len(self.raw_data):
+        max_index = max(change_points) if change_points else 0
+        if max_index > len(raw_data):
             raise ValueError(
-                f"Change point index exceeds data length. Max index: {max_index}, data length: {len(self.raw_data)}"
+                f"Change point index exceeds data length. Max index: {max_index}, data length: {len(raw_data)}"
             )
+
+        self.__raw_data = raw_data
+        self.__change_points = change_points
 
     def __iter__(self) -> Iterator[T]:
         """
@@ -91,7 +75,7 @@ class LabeledData[T](DataProvider[T]):
         Iterator[T]
             Iterator yielding each observation in sequence.
         """
-        return iter(self.raw_data)
+        return iter(self.__raw_data)
 
     def __len__(self) -> int:
         """
@@ -102,7 +86,7 @@ class LabeledData[T](DataProvider[T]):
         int
             Total number of observations.
         """
-        return len(self.raw_data)
+        return len(self.__raw_data)
 
     def __str__(self) -> str:
         """
@@ -113,6 +97,12 @@ class LabeledData[T](DataProvider[T]):
         str
             String representation with dataset name (if provided) and length.
         """
-        if self.name is not None:
-            return f"{self.name} (len = {len(self)})"
-        return f"Labeled Data (len = {len(self)})"
+        return f"{self.name} (len = {len(self)})"
+
+    @property
+    def raw_data(self) -> Collection[T]:
+        return self.__raw_data
+
+    @property
+    def change_points(self) -> Sequence[int]:
+        return self.__change_points

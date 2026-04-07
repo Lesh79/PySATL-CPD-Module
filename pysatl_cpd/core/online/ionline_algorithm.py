@@ -130,7 +130,6 @@ class OnlineAlgorithm[DataT, ConfigurationT: OnlineAlgorithmConfiguration, State
     """
 
     @property
-    @abstractmethod
     def name(self) -> str:
         """
         Human-readable name of the algorithm.
@@ -140,7 +139,7 @@ class OnlineAlgorithm[DataT, ConfigurationT: OnlineAlgorithmConfiguration, State
         str
             Algorithm identifier suitable for logging and display.
         """
-        raise NotImplementedError  # pragma: no cover
+        return type(self).__name__
 
     @property
     @abstractmethod

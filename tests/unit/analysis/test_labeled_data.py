@@ -34,7 +34,7 @@ class TestLabeledData:
 
         assert labeled.raw_data == sample_univariate_data
         assert labeled.change_points == [3, 6]
-        assert labeled.name is None
+        assert labeled.name == "LabeledData"
 
     def test_initialization_with_name(self, sample_univariate_data):
         """Test LabeledData initialization with optional name."""
@@ -93,7 +93,7 @@ class TestLabeledData:
         """Test string representation without name."""
         labeled = LabeledData(sample_univariate_data, change_points=[3])
 
-        assert str(labeled) == f"Labeled Data (len = {len(sample_univariate_data)})"
+        assert str(labeled) == f"LabeledData (len = {len(sample_univariate_data)})"
 
     def test_str_with_name(self, sample_univariate_data):
         """Test string representation with name."""
