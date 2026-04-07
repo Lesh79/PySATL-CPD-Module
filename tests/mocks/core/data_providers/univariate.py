@@ -28,7 +28,9 @@ class MockUnivariateDataProvider(DataProvider[Number]):
         Sequence of observations to yield.
     """
 
-    def __init__(self, data: Sequence[Number]) -> None:
+    def __init__(self, data: Sequence[Number], name: str | None = None) -> None:
+        super().__init__(name)
+
         self._data = list(data)
         self._call_count = 0
 
@@ -79,10 +81,10 @@ class MockUnivariateConstantDataProvider(MockUnivariateDataProvider):
         Number of observations to yield.
     """
 
-    def __init__(self, value: Number, length: int) -> None:
+    def __init__(self, value: Number, length: int, name: str | None = None) -> None:
         self._value = value
         self._length = length
-        super().__init__([value] * length)
+        super().__init__([value] * length, name)
 
 
 class MockUnivariateZeroDataProvider(MockUnivariateConstantDataProvider):
@@ -97,8 +99,8 @@ class MockUnivariateZeroDataProvider(MockUnivariateConstantDataProvider):
         Number of observations to yield.
     """
 
-    def __init__(self, length: int) -> None:
-        super().__init__(0.0, length)
+    def __init__(self, length: int, name: str | None = None) -> None:
+        super().__init__(0.0, length, name)
 
 
 class MockUnivariateNaNDataProvider(MockUnivariateConstantDataProvider):
@@ -113,8 +115,8 @@ class MockUnivariateNaNDataProvider(MockUnivariateConstantDataProvider):
         Number of observations to yield.
     """
 
-    def __init__(self, length: int) -> None:
-        super().__init__(float("nan"), length)
+    def __init__(self, length: int, name: str | None = None) -> None:
+        super().__init__(float("nan"), length, name)
 
 
 class MockUnivariateInfDataProvider(MockUnivariateConstantDataProvider):
@@ -129,5 +131,5 @@ class MockUnivariateInfDataProvider(MockUnivariateConstantDataProvider):
         Number of observations to yield.
     """
 
-    def __init__(self, length: int) -> None:
-        super().__init__(float("inf"), length)
+    def __init__(self, length: int, name: str | None = None) -> None:
+        super().__init__(float("inf"), length, name)

@@ -34,6 +34,9 @@ class DataProvider[T](ABC):
         For multivariate data, T is typically a one-dimensional array.
     """
 
+    def __init__(self, name: str | None) -> None:
+        self._name = name if name is not None else type(self).__name__
+
     @abstractmethod
     def __iter__(self) -> Iterator[T]:
         """
@@ -57,3 +60,8 @@ class DataProvider[T](ABC):
             Length of the provided data
         """
         raise NotImplementedError  # pragma: no cover
+
+    @property
+    def name(self) -> str:
+        """Return the name of the DataProvider"""
+        return self._name

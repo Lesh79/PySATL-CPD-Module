@@ -176,18 +176,6 @@ class ShewhartControlChart(OnlineAlgorithm[Number, ShewhartControlChartConfigura
         self._window_mean: Number = 0.0
 
     @property
-    def name(self) -> str:
-        """
-        Return the short algorithm name.
-
-        Returns
-        -------
-        str
-            Algorithm identifier: ``"ShewhartControlChart"``.
-        """
-        return "ShewhartControlChart"
-
-    @property
     def configuration(self) -> ShewhartControlChartConfiguration:
         """
         Return the algorithm configuration.

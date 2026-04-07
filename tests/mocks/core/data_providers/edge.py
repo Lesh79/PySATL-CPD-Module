@@ -17,7 +17,9 @@ from pysatl_cpd.core.data_providers import DataProvider
 class MockEmptyDataProvider[T](DataProvider[T]):
     """Mock data provider that yields no observations."""
 
-    def __init__(self) -> None:
+    def __init__(self, name: str | None = None) -> None:
+        super().__init__(name)
+
         self._call_count = 0
 
     def __iter__(self) -> Iterator[T]:
@@ -45,7 +47,9 @@ class MockEmptyDataProvider[T](DataProvider[T]):
 class MockSingleObservationProvider[T](DataProvider[T]):
     """Mock data provider with a single observation."""
 
-    def __init__(self, observation: T) -> None:
+    def __init__(self, observation: T, name: str | None = None) -> None:
+        super().__init__(name)
+
         self._observation = observation
         self._call_count = 0
 
