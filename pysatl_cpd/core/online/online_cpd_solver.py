@@ -86,8 +86,6 @@ class OnlineCpdSolver:
         self.__max_runlength = max_runlength
         self.__collect_states = collect_states
 
-        self.__in_skip_period = False
-
     def run[DataT, ConfugrationT: OnlineAlgorithmConfiguration, StateT: OnlineAlgorithmState](
         self,
         algorithm: OnlineAlgorithm[DataT, ConfugrationT, StateT],
@@ -126,11 +124,13 @@ class OnlineCpdSolver:
         """
         run_length: int = 0
         skip_period_counter: int = 0
+        in_skip_period: bool = False
+
         algorithm.reset()
 
         for step, observation in enumerate(data_provider):
             # Handle skip period where detections are suppressed
-            if self.__in_skip_period:
+            if in_skip_period:
                 if skip_period_counter < self.__skip_period:
                     skip_period_counter += 1
                     yield OnlineDetectionStepResult(
@@ -140,7 +140,7 @@ class OnlineCpdSolver:
                     )
                     continue
                 if skip_period_counter == self.__skip_period:
-                    self.__in_skip_period = False
+                    in_skip_period = False
                     skip_period_counter = 0
 
             # Process observation normally
@@ -171,7 +171,7 @@ class OnlineCpdSolver:
             # Handle change point detection
             if is_change_point:
                 algorithm.reset()
-                self.__in_skip_period = True
+                in_skip_period = True
                 run_length = 0
 
     def _is_signal_change_point(self, detection_func: Number, threshold: float) -> bool:
