@@ -46,15 +46,13 @@ def main() -> None:
 
     # Create solver with threshold 2.5
     solver = OnlineCpdSolver(
-        algorithm=algorithm,
-        threshold=2.5,
         skip_period=10,  # Skip 10 observations after detection
         collect_states=True,
     )
 
     # Run detection and collect results
     print("\nRunning online change-point detection...")
-    results = list(solver.run(data_provider))
+    results = list(solver.run(algorithm, data_provider, threshold=2.5))
 
     # Extract results
     detection_scores = [r.detection_function for r in results]
