@@ -32,18 +32,16 @@ class TestOnlineCpdSolverInitialization:
 
     def test_initialization_with_defaults(self) -> None:
         """Test initialization with default parameters."""
-        algorithm = MockOnlineAlgorithm[float]()
-        solver = OnlineCpdSolver(algorithm)
+        MockOnlineAlgorithm[float]()
+        solver = OnlineCpdSolver()
 
         assert solver is not None
 
     def test_initialization_with_custom_parameters(self) -> None:
         """Test initialization with custom parameters."""
-        algorithm = MockOnlineAlgorithm[float]()
+        MockOnlineAlgorithm[float]()
 
         solver = OnlineCpdSolver(
-            algorithm=algorithm,
-            threshold=0.5,
             skip_period=10,
             max_runlength=100,
             collect_states=False,
@@ -53,25 +51,22 @@ class TestOnlineCpdSolverInitialization:
 
     def test_raises_value_error_for_negative_skip_period(self) -> None:
         """Test ValueError raised when skip_period is negative."""
-        algorithm = MockOnlineAlgorithm[float]()
 
         with pytest.raises(ValueError, match="skip_period must be non-negative"):
-            OnlineCpdSolver(algorithm, skip_period=-1)
+            OnlineCpdSolver(skip_period=-1)
 
     def test_raises_value_error_for_non_positive_max_runlength(self) -> None:
         """Test ValueError raised when max_runlength is not positive."""
-        algorithm = MockOnlineAlgorithm[float]()
 
         with pytest.raises(ValueError, match="max_runlength must be positive"):
-            OnlineCpdSolver(algorithm, max_runlength=0)
+            OnlineCpdSolver(max_runlength=0)
 
         with pytest.raises(ValueError, match="max_runlength must be positive"):
-            OnlineCpdSolver(algorithm, max_runlength=-5)
+            OnlineCpdSolver(max_runlength=-5)
 
     def test_collect_states_default_true(self) -> None:
         """Test that collect_states defaults to True."""
-        algorithm = MockOnlineAlgorithm[float]()
-        solver = OnlineCpdSolver(algorithm)
+        solver = OnlineCpdSolver()
 
         assert solver is not None
 
@@ -87,8 +82,8 @@ class TestOnlineCpdSolverDetectionBehavior:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=0.6)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver()
+        results = list(solver.run(algorithm, data, threshold=0.6))
 
         assert len(results) == 10
         # Check that no change points were detected (either forced or signal)
@@ -105,8 +100,8 @@ class TestOnlineCpdSolverDetectionBehavior:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=0.5)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver()
+        results = list(solver.run(algorithm, data, threshold=0.5))
 
         assert len(results) == 10
         # Change point should be detected at step 4 (0-indexed)
@@ -123,8 +118,8 @@ class TestOnlineCpdSolverDetectionBehavior:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=0.5, skip_period=2)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver(skip_period=2)
+        results = list(solver.run(algorithm, data, threshold=0.5))
 
         assert len(results) == 10
         # Change point at step 2
@@ -147,8 +142,8 @@ class TestOnlineCpdSolverDetectionBehavior:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=0.5, max_runlength=3)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver(max_runlength=3)
+        results = list(solver.run(algorithm, data, threshold=0.5))
 
         assert len(results) == 6
         # Forced change point should occur at step 3 (run_length = 4)
@@ -163,8 +158,8 @@ class TestOnlineCpdSolverDetectionBehavior:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=float("nan"))
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver()
+        results = list(solver.run(algorithm, data, threshold=float("nan")))
 
         assert len(results) == 5
         # No change points should be detected despite high values
@@ -187,8 +182,8 @@ class TestOnlineCpdSolverDetectionBehavior:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=0.5)
-        list(solver.run(data))
+        solver = OnlineCpdSolver()
+        list(solver.run(algorithm, data, threshold=0.5))
 
         assert reset_called is True
 
@@ -201,8 +196,8 @@ class TestOnlineCpdSolverDetectionBehavior:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=0.5, skip_period=1)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver(skip_period=1)
+        results = list(solver.run(algorithm, data, threshold=0.5))
 
         assert len(results) == 3
         # Detection at step 1
@@ -220,8 +215,8 @@ class TestOnlineCpdSolverDetectionBehavior:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=0.5, skip_period=2)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver(skip_period=2)
+        results = list(solver.run(algorithm, data, threshold=0.5))
 
         assert len(results) == 6
         # Should detect at step 0
@@ -243,8 +238,8 @@ class TestOnlineCpdSolverDetectionBehavior:
             return_sequence=[1.0],
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=float("nan"))
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver()
+        results = list(solver.run(algorithm, data, threshold=float("nan")))
 
         assert len(results) == 10
 
@@ -266,8 +261,8 @@ class TestOnlineCpdSolverDetectionBehavior:
             return_sequence=[0.9],
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=0.5, skip_period=2)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver(skip_period=2)
+        results = list(solver.run(algorithm, data, threshold=0.5))
 
         assert len(results) == 10
 
@@ -305,8 +300,8 @@ class TestOnlineCpdSolverStateCollection:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, collect_states=True)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver(collect_states=True)
+        results = list(solver.run(algorithm, data))
 
         assert len(results) == 5
         for i, r in enumerate(results):
@@ -321,8 +316,8 @@ class TestOnlineCpdSolverStateCollection:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, collect_states=False)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver(collect_states=False)
+        results = list(solver.run(algorithm, data))
 
         assert all(r.algorithm_state is None for r in results)
 
@@ -335,8 +330,8 @@ class TestOnlineCpdSolverStateCollection:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=0.5, skip_period=1, collect_states=True)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver(skip_period=1, collect_states=True)
+        results = list(solver.run(algorithm, data, threshold=0.5))
 
         assert len(results) == 3
         # Step 0: detection, state captured
@@ -355,8 +350,8 @@ class TestOnlineCpdSolverStateCollection:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, collect_states=True)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver(collect_states=True)
+        results = list(solver.run(algorithm, data))
 
         assert all(r.algorithm_state is not None for r in results)
 
@@ -369,8 +364,8 @@ class TestOnlineCpdSolverStepResults:
         data = MockUnivariateDataProvider(basic_data)
         algorithm = MockOnlineAlgorithm[float]()
 
-        solver = OnlineCpdSolver(algorithm)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver()
+        results = list(solver.run(algorithm, data))
 
         assert [r.step_num for r in results] == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
@@ -379,8 +374,8 @@ class TestOnlineCpdSolverStepResults:
         data = MockUnivariateDataProvider(basic_data)
         algorithm = MockOnlineAlgorithm[float]()
 
-        solver = OnlineCpdSolver(algorithm)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver()
+        results = list(solver.run(algorithm, data))
 
         for r in results:
             assert r.processing_time >= 0
@@ -395,8 +390,8 @@ class TestOnlineCpdSolverStepResults:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=0.5, skip_period=2)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver(skip_period=2)
+        results = list(solver.run(algorithm, data, threshold=0.5))
 
         assert len(results) == 4
         assert results[0].is_in_skip_period is False
@@ -413,8 +408,8 @@ class TestOnlineCpdSolverStepResults:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=0.5, max_runlength=2)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver(max_runlength=2)
+        results = list(solver.run(algorithm, data, threshold=0.5))
 
         assert len(results) == 4
         assert results[0].is_forced_change_point is False
@@ -431,8 +426,8 @@ class TestOnlineCpdSolverEdgeCases:
         data = MockEmptyDataProvider[float]()
         algorithm = MockOnlineAlgorithm[float]()
 
-        solver = OnlineCpdSolver(algorithm)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver()
+        results = list(solver.run(algorithm, data))
 
         assert len(results) == 0
 
@@ -441,8 +436,8 @@ class TestOnlineCpdSolverEdgeCases:
         data = MockSingleObservationProvider(42.0)
         algorithm = MockOnlineAlgorithm[float]()
 
-        solver = OnlineCpdSolver(algorithm)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver()
+        results = list(solver.run(algorithm, data))
 
         assert len(results) == 1
         assert results[0].step_num == 0
@@ -456,8 +451,8 @@ class TestOnlineCpdSolverEdgeCases:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=0.5, skip_period=10)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver(skip_period=10)
+        results = list(solver.run(algorithm, data, threshold=0.5))
 
         assert len(results) == 5
         # Detection at step 0
@@ -476,8 +471,8 @@ class TestOnlineCpdSolverEdgeCases:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=0.5, skip_period=0)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver(skip_period=0)
+        results = list(solver.run(algorithm, data, threshold=0.5))
 
         assert len(results) == 3
         # All detections should be processed normally
@@ -495,8 +490,8 @@ class TestOnlineCpdSolverEdgeCases:
             learning_period_size=0,
         )
 
-        solver = OnlineCpdSolver(algorithm, threshold=0.5, max_runlength=1)
-        results = list(solver.run(data))
+        solver = OnlineCpdSolver(max_runlength=1)
+        results = list(solver.run(algorithm, data, threshold=0.5))
 
         assert len(results) == 3
         # With max_runlength=1:
@@ -514,9 +509,9 @@ class TestOnlineCpdSolverEdgeCases:
             error_to_raise=ValueError("Process failed"),
         )
 
-        solver = OnlineCpdSolver(algorithm)
+        solver = OnlineCpdSolver()
 
-        iterator = solver.run(data)
+        iterator = solver.run(algorithm, data)
         next(iterator)
 
         with pytest.raises(ValueError, match="Process failed"):
@@ -529,7 +524,7 @@ class TestOnlineCpdSolverEdgeCases:
 
         assert data.get_call_count() == 0
 
-        solver = OnlineCpdSolver(algorithm)
-        list(solver.run(data))
+        solver = OnlineCpdSolver()
+        list(solver.run(algorithm, data))
 
         assert data.get_call_count() == 1

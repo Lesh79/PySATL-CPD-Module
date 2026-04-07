@@ -20,7 +20,7 @@ from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionStepRes
 from pysatl_cpd.core.typedefs import Number
 
 
-class OnlineCpdSolver[DataT, ConfugrationT: OnlineAlgorithmConfiguration, StateT: OnlineAlgorithmState]:
+class OnlineCpdSolver:
     """
     Sequential executor for online change-point detection.
 
@@ -58,8 +58,6 @@ class OnlineCpdSolver[DataT, ConfugrationT: OnlineAlgorithmConfiguration, StateT
 
     def __init__(
         self,
-        algorithm: OnlineAlgorithm[DataT, ConfugrationT, StateT],
-        threshold: float = float("nan"),
         skip_period: int = 0,
         max_runlength: int | None = None,
         collect_states: bool = True,
@@ -69,10 +67,6 @@ class OnlineCpdSolver[DataT, ConfugrationT: OnlineAlgorithmConfiguration, StateT
 
         Parameters
         ----------
-        algorithm : OnlineAlgorithm[T]
-            The online change-point detection algorithm to apply.
-        threshold : float, optional
-            Detection threshold for the change-point function.
         skip_period : int, optional
             Number of steps to skip after each declared change point.
         max_runlength : int or None, optional
@@ -88,15 +82,18 @@ class OnlineCpdSolver[DataT, ConfugrationT: OnlineAlgorithmConfiguration, StateT
         if max_runlength is not None and max_runlength <= 0:
             raise ValueError(f"max_runlength must be positive if specified, got {max_runlength}")
 
-        self.__algorithm = algorithm
-        self.__threshold = threshold
         self.__skip_period = skip_period
         self.__max_runlength = max_runlength
         self.__collect_states = collect_states
 
         self.__in_skip_period = False
 
-    def run(self, data_provider: DataProvider[DataT]) -> Iterator[OnlineDetectionStepResult[StateT]]:
+    def run[DataT, ConfugrationT: OnlineAlgorithmConfiguration, StateT: OnlineAlgorithmState](
+        self,
+        algorithm: OnlineAlgorithm[DataT, ConfugrationT, StateT],
+        data_provider: DataProvider[DataT],
+        threshold: float = float("nan"),
+    ) -> Iterator[OnlineDetectionStepResult[StateT]]:
         """
         Execute the detection loop over all observations.
 
@@ -107,8 +104,12 @@ class OnlineCpdSolver[DataT, ConfugrationT: OnlineAlgorithmConfiguration, StateT
 
         Parameters
         ----------
+        algorithm : OnlineAlgorithm[T]
+            The online change-point detection algorithm to apply.
         data_provider : DataProvider[DataT]
             An iterable source of observations.
+        threshold : float, optional
+            Detection threshold for the change-point function.
 
         Yields
         ------
@@ -125,7 +126,7 @@ class OnlineCpdSolver[DataT, ConfugrationT: OnlineAlgorithmConfiguration, StateT
         """
         run_length: int = 0
         skip_period_counter: int = 0
-        self.__algorithm.reset()
+        algorithm.reset()
 
         for step, observation in enumerate(data_provider):
             # Handle skip period where detections are suppressed
@@ -144,18 +145,18 @@ class OnlineCpdSolver[DataT, ConfugrationT: OnlineAlgorithmConfiguration, StateT
 
             # Process observation normally
             step_start_time: float = time.perf_counter()
-            detection_func: Number = self.__algorithm.process(observation)
+            detection_func: Number = algorithm.process(observation)
             step_finish_time: float = time.perf_counter()
 
             run_length += 1
 
             # Determine if change point occurred
             is_forced: bool = self._is_forced_change_point(run_length)
-            is_signal: bool = self._is_signal_change_point(detection_func)
+            is_signal: bool = self._is_signal_change_point(detection_func, threshold)
             is_change_point: bool = is_forced | is_signal
 
             # Get algorithm state if collecting
-            algorithm_state = self.__algorithm.state if self.__collect_states else None
+            algorithm_state = algorithm.state if self.__collect_states else None
 
             yield OnlineDetectionStepResult(
                 step_num=step,
@@ -169,11 +170,11 @@ class OnlineCpdSolver[DataT, ConfugrationT: OnlineAlgorithmConfiguration, StateT
 
             # Handle change point detection
             if is_change_point:
-                self.__algorithm.reset()
+                algorithm.reset()
                 self.__in_skip_period = True
                 run_length = 0
 
-    def _is_signal_change_point(self, detection_func: Number) -> bool:
+    def _is_signal_change_point(self, detection_func: Number, threshold: float) -> bool:
         """
         Determine if detection statistic exceeds threshold.
 
@@ -181,13 +182,15 @@ class OnlineCpdSolver[DataT, ConfugrationT: OnlineAlgorithmConfiguration, StateT
         ----------
         detection_func : Number
             Current detection statistic value.
+        threshold : floatl
+            Detection threshold for the change-point function.
 
         Returns
         -------
         bool
             True if statistic exceeds threshold, False otherwise.
         """
-        return bool(detection_func > self.__threshold)
+        return bool(detection_func > threshold)
 
     def _is_forced_change_point(self, run_length: int) -> bool:
         """
@@ -204,25 +207,3 @@ class OnlineCpdSolver[DataT, ConfugrationT: OnlineAlgorithmConfiguration, StateT
             True if run length exceeds max_runlength, False otherwise.
         """
         return bool(self.__max_runlength is not None and run_length > self.__max_runlength)
-
-    def _is_change_point(self, detection_func: Number, run_length: int) -> bool:
-        """
-        Determine if a change point should be declared.
-
-        Combines both detection threshold exceedance and forced change point
-        conditions.
-
-        Parameters
-        ----------
-        detection_func : Number
-            Current detection statistic value.
-        run_length : int
-            Number of observations since last change point.
-
-        Returns
-        -------
-        bool
-            True if either detection threshold exceeded or forced change point
-            condition is met.
-        """
-        return self._is_signal_change_point(detection_func) or self._is_forced_change_point(run_length)
