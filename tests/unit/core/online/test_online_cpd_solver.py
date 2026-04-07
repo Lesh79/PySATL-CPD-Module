@@ -133,6 +133,42 @@ class TestOnlineCpdSolverDetectionBehavior:
         # After skip period, detection resumes
         assert results[5].is_in_skip_period is False
 
+    def test_run_does_not_carry_skip_period_between_runs(self, basic_data: list[float]) -> None:
+        """Test that skip period state does not leak between consecutive runs."""
+        solver = OnlineCpdSolver(skip_period=10)
+
+        # First run: detect immediately and finish while still in skip period
+        first_data = MockUnivariateDataProvider(basic_data[:2])
+        first_algorithm = MockOnlineAlgorithm[float](
+            return_sequence=[0.9, 0.1],
+            learning_period_size=0,
+        )
+
+        first_results = list(solver.run(first_algorithm, first_data, threshold=0.5))
+
+        assert len(first_results) == 2
+        assert first_results[0].is_signal_change_point is True
+        assert first_results[0].is_in_skip_period is False
+        assert first_results[1].is_in_skip_period is True
+
+        # Second run on the same solver must start from a clean state
+        second_data = MockUnivariateDataProvider(basic_data[:2])
+        second_algorithm = MockOnlineAlgorithm[float](
+            return_sequence=[0.9, 0.1],
+            learning_period_size=0,
+        )
+
+        second_results = list(solver.run(second_algorithm, second_data, threshold=0.5))
+
+        assert len(second_results) == 2
+
+        # Important: the new run must NOT start in skip period
+        assert second_results[0].is_in_skip_period is False
+        assert second_results[0].is_signal_change_point is True
+
+        # And only after this detection the skip period starts again
+        assert second_results[1].is_in_skip_period is True
+
     def test_run_with_forced_change_point(self, basic_data: list[float]) -> None:
         """Test run with forced change point due to max_runlength."""
         detection_values = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
