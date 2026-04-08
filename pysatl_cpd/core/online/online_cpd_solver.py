@@ -30,12 +30,6 @@ class OnlineCpdSolver:
 
     Parameters
     ----------
-    algorithm : OnlineAlgorithm[DataT, ConfugrationT, StateT]
-        The online change-point detection algorithm to apply.
-    threshold : float, optional
-        Detection threshold for the change-point function. A change point is
-        declared when the statistic exceeds this value.
-        If `nan`, the algorithm will not generate any signals. Default is ``nan``.
     skip_period : int, optional
         Number of steps to skip (suppress detections) after each declared
         change point. Must be non-negative. Default is ``0``.
@@ -62,18 +56,6 @@ class OnlineCpdSolver:
         max_runlength: int | None = None,
         collect_states: bool = True,
     ) -> None:
-        """
-        Initialize the online change-point detection solver.
-
-        Parameters
-        ----------
-        skip_period : int, optional
-            Number of steps to skip after each declared change point.
-        max_runlength : int or None, optional
-            Maximum run length before forcing a change point.
-        collect_states : bool, optional
-            Whether to collect algorithm state snapshots.
-        """
         # Validate skip_period is non-negative
         if skip_period < 0:
             raise ValueError(f"skip_period must be non-negative, got {skip_period}")
@@ -102,12 +84,15 @@ class OnlineCpdSolver:
 
         Parameters
         ----------
-        algorithm : OnlineAlgorithm[T]
+        algorithm : OnlineAlgorithm[DataT, ConfugrationT, StateT]
             The online change-point detection algorithm to apply.
         data_provider : DataProvider[DataT]
             An iterable source of observations.
         threshold : float, optional
-            Detection threshold for the change-point function.
+            Detection threshold for the change-point function. A change point
+            is declared when the statistic exceeds this value.
+            If ``nan``, the algorithm will not generate any signals.
+            Default is ``nan``.
 
         Yields
         ------
@@ -182,7 +167,7 @@ class OnlineCpdSolver:
         ----------
         detection_func : Number
             Current detection statistic value.
-        threshold : floatl
+        threshold : float
             Detection threshold for the change-point function.
 
         Returns

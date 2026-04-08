@@ -34,7 +34,6 @@ class DetectionTrace:
 
     Examples
     --------
-    >>> from pysatl_cpd.data_providers import NDArrayUnivariateProvider
     >>> trace = DetectionTrace(detected_change_points=[2, 4])
     >>> trace.detected_changes
     [2, 4]
