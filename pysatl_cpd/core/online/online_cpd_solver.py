@@ -68,9 +68,9 @@ class OnlineCpdSolver:
         self.__max_runlength = max_runlength
         self.__collect_states = collect_states
 
-    def run[DataT, ConfugrationT: OnlineAlgorithmConfiguration, StateT: OnlineAlgorithmState](
+    def run[DataT, ConfigurationT: OnlineAlgorithmConfiguration, StateT: OnlineAlgorithmState](
         self,
-        algorithm: OnlineAlgorithm[DataT, ConfugrationT, StateT],
+        algorithm: OnlineAlgorithm[DataT, ConfigurationT, StateT],
         data_provider: DataProvider[DataT],
         threshold: float = float("nan"),
     ) -> Iterator[OnlineDetectionStepResult[StateT]]:
