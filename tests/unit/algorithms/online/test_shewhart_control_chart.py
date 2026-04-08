@@ -9,6 +9,7 @@ __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
 
+import math
 import re
 
 import pytest
@@ -83,22 +84,18 @@ class TestShewhartControlChartState:
             is_in_learning_period=True,
             mean=5.0,
             variance=2.0,
-            standard_deviation=1.414,
             samples_count=100,
-            window_mean=4.5,
-            window_sum=45.0,
-            window_size=10,
             window_contents=[1.0, 2.0, 3.0],
         )
 
         assert state.is_in_learning_period is True
         assert state.mean == 5.0
         assert state.variance == 2.0
-        assert state.standard_deviation == 1.414
+        assert math.isclose(state.standard_deviation, math.sqrt(2))
         assert state.samples_count == 100
-        assert state.window_mean == 4.5
-        assert state.window_sum == 45.0
-        assert state.window_size == 10
+        assert state.window_mean == 2.0
+        assert state.window_sum == 6.0
+        assert state.window_size == 3
         assert state.window_contents == [1.0, 2.0, 3.0]
 
     def test_state_immutability(self) -> None:
@@ -295,13 +292,10 @@ class TestShewhartControlChart:
         assert recreated.state.window_sum == state.window_sum
         assert recreated.state.window_contents == state.window_contents
 
-    def test_recreate_with_state_validates_window_size(self) -> None:
+    def test_recreate_with_state_validates_window_size_condition(self) -> None:
         """Test recreate validates window size consistency."""
         config = ShewhartControlChartConfiguration(learning_period_size=50, window_size=10)
-        state = ShewhartControlChartState(
-            window_size=20,  # Different from config
-            window_contents=[1.0, 2.0],
-        )
+        state = ShewhartControlChartState(window_contents=[1.0, 2.0])
 
         with pytest.raises(ValueError, match="State window_size.*does not match configuration window_size"):
             ShewhartControlChart.recreate(config, state)
