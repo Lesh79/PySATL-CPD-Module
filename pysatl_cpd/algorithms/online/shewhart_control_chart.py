@@ -57,12 +57,24 @@ class ShewhartControlChartState(OnlineAlgorithmState):
 
     mean: Number = 0.0
     variance: Number = 0.0
-    standard_deviation: Number = 0.0  # TODO: make property
     samples_count: int = 0
-    window_mean: Number = 0.0  # TODO: make property
-    window_sum: Number = 0.0  # TODO: make property
-    window_size: int = 0  # TODO: make property
     window_contents: list[Number] = field(default_factory=list)
+
+    @property
+    def standard_deviation(self) -> Number:
+        return np.sqrt(self.variance, dtype=np.float64)  # type: ignore
+
+    @property
+    def window_sum(self) -> Number:
+        return sum(self.window_contents)
+
+    @property
+    def window_size(self) -> int:
+        return len(self.window_contents)
+
+    @property
+    def window_mean(self) -> Number:
+        return self.window_sum / self.window_size if self.window_size > 0 else 0.0
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -201,11 +213,7 @@ class ShewhartControlChart(OnlineAlgorithm[Number, ShewhartControlChartConfigura
             is_in_learning_period=self._samples_count <= self._configuration.learning_period_size,
             mean=self._mean,
             variance=self._variance,
-            standard_deviation=self._standard_deviation,
             samples_count=self._samples_count,
-            window_mean=self._window_mean,
-            window_sum=self._window_sum,
-            window_size=self._configuration.window_size,
             window_contents=list(self._window),
         )
 
@@ -337,7 +345,7 @@ class ShewhartControlChart(OnlineAlgorithm[Number, ShewhartControlChartConfigura
 
         if state is not None:
             # Validate window sizes match
-            if state.window_size != configuration.window_size:
+            if state.window_size < configuration.window_size and state.window_size != state.samples_count:
                 raise ValueError(
                     f"State window_size ({state.window_size}) does not match "
                     f"configuration window_size ({configuration.window_size})"
@@ -351,8 +359,5 @@ class ShewhartControlChart(OnlineAlgorithm[Number, ShewhartControlChartConfigura
             algorithm._window = deque(state.window_contents, maxlen=configuration.window_size)
             algorithm._window_sum = state.window_sum
             algorithm._window_mean = state.window_mean
-            # Recalculate previous_mean for variance update
-            if algorithm._samples_count > 0:
-                algorithm._previous_mean = algorithm._mean - (algorithm._mean - algorithm._previous_mean)
 
         return algorithm
