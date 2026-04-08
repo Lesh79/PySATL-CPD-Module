@@ -31,6 +31,9 @@ class NDArrayUnivariateProvider(DataProvider[NumPyNumber]):
     data : NumericArray
         A one-dimensional array of univariate observations. The array must contain
         numeric values and have exactly one dimension.
+    name : str or None, optional
+        Optional human-readable identifier for the data provider.
+        If None, defaults to the class name. Default is None.
 
     Raises
     ------
@@ -106,6 +109,9 @@ class NDArrayMultivariateProvider(DataProvider[UnivariateNumericArray]):
     data : NumericArray
         An array with ``ndim == 2``. The first axis indexes observations over time,
         while the second axis represents multivariate components.
+    name : str or None, optional
+        Optional human-readable identifier for the data provider.
+        If None, defaults to the class name. Default is None.
 
     Raises
     ------

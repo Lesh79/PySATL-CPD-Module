@@ -70,17 +70,18 @@ class OnlineDetectionStepResult[StateT: OnlineAlgorithmState]:
     ----------
     step_num : int, default=0
         Zero-based index of the processed observation.
-    is_change_point : bool, default=False
-        Whether a changepoint was detected at this step.
-    is_force_change_point : bool, default=False
+    is_forced_change_point : bool, default=False
         Whether a changepoint was forced due to maximum runlength constraint.
+    is_signal_change_point : bool, default=False
+        Whether a changepoint was detected by the algorithm's detection
+        function exceeding the threshold.
     is_in_skip_period : bool, default=False
         Whether this step occurred during a post-detection skip period.
     detection_function : Number, default=nan
         The value of the detection statistic computed for this observation.
     processing_time : Number, default=nan
         Wall-clock time in seconds spent processing this step.
-    algorithm_state : StateT | None, default=None
+    algorithm_state : StateT or None, default=None
         Snapshot of algorithm internal state after processing this step.
     """
 
@@ -94,6 +95,18 @@ class OnlineDetectionStepResult[StateT: OnlineAlgorithmState]:
 
     @property
     def is_change_point(self) -> bool:
+        """
+        Whether a changepoint was detected at this step.
+
+        A changepoint is considered detected if it was either forced
+        (due to maximum runlength) or signaled (detection function
+        exceeded threshold).
+
+        Returns
+        -------
+        bool
+            True if a forced or signal changepoint occurred, False otherwise.
+        """
         return self.is_forced_change_point or self.is_signal_change_point
 
 
@@ -126,11 +139,11 @@ class OnlineDetectionTrace[StateT: OnlineAlgorithmState](DetectionTrace):
         Indices of beginning and ending of segments where algorithm was
         learning data distribution before change point. Default is empty list.
     forced_change_points : list[int], optional
-        Indices where changepoints were forced due to maximum runlength.
-        Default is empty list.
-    forced_change_points : list[int], optional
-        Indices where changepoints were forced due algorithm detection function
-        overcoming threshold. Default is empty list.
+        Indices where changepoints were forced due to maximum runlength
+        constraint. Default is empty list.
+    signal_change_points : list[int], optional
+        Indices where changepoints were detected due to the algorithm's
+        detection function exceeding the threshold. Default is empty list.
     """
 
     threshold: Number | None = None

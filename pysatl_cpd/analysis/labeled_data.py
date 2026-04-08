@@ -101,8 +101,27 @@ class LabeledData[T](DataProvider[T]):
 
     @property
     def raw_data(self) -> Collection[T]:
+        """
+        Return the raw observation data.
+
+        Returns
+        -------
+        Collection[T]
+            The sequential observations forming the time series.
+        """
         return self.__raw_data
 
     @property
     def change_points(self) -> Sequence[int]:
+        """
+        Return the known change point indices.
+
+        Each index indicates the first observation after a regime change,
+        i.e., a change occurs between observations at index ``i-1`` and ``i``.
+
+        Returns
+        -------
+        Sequence[int]
+            Indices of change points in the data.
+        """
         return self.__change_points

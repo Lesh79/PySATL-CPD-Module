@@ -32,6 +32,9 @@ class DataProvider[T](ABC):
         The type of a single observation yielded by the provider.
         For univariate data, T is typically a scalar numeric type.
         For multivariate data, T is typically a one-dimensional array.
+    name : str or None, optional
+        Optional human-readable identifier for the data provider.
+        If None, defaults to the class name. Default is None.
     """
 
     def __init__(self, name: str | None) -> None:
@@ -63,5 +66,14 @@ class DataProvider[T](ABC):
 
     @property
     def name(self) -> str:
-        """Return the name of the DataProvider"""
+        """
+        Return the name of the data provider.
+
+        If no name was provided at initialization, returns the class name.
+
+        Returns
+        -------
+        str
+            Human-readable identifier for this data provider.
+        """
         return self._name
