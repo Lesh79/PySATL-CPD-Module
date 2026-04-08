@@ -191,8 +191,6 @@ class OnlineDetectionTrace[StateT: OnlineAlgorithmState](DetectionTrace):
         >>> trace.detected_changes
         [1]
         """
-        step_nums: range = range(len(steps))
-
         # Extract detection function values into a float64 array
         detection_function: UnivariateNumericArray = cast(
             UnivariateNumericArray,
@@ -211,9 +209,9 @@ class OnlineDetectionTrace[StateT: OnlineAlgorithmState](DetectionTrace):
         learning_periods = extract_periods([s.is_in_learning_period if s is not None else None for s in states])
 
         # Identify indices of different detection types
-        detected_indices: list[int] = [idx for idx in step_nums if steps[idx].is_change_point]
-        forced_indices: list[int] = [idx for idx in step_nums if steps[idx].is_forced_change_point]
-        signal_indices: list[int] = [idx for idx in step_nums if steps[idx].is_signal_change_point]
+        detected_indices: list[int] = [step.step_num for step in steps if step.is_change_point]
+        forced_indices: list[int] = [step.step_num for step in steps if step.is_forced_change_point]
+        signal_indices: list[int] = [step.step_num for step in steps if step.is_signal_change_point]
 
         return cls(
             detected_change_points=detected_indices,
