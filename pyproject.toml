@@ -69,6 +69,7 @@ testpaths = [ "tests" ]
 source = [ "pysatl_cpd" ]
 branch = true
 parallel = true
+omit = [ "pysatl_cpd/analysis/visualisation/*" ]
 
 [tool.coverage.report]
 show_missing = true
@@ -98,3 +99,7 @@ disallow_untyped_defs = false
 check_untyped_defs = true
 warn_return_any = false
 implicit_reexport = true
+
+[[tool.mypy.overrides]]
+module = [ "plotly.*" ]
+ignore_missing_imports = true
