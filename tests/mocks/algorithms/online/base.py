@@ -46,8 +46,8 @@ class MockAlgorithmConfiguration(OnlineAlgorithmConfiguration):
     ----------
     learning_period_size : int, default=0
         Number of initial observations for learning period.
-    return_sequence : list[Number]
+    return_sequence : tuple[Number, ...]
         Sequence of return values for process() calls.
     """
 
-    return_sequence: list[Number]
+    return_sequence: tuple[Number, ...]

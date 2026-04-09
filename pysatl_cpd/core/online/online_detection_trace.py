@@ -159,6 +159,8 @@ class OnlineDetectionTrace[StateT: OnlineAlgorithmState](DetectionTrace):
     def from_run(
         cls,
         steps: Sequence[OnlineDetectionStepResult[StateT]],
+        algorithm_name: str,
+        configuration_hash: int,
         threshold: Number | None = None,
     ) -> "OnlineDetectionTrace[StateT]":
         """
@@ -171,6 +173,10 @@ class OnlineDetectionTrace[StateT: OnlineAlgorithmState](DetectionTrace):
         ----------
         steps : Sequence[OnlineDetectionStepResult]
             Sequence of step results from processing each observation.
+        algorithm_name : str
+            Human-readable name of the algorithm that produced the steps.
+        configuration_hash : int
+            Hash of the algorithm configuration used during the run.
         threshold : Number | None, optional
             The detection threshold used during execution.
 
@@ -214,6 +220,8 @@ class OnlineDetectionTrace[StateT: OnlineAlgorithmState](DetectionTrace):
         signal_indices: list[int] = [step.step_num for step in steps if step.is_signal_change_point]
 
         return cls(
+            algorithm_name=algorithm_name,
+            configuration_hash=configuration_hash,
             detected_change_points=detected_indices,
             forced_change_points=forced_indices,
             signal_change_points=signal_indices,
