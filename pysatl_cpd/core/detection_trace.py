@@ -31,6 +31,11 @@ class DetectionTrace:
         Indices where changepoints were detected. For online algorithms,
         these are typically reported as they occur. For offline algorithms,
         these are the final changepoint positions.
+    algorithm_name : str
+        Human-readable name of the algorithm that produced this trace.
+    configuration_hash : int
+        Hash of the algorithm configuration used during the run.
+        Can be used to identify and group runs with identical configurations.
 
     Examples
     --------
@@ -40,7 +45,8 @@ class DetectionTrace:
     """
 
     detected_change_points: Sequence[int] = field(default_factory=list)
-    """Indices of detected changepoints in the data sequence."""
+    algorithm_name: str
+    configuration_hash: int
 
     def __post_init__(self) -> None:
         """

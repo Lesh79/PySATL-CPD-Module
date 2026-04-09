@@ -48,7 +48,7 @@ class MockErrorOnlineAlgorithm[T](OnlineAlgorithm[T, MockAlgorithmConfiguration,
         self._name = name
         self._config = MockAlgorithmConfiguration(
             learning_period_size=learning_period_size,
-            return_sequence=return_sequence or [0.0],
+            return_sequence=tuple(return_sequence or [0.0]),
         )
         self._error_on_call = error_on_call
         self._error_to_raise = error_to_raise
@@ -144,7 +144,7 @@ class MockErrorOnlineAlgorithm[T](OnlineAlgorithm[T, MockAlgorithmConfiguration,
             error_to_raise=RuntimeError("Recreated error"),
             name="ErrorAlgorithm",
             learning_period_size=configuration.learning_period_size,
-            return_sequence=configuration.return_sequence,
+            return_sequence=list(configuration.return_sequence),
         )
         if state is not None:
             algorithm._process_count = state.process_count

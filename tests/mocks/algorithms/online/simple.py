@@ -46,7 +46,7 @@ class MockOnlineAlgorithm[T](OnlineAlgorithm[T, MockAlgorithmConfiguration, Mock
         self._name = name
         self._config = MockAlgorithmConfiguration(
             learning_period_size=learning_period_size,
-            return_sequence=return_sequence or [0.0],
+            return_sequence=tuple(return_sequence or [0.0]),
         )
         self._process_count = 0
         self._call_history: list[T] = []
@@ -130,7 +130,7 @@ class MockOnlineAlgorithm[T](OnlineAlgorithm[T, MockAlgorithmConfiguration, Mock
         algorithm = cls(
             name="MockAlgorithm",
             learning_period_size=configuration.learning_period_size,
-            return_sequence=configuration.return_sequence,
+            return_sequence=list(configuration.return_sequence),
         )
         if state is not None:
             algorithm._process_count = state.process_count

@@ -120,28 +120,28 @@ class TestMockAlgorithmConfiguration:
 
     def test_mock_config_has_required_fields(self) -> None:
         """Verify MockAlgorithmConfiguration has all required fields."""
-        config: MockAlgorithmConfiguration = MockAlgorithmConfiguration(return_sequence=[0.0])
+        config: MockAlgorithmConfiguration = MockAlgorithmConfiguration(return_sequence=(0.0,))
         assert hasattr(config, "learning_period_size")
         assert hasattr(config, "return_sequence")
 
     def test_mock_config_default_values(self) -> None:
         """Test default values for MockAlgorithmConfiguration."""
-        config: MockAlgorithmConfiguration = MockAlgorithmConfiguration(return_sequence=[0.0])
+        config: MockAlgorithmConfiguration = MockAlgorithmConfiguration(return_sequence=(0.0,))
         assert config.learning_period_size == 0
-        assert config.return_sequence == [0.0]
+        assert config.return_sequence == (0.0,)
 
     def test_mock_config_custom_values(self) -> None:
         """Test setting custom values in MockAlgorithmConfiguration."""
         config: MockAlgorithmConfiguration = MockAlgorithmConfiguration(
             learning_period_size=50,
-            return_sequence=[0.1, 0.2, 0.3],
+            return_sequence=(0.1, 0.2, 0.3),
         )
         assert config.learning_period_size == 50
-        assert config.return_sequence == [0.1, 0.2, 0.3]
+        assert config.return_sequence == (0.1, 0.2, 0.3)
 
     def test_mock_config_immutability(self) -> None:
         """Test that MockAlgorithmConfiguration is frozen and immutable."""
-        config: MockAlgorithmConfiguration = MockAlgorithmConfiguration(return_sequence=[0.0])
+        config: MockAlgorithmConfiguration = MockAlgorithmConfiguration(return_sequence=(0.0,))
 
         with pytest.raises(AttributeError):
             config.learning_period_size = 20  # type: ignore

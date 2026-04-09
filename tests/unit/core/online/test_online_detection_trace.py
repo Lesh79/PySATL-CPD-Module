@@ -20,11 +20,14 @@ from pysatl_cpd.core.online.online_detection_trace import (
     OnlineDetectionTrace,
     extract_periods,
 )
-from pysatl_cpd.core.typedefs import UnivariateNumericArray
-from tests.mocks.algorithms.online import MockAlgorithmState
+from pysatl_cpd.core.typedefs import Number, UnivariateNumericArray
+from tests.mocks.algorithms.online import MockAlgorithmState, MockOnlineAlgorithm
 
-MOCK_ALGORITHM_NAME = "MockAlgorithm"
-MOCK_CONFIGURATION_HASH = hash("MockAlgorithm_config")
+
+@pytest.fixture
+def mock_algorithm() -> MockOnlineAlgorithm[Number]:
+    """Create a mock algorithm instance."""
+    return MockOnlineAlgorithm[Number]()
 
 
 class TestExtractPeriods:
@@ -134,28 +137,24 @@ class TestOnlineDetectionStepResult:
 
     def test_is_change_point_property(self) -> None:
         """Test that is_change_point returns OR of forced and signal."""
-        # Both false
         result = OnlineDetectionStepResult[MockAlgorithmState[float]](
             is_forced_change_point=False,
             is_signal_change_point=False,
         )
         assert result.is_change_point is False
 
-        # Only forced
         result = OnlineDetectionStepResult(
             is_forced_change_point=True,
             is_signal_change_point=False,
         )
         assert result.is_change_point is True
 
-        # Only signal
         result = OnlineDetectionStepResult(
             is_forced_change_point=False,
             is_signal_change_point=True,
         )
         assert result.is_change_point is True
 
-        # Both true
         result = OnlineDetectionStepResult(
             is_forced_change_point=True,
             is_signal_change_point=True,
@@ -211,17 +210,42 @@ class TestOnlineDetectionTrace:
             ),
         ]
 
-    def test_from_run(self, sample_steps: list[OnlineDetectionStepResult[MockAlgorithmState[float]]]) -> None:
+    @pytest.fixture
+    def empty_trace(
+        self, mock_algorithm: MockOnlineAlgorithm[Number]
+    ) -> OnlineDetectionTrace[MockAlgorithmState[float]]:
+        """Create minimal OnlineDetectionTrace for mutability tests."""
+        detection_function: UnivariateNumericArray = cast(
+            UnivariateNumericArray, np.array([0.1, 0.2], dtype=np.float64)
+        )
+        processing_times: UnivariateNumericArray = cast(
+            UnivariateNumericArray, np.array([0.001, 0.002], dtype=np.float64)
+        )
+        return OnlineDetectionTrace(
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
+            detected_change_points=[1],
+            threshold=0.5,
+            detection_function=detection_function,
+            processing_time=processing_times,
+            algorithm_states=[],
+        )
+
+    def test_from_run(
+        self,
+        mock_algorithm: MockOnlineAlgorithm[Number],
+        sample_steps: list[OnlineDetectionStepResult[MockAlgorithmState[float]]],
+    ) -> None:
         """Test constructing OnlineDetectionTrace from run results."""
         trace: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace.from_run(
             steps=sample_steps,
             threshold=0.5,
-            algorithm_name=MOCK_ALGORITHM_NAME,
-            configuration_hash=MOCK_CONFIGURATION_HASH,
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
         )
 
-        assert trace.algorithm_name == MOCK_ALGORITHM_NAME
-        assert trace.configuration_hash == MOCK_CONFIGURATION_HASH
+        assert trace.algorithm_name == mock_algorithm.name
+        assert trace.configuration_hash == hash(mock_algorithm.configuration)
         assert trace.threshold == 0.5
         assert isinstance(trace.detection_function, np.ndarray)
         assert trace.detection_function.ndim == 1
@@ -241,31 +265,33 @@ class TestOnlineDetectionTrace:
         assert trace.algorithm_states[3] is None
 
     def test_from_run_with_none_threshold(
-        self, sample_steps: list[OnlineDetectionStepResult[MockAlgorithmState[float]]]
+        self,
+        mock_algorithm: MockOnlineAlgorithm[Number],
+        sample_steps: list[OnlineDetectionStepResult[MockAlgorithmState[float]]],
     ) -> None:
         """Test constructing trace with None threshold."""
         trace: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace.from_run(
             steps=sample_steps,
             threshold=None,
-            algorithm_name=MOCK_ALGORITHM_NAME,
-            configuration_hash=MOCK_CONFIGURATION_HASH,
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
         )
 
         assert trace.threshold is None
         assert len(trace.detection_function) == 4
 
-    def test_from_run_empty(self) -> None:
+    def test_from_run_empty(self, mock_algorithm: MockOnlineAlgorithm[Number]) -> None:
         """Test constructing trace from empty step sequence."""
         steps: list[OnlineDetectionStepResult[MockAlgorithmState[float]]] = []
         trace: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace.from_run(
             steps=steps,
             threshold=0.5,
-            algorithm_name=MOCK_ALGORITHM_NAME,
-            configuration_hash=MOCK_CONFIGURATION_HASH,
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
         )
 
-        assert trace.algorithm_name == MOCK_ALGORITHM_NAME
-        assert trace.configuration_hash == MOCK_CONFIGURATION_HASH
+        assert trace.algorithm_name == mock_algorithm.name
+        assert trace.configuration_hash == hash(mock_algorithm.configuration)
         assert trace.threshold == 0.5
         assert isinstance(trace.detection_function, np.ndarray)
         assert len(trace.detection_function) == 0
@@ -278,7 +304,7 @@ class TestOnlineDetectionTrace:
         assert trace.learning_periods == []
         assert trace.algorithm_states == []
 
-    def test_from_run_no_detections(self) -> None:
+    def test_from_run_no_detections(self, mock_algorithm: MockOnlineAlgorithm[Number]) -> None:
         """Test constructing trace with no changepoints."""
         steps: list[OnlineDetectionStepResult[MockAlgorithmState[float]]] = [
             OnlineDetectionStepResult(
@@ -296,8 +322,8 @@ class TestOnlineDetectionTrace:
         trace: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace.from_run(
             steps=steps,
             threshold=0.5,
-            algorithm_name=MOCK_ALGORITHM_NAME,
-            configuration_hash=MOCK_CONFIGURATION_HASH,
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
         )
 
         assert trace.detected_change_points == []
@@ -305,7 +331,7 @@ class TestOnlineDetectionTrace:
         assert trace.signal_change_points == []
         assert trace.skip_periods == []
 
-    def test_direct_initialization(self) -> None:
+    def test_direct_initialization(self, mock_algorithm: MockOnlineAlgorithm[Number]) -> None:
         """Test direct initialization of OnlineDetectionTrace."""
         states: list[MockAlgorithmState[float] | None] = [
             MockAlgorithmState[float](process_count=1, last_observation=1.0),
@@ -321,8 +347,8 @@ class TestOnlineDetectionTrace:
         )
 
         trace: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace(
-            algorithm_name=MOCK_ALGORITHM_NAME,
-            configuration_hash=MOCK_CONFIGURATION_HASH,
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
             detected_change_points=[2],
             threshold=0.75,
             detection_function=detection_function,
@@ -334,8 +360,8 @@ class TestOnlineDetectionTrace:
             learning_periods=[(0, 0)],
         )
 
-        assert trace.algorithm_name == MOCK_ALGORITHM_NAME
-        assert trace.configuration_hash == MOCK_CONFIGURATION_HASH
+        assert trace.algorithm_name == mock_algorithm.name
+        assert trace.configuration_hash == hash(mock_algorithm.configuration)
         assert trace.threshold == 0.75
         assert isinstance(trace.detection_function, np.ndarray)
         assert len(trace.detection_function) == 3
@@ -347,15 +373,14 @@ class TestOnlineDetectionTrace:
         assert trace.skip_periods == [(1, 1)]
         assert trace.learning_periods == [(0, 0)]
 
-    def test_algorithm_name_stored_correctly(self) -> None:
+    def test_algorithm_name_stored_correctly(self, mock_algorithm: MockOnlineAlgorithm[Number]) -> None:
         """Test that algorithm_name is stored and accessible."""
         detection_function: UnivariateNumericArray = cast(UnivariateNumericArray, np.array([0.1], dtype=np.float64))
         processing_times: UnivariateNumericArray = cast(UnivariateNumericArray, np.array([0.001], dtype=np.float64))
 
-        custom_name = "ShewhartControlChart"
         trace: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace(
-            algorithm_name=custom_name,
-            configuration_hash=42,
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
             detected_change_points=[],
             threshold=0.5,
             detection_function=detection_function,
@@ -363,18 +388,17 @@ class TestOnlineDetectionTrace:
             algorithm_states=[],
         )
 
-        assert trace.algorithm_name == custom_name
-        assert trace.configuration_hash == 42
+        assert trace.algorithm_name == mock_algorithm.name
+        assert trace.configuration_hash == hash(mock_algorithm.configuration)
 
-    def test_configuration_hash_stored_correctly(self) -> None:
+    def test_configuration_hash_stored_correctly(self, mock_algorithm: MockOnlineAlgorithm[Number]) -> None:
         """Test that configuration_hash is stored and accessible."""
         detection_function: UnivariateNumericArray = cast(UnivariateNumericArray, np.array([0.1], dtype=np.float64))
         processing_times: UnivariateNumericArray = cast(UnivariateNumericArray, np.array([0.001], dtype=np.float64))
 
-        expected_hash = hash(("window_size", 10, "learning_period", 50))
         trace: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace(
-            algorithm_name=MOCK_ALGORITHM_NAME,
-            configuration_hash=expected_hash,
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
             detected_change_points=[],
             threshold=0.5,
             detection_function=detection_function,
@@ -382,9 +406,9 @@ class TestOnlineDetectionTrace:
             algorithm_states=[],
         )
 
-        assert trace.configuration_hash == expected_hash
+        assert trace.configuration_hash == hash(mock_algorithm.configuration)
 
-    def test_inherits_from_detection_trace(self) -> None:
+    def test_inherits_from_detection_trace(self, mock_algorithm: MockOnlineAlgorithm[Number]) -> None:
         """Test that OnlineDetectionTrace inherits DetectionTrace functionality."""
         detection_function: UnivariateNumericArray = cast(
             UnivariateNumericArray, np.array([0.1, 0.2, 0.3], dtype=np.float64)
@@ -394,8 +418,8 @@ class TestOnlineDetectionTrace:
         )
 
         trace: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace(
-            algorithm_name=MOCK_ALGORITHM_NAME,
-            configuration_hash=MOCK_CONFIGURATION_HASH,
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
             detected_change_points=[1, 2],
             threshold=0.5,
             detection_function=detection_function,
@@ -405,7 +429,7 @@ class TestOnlineDetectionTrace:
 
         assert trace.detected_change_points == [1, 2]
 
-    def test_detected_change_points_property(self) -> None:
+    def test_detected_change_points_property(self, mock_algorithm: MockOnlineAlgorithm[Number]) -> None:
         """Test detected_change_points property."""
         detection_function: UnivariateNumericArray = cast(
             UnivariateNumericArray, np.array([0.1, 0.2, 0.3], dtype=np.float64)
@@ -415,8 +439,8 @@ class TestOnlineDetectionTrace:
         )
 
         trace: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace(
-            algorithm_name=MOCK_ALGORITHM_NAME,
-            configuration_hash=MOCK_CONFIGURATION_HASH,
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
             detected_change_points=[1, 2, 3],
             threshold=0.5,
             detection_function=detection_function,
@@ -427,14 +451,16 @@ class TestOnlineDetectionTrace:
         assert trace.detected_change_points == [1, 2, 3]
 
     def test_multiple_detection_types(
-        self, sample_steps: list[OnlineDetectionStepResult[MockAlgorithmState[float]]]
+        self,
+        mock_algorithm: MockOnlineAlgorithm[Number],
+        sample_steps: list[OnlineDetectionStepResult[MockAlgorithmState[float]]],
     ) -> None:
         """Test trace with multiple detection types."""
         trace: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace.from_run(
             steps=sample_steps,
             threshold=0.5,
-            algorithm_name=MOCK_ALGORITHM_NAME,
-            configuration_hash=MOCK_CONFIGURATION_HASH,
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
         )
 
         assert trace.detected_change_points == [1, 3]
@@ -442,7 +468,7 @@ class TestOnlineDetectionTrace:
         assert trace.signal_change_points == [1]
         assert trace.skip_periods == [(2, 2)]
 
-    def test_ndarray_dtype_preservation(self) -> None:
+    def test_ndarray_dtype_preservation(self, mock_algorithm: MockOnlineAlgorithm[Number]) -> None:
         """Test that NumPy arrays preserve float64 dtype."""
         steps: list[OnlineDetectionStepResult[MockAlgorithmState[float]]] = [
             OnlineDetectionStepResult(
@@ -460,24 +486,28 @@ class TestOnlineDetectionTrace:
         trace: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace.from_run(
             steps=steps,
             threshold=0.5,
-            algorithm_name=MOCK_ALGORITHM_NAME,
-            configuration_hash=MOCK_CONFIGURATION_HASH,
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
         )
 
         assert trace.detection_function.dtype == np.float64
         assert trace.processing_time.dtype == np.float64
 
-    def _make_empty_trace(self) -> OnlineDetectionTrace[MockAlgorithmState[float]]:
-        """Helper: create minimal OnlineDetectionTrace for mutability tests."""
+    def test_skip_periods_default_mutable(
+        self,
+        empty_trace: OnlineDetectionTrace[MockAlgorithmState[float]],
+        mock_algorithm: MockOnlineAlgorithm[Number],
+    ) -> None:
+        """Test that skip_periods default is a new list each instance."""
         detection_function: UnivariateNumericArray = cast(
             UnivariateNumericArray, np.array([0.1, 0.2], dtype=np.float64)
         )
         processing_times: UnivariateNumericArray = cast(
             UnivariateNumericArray, np.array([0.001, 0.002], dtype=np.float64)
         )
-        return OnlineDetectionTrace(
-            algorithm_name=MOCK_ALGORITHM_NAME,
-            configuration_hash=MOCK_CONFIGURATION_HASH,
+        trace2: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace(
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
             detected_change_points=[1],
             threshold=0.5,
             detection_function=detection_function,
@@ -485,38 +515,84 @@ class TestOnlineDetectionTrace:
             algorithm_states=[],
         )
 
-    def test_skip_periods_default_mutable(self) -> None:
-        """Test that skip_periods default is a new list each instance."""
-        trace1 = self._make_empty_trace()
-        trace2 = self._make_empty_trace()
-
-        trace1.skip_periods.append((2, 3))
+        empty_trace.skip_periods.append((2, 3))
 
         assert trace2.skip_periods == []
 
-    def test_learning_periods_default_mutable(self) -> None:
+    def test_learning_periods_default_mutable(
+        self,
+        empty_trace: OnlineDetectionTrace[MockAlgorithmState[float]],
+        mock_algorithm: MockOnlineAlgorithm[Number],
+    ) -> None:
         """Test that learning_periods default is a new list each instance."""
-        trace1 = self._make_empty_trace()
-        trace2 = self._make_empty_trace()
+        detection_function: UnivariateNumericArray = cast(
+            UnivariateNumericArray, np.array([0.1, 0.2], dtype=np.float64)
+        )
+        processing_times: UnivariateNumericArray = cast(
+            UnivariateNumericArray, np.array([0.001, 0.002], dtype=np.float64)
+        )
+        trace2: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace(
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
+            detected_change_points=[1],
+            threshold=0.5,
+            detection_function=detection_function,
+            processing_time=processing_times,
+            algorithm_states=[],
+        )
 
-        trace1.learning_periods.append((0, 1))
+        empty_trace.learning_periods.append((0, 1))
 
         assert trace2.learning_periods == []
 
-    def test_forced_change_points_default_mutable(self) -> None:
+    def test_forced_change_points_default_mutable(
+        self,
+        empty_trace: OnlineDetectionTrace[MockAlgorithmState[float]],
+        mock_algorithm: MockOnlineAlgorithm[Number],
+    ) -> None:
         """Test that forced_change_points default is a new list each instance."""
-        trace1 = self._make_empty_trace()
-        trace2 = self._make_empty_trace()
+        detection_function: UnivariateNumericArray = cast(
+            UnivariateNumericArray, np.array([0.1, 0.2], dtype=np.float64)
+        )
+        processing_times: UnivariateNumericArray = cast(
+            UnivariateNumericArray, np.array([0.001, 0.002], dtype=np.float64)
+        )
+        trace2: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace(
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
+            detected_change_points=[1],
+            threshold=0.5,
+            detection_function=detection_function,
+            processing_time=processing_times,
+            algorithm_states=[],
+        )
 
-        trace1.forced_change_points.append(3)
+        empty_trace.forced_change_points.append(3)
 
         assert trace2.forced_change_points == []
 
-    def test_signal_change_points_default_mutable(self) -> None:
+    def test_signal_change_points_default_mutable(
+        self,
+        empty_trace: OnlineDetectionTrace[MockAlgorithmState[float]],
+        mock_algorithm: MockOnlineAlgorithm[Number],
+    ) -> None:
         """Test that signal_change_points default is a new list each instance."""
-        trace1 = self._make_empty_trace()
-        trace2 = self._make_empty_trace()
+        detection_function: UnivariateNumericArray = cast(
+            UnivariateNumericArray, np.array([0.1, 0.2], dtype=np.float64)
+        )
+        processing_times: UnivariateNumericArray = cast(
+            UnivariateNumericArray, np.array([0.001, 0.002], dtype=np.float64)
+        )
+        trace2: OnlineDetectionTrace[MockAlgorithmState[float]] = OnlineDetectionTrace(
+            algorithm_name=mock_algorithm.name,
+            configuration_hash=hash(mock_algorithm.configuration),
+            detected_change_points=[1],
+            threshold=0.5,
+            detection_function=detection_function,
+            processing_time=processing_times,
+            algorithm_states=[],
+        )
 
-        trace1.signal_change_points.append(2)
+        empty_trace.signal_change_points.append(2)
 
         assert trace2.signal_change_points == []

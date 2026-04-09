@@ -122,11 +122,6 @@ class OnlineDetectionTrace[StateT: OnlineAlgorithmState](DetectionTrace):
 
     Parameters
     ----------
-    algorithm_name : str
-        Human-readable name of the algorithm that produced this trace.
-    configuration_hash : int
-        Hash of the algorithm configuration used during the run.
-        Can be used to identify and group runs with identical configurations.
     detected_change_points : list[int]
         Indices where changepoints were detected.
     threshold : Number | None, optional
@@ -149,11 +144,8 @@ class OnlineDetectionTrace[StateT: OnlineAlgorithmState](DetectionTrace):
     signal_change_points : list[int], optional
         Indices where changepoints were detected due to the algorithm's
         detection function exceeding the threshold. Default is empty list.
-    TODO
     """
 
-    algorithm_name: str
-    configuration_hash: int
     threshold: Number | None = None
     processing_time: UnivariateNumericArray
     detection_function: UnivariateNumericArray
