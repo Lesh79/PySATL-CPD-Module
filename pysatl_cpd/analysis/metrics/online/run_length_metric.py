@@ -1,5 +1,12 @@
 # -*- coding: ascii -*-
 
+"""
+Module for computing Run Length to False Alarm for online algorithms.
+
+Evaluates the distance (time steps) between algorithm resets and
+false positive detections (false alarms).
+"""
+
 __author__ = "Danil Totmyanin"
 __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
@@ -13,10 +20,41 @@ from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 
 
 class RunLengthMetric[T: OnlineDetectionTrace[Any], D: LabeledData[Any]](RunMetric[T, D, Sequence[int]]):
+    """
+    Computes the Run Lengths to False Alarms (ARL) for online detection traces.
+
+    A run length is the distance between consecutive "resets" of the algorithm
+    and a False Positive (false alarm). The timer is reset at the start (0),
+    after successfully traversing a true change point window, or right after
+    a previous false alarm.
+
+    Parameters
+    ----------
+    max_delay : int
+        The maximum allowable delay window that defines valid detections.
+        Detections outside these windows are considered False Positives.
+    """
+
     def __init__(self, max_delay: int) -> None:
         self.__max_delay = max_delay
 
     def evaluate(self, trace: T, data: D) -> Sequence[int]:
+        """
+        Calculate the run lengths to false alarms.
+
+        Parameters
+        ----------
+        trace : T
+            The online detection trace.
+        data : D
+            The ground truth data.
+
+        Returns
+        -------
+        Sequence[int]
+            A sequence of distances (run lengths) preceding each false alarm.
+        """
+
         detected_changes = trace.detected_change_points
         true_changes = data.change_points
 

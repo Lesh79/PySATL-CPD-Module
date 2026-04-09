@@ -1,5 +1,12 @@
 # -*- coding: ascii -*-
 
+"""
+Module for computing the confusion matrix of change point detections.
+
+Calculates True Positives (TP), False Positives (FP), and False Negatives (FN)
+simultaneously to optimize computational overhead.
+"""
+
 __author__ = "Danil Totmyanin"
 __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
@@ -13,10 +20,36 @@ from pysatl_cpd.core.detection_trace import DetectionTrace
 
 
 class ConfusionMatrix[T: DetectionTrace, D: LabeledData[Any]](RunMetric[T, D, dict[str, float]]):
+    """
+    Computes True Positives (TP), False Positives (FP), and False Negatives (FN)
+    in a single pass to avoid computational overhead.
+
+    Parameters
+    ----------
+    error_margin : tuple[int, int]
+        Tolerance window `(left, right)` around true change points for matching.
+    """
+
     def __init__(self, error_margin: tuple[int, int]) -> None:
         self.__error_margin = error_margin
 
     def evaluate(self, trace: T, data: D) -> dict[str, float]:
+        """
+        Calculate TP, FP, and FN based on detection matches.
+
+        Parameters
+        ----------
+        trace : T
+            The trace containing detected change points.
+        data : D
+            The ground truth data containing actual change points.
+
+        Returns
+        -------
+        dict[str, float]
+            A dictionary containing the counts of TP, FP, and FN.
+        """
+
         detected_changes = trace.detected_change_points
         true_changes = data.change_points
 
