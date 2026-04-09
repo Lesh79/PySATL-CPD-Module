@@ -1,5 +1,12 @@
 # -*- coding: ascii -*-
 
+"""
+Mock classification metrics for testing.
+
+This module provides a mock implementation of ClassificationMetric
+for testing metric evaluations without performing actual computations.
+"""
+
 __author__ = "Danil Totmyanin"
 __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
@@ -13,11 +20,27 @@ from pysatl_cpd.core.detection_trace import DetectionTrace
 
 class MockClassificationMetric(ClassificationMetric[DetectionTrace, LabeledData[Any]]):
     """
-    Mock implementation of the abstract ClassificationMetric class for testing purposes.
+    Mock implementation of the ClassificationMetric class for testing purposes.
+
+    This metric always returns a constant evaluation score (0.0) regardless
+    of the provided trace and labeled data.
     """
 
     def evaluate(self, trace: DetectionTrace, data: LabeledData[Any]) -> float:
         """
-        Dummy implementation of the abstract evaluate method.
+        Dummy implementation of the evaluate method.
+
+        Parameters
+        ----------
+        trace : DetectionTrace
+            The detection trace produced by a change-point detection algorithm.
+        data : LabeledData[Any]
+            The ground truth labeled data.
+
+        Returns
+        -------
+        float
+            A constant dummy metric value (0.0).
         """
+
         return 0.0
