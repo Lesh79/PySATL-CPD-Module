@@ -47,7 +47,8 @@ class FalsePositiveMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](C
             The number of false alarm detections.
         """
 
-        return len(detected_changes) - len(cls.match(detected_changes, true_changes, error_margin))
+        matching = cls.match(detected_changes, true_changes, error_margin)
+        return len(detected_changes) - sum(len(v) for v in matching.values())
 
     def evaluate(self, trace: TraceT, data: ProviderT) -> float:
         """

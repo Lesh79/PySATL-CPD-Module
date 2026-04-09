@@ -37,40 +37,51 @@ class ClassificationMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
         self._error_margin = error_margin
 
     @staticmethod
-    def match(detected_changes: Sequence[int], true_changes: Sequence[int], error_margin: tuple[int, int]) -> set[int]:
+    def match(
+        detected_change_points: Sequence[int], true_change_points: Sequence[int], error_margin: tuple[int, int]
+    ) -> dict[int, set[int]]:
         """
         Match detected change points to true change points within a given error margin.
 
-        Establishes a 1-to-1 mapping where the first available detected point within
-        the tolerance window of a true point is considered a match.
+        Matching policy
+        ---------------
+        - For every true change point we collect all detected points that fall into
+          the tolerance window: [true_change - left, true_change + right].
+        - Each detected change point can be assigned to at most one true change point
+          (enforced via `used_detections`).
+        - The returned mapping contains **all** true change points as keys; if a true
+          change point has no matches, its value is an empty set.
 
         Parameters
         ----------
-        detected_changes : Sequence[int]
-            The sequence of predicted change point indices.
-        true_changes : Sequence[int]
-            The sequence of actual change point indices.
+        detected_change_points : Sequence[int]
+            Predicted change point indices.
+        true_change_points : Sequence[int]
+            Ground truth change point indices.
         error_margin : tuple[int, int]
-            Tolerance window `(left, right)`.
+            Tolerance window (left, right).
 
         Returns
         -------
-        set[int]
-            A set of detected change points that successfully matched with true change points.
+        dict[int, set[int]]
+            Mapping: true change point -> set of matched detected change points.
+            Note: sets are unordered; use `min()`/`max()` if you need a stable choice.
         """
 
         left, right = error_margin
-        used_detections = set()
+        used_detections: set[int] = set()
+        detections: dict[int, set[int]] = {}
 
-        for true_change in true_changes:
-            for detected_change in detected_changes:
+        for true_change in true_change_points:
+            detections[true_change] = set()
+            for detected_change in detected_change_points:
                 if detected_change in used_detections:
                     continue
                 if true_change - left <= detected_change <= true_change + right:
+                    detections[true_change].add(detected_change)
                     used_detections.add(detected_change)
-                    break
 
-        return used_detections
+        return detections
 
     @abstractmethod
     def evaluate(self, trace: TraceT, data: ProviderT) -> float:

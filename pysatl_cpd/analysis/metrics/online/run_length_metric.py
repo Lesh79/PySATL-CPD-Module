@@ -1,10 +1,17 @@
 # -*- coding: ascii -*-
 
 """
-Module for computing Run Length to False Alarm for online algorithms.
+Module for computing Run Lengths between consecutive alarms (detections)
+for online algorithms.
 
-Evaluates the distance (time steps) between algorithm resets and
-false positive detections (false alarms).
+In this implementation run length is simply the distance (in time steps)
+between consecutive detected change points ('positives'). The first run length
+is measured from time step 0 to the first detection.
+
+Note
+----
+Ground truth (`data`) is not used here. Metrics that require TP/FP
+separation should be implemented separately (e.g., via classification metrics).
 """
 
 __author__ = "Danil Totmyanin"
@@ -23,65 +30,38 @@ class RunLengthMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[
     RunMetric[TraceT, ProviderT, Sequence[int]]
 ):
     """
-    Computes the Run Lengths to False Alarms (ARL) for online detection traces.
+    Computes run lengths between consecutive detections.
 
-    A run length is the distance between consecutive "resets" of the algorithm
-    and a False Positive (false alarm). The timer is reset at the start (0),
-    after successfully traversing a true change point window, or right after
-    a previous false alarm.
-
-    Parameters
-    ----------
-    max_delay : int
-        The maximum allowable delay window that defines valid detections.
-        Detections outside these windows are considered False Positives.
+    Run length is the distance between two successive detected change points,
+    starting from time 0. This is the definition used for Average Run Length
+    (ARL) - every detection is treated as a positive, ground-truth is ignored.
     """
-
-    def __init__(self, max_delay: int) -> None:
-        self.__max_delay = max_delay
 
     def evaluate(self, trace: TraceT, data: ProviderT) -> Sequence[int]:
         """
-        Calculate the run lengths to false alarms.
+        Calculate run lengths between consecutive detections.
 
         Parameters
         ----------
         trace : TraceT
             The online detection trace.
         data : ProviderT
-            The ground truth data.
+            Unused. Present for API consistency.
 
         Returns
         -------
         Sequence[int]
-            A sequence of distances (run lengths) preceding each false alarm.
+            Distances between consecutive detections, with the first distance measured
+            from 0 to the first detection.
         """
 
-        detected_changes = trace.detected_change_points
-        true_changes = data.change_points
-
-        false_positives = []
-        for detected in detected_changes:
-            is_tp = False
-            for true_change in true_changes:
-                if true_change <= detected <= true_change + self.__max_delay:
-                    is_tp = True
-                    break
-
-            if not is_tp:
-                false_positives.append(detected)
+        detected_changes = sorted(trace.detected_change_points)
 
         run_lengths = []
         last_reset_point = 0
 
-        true_idx = 0
-
-        for fp in false_positives:
-            while true_idx < len(true_changes) and true_changes[true_idx] + self.__max_delay < fp:
-                last_reset_point = true_changes[true_idx] + self.__max_delay
-                true_idx += 1
-
-            run_lengths.append(fp - last_reset_point)
-            last_reset_point = fp
+        for detected in detected_changes:
+            run_lengths.append(detected - last_reset_point)
+            last_reset_point = detected
 
         return run_lengths

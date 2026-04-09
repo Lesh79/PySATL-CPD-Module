@@ -23,6 +23,8 @@ class TruePositiveMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](Cl
     """
     Metric for counting True Positives (TP), which are correctly identified
     actual change points within the defined error margin.
+    A true change point is counted as TP if it has at least one matched detection
+    within the tolerance window.
     """
 
     @classmethod
@@ -47,7 +49,7 @@ class TruePositiveMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](Cl
             The number of correctly detected change points.
         """
 
-        return len(cls.match(detected_changes, true_changes, error_margin))
+        return len([v for v in cls.match(detected_changes, true_changes, error_margin).values() if v])
 
     def evaluate(self, trace: TraceT, data: ProviderT) -> float:
         """

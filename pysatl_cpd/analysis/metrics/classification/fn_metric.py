@@ -47,7 +47,8 @@ class FalseNegativeMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](C
             The number of missed true change points.
         """
 
-        return len(true_changes) - len(cls.match(detected_changes, true_changes, error_margin))
+        tp = len([v for v in cls.match(detected_changes, true_changes, error_margin).values() if v])
+        return len(true_changes) - tp
 
     def evaluate(self, trace: TraceT, data: ProviderT) -> float:
         """

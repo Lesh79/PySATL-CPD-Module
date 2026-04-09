@@ -15,6 +15,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
+from pysatl_cpd.analysis.metrics.classification.classification_metric import ClassificationMetric
 from pysatl_cpd.analysis.metrics.run_metric import RunMetric
 from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 
@@ -42,6 +43,9 @@ class DelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[Any]
     def evaluate(self, trace: TraceT, data: ProviderT) -> Sequence[int]:
         """
         Calculate delays for all true change points
+        Delay is computed per true change point as the minimum non-negative delay
+        among matched detections within [true_change, true_change + max_delay].
+        If there is no match, `max_delay` is returned for that change point.
 
         Parameters
         ----------
@@ -60,22 +64,6 @@ class DelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[Any]
         detected_changes = trace.detected_change_points
         true_changes = data.change_points
 
-        delays = []
-        used_detections = set()
-
-        for true_change in true_changes:
-            covered = False
-            for detected_change in detected_changes:
-                if detected_change in used_detections:
-                    continue
-
-                if true_change <= detected_change <= true_change + self.__max_delay:
-                    delays.append(detected_change - true_change)
-                    used_detections.add(detected_change)
-                    covered = True
-                    break
-
-            if not covered:
-                delays.append(self.__max_delay)
-
+        matching = ClassificationMetric.match(detected_changes, true_changes, (0, self.__max_delay))
+        delays = [min(v) - k if v else self.__max_delay for k, v in matching.items()]
         return delays

@@ -49,14 +49,17 @@ class ConfusionMatrix[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
         Returns
         -------
         dict[str, float]
-            A dictionary containing the counts of TP, FP, and FN.
+            tp: number of true change points covered by >=1 detection
+            fn: number of true change points with no detections
+            fp: number of detections not matched to any true change point
         """
 
         detected_changes = trace.detected_change_points
         true_changes = data.change_points
 
-        tp = len(ClassificationMetric.match(detected_changes, true_changes, self.__error_margin))
+        matching = ClassificationMetric.match(detected_changes, true_changes, self.__error_margin)
+        tp = len([v for v in matching.values() if v])
         fn = len(true_changes) - tp
-        fp = len(detected_changes) - tp
+        fp = len(detected_changes) - sum(len(v) for v in matching.values())
 
         return {"tp": float(tp), "fp": float(fp), "fn": float(fn)}
