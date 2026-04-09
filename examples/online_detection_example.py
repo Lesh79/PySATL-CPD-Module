@@ -67,7 +67,9 @@ def main() -> None:
     print(f"  Forced changes: {forced_changes}")
     print(f"  Skip period observations: {len(skip_periods)}")
 
-    trace = OnlineDetectionTrace.from_run(threshold=2.5, steps=results)
+    trace = OnlineDetectionTrace.from_run(
+        algorithm_name=algorithm.name, configuration_hash=hash(algorithm.configuration), threshold=2.5, steps=results
+    )
 
     print("\nTrace Summary:")
     print(f"  Number of change points: {len(trace.detected_change_points)}")
