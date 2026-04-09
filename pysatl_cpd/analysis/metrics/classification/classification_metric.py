@@ -31,9 +31,18 @@ class ClassificationMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
         A tuple `(left, right)` representing the tolerance window around a true
         change point. A detected change point is considered a match if it falls
         within `[true_change - left, true_change + right]`.
+
+    Raises
+    ------
+    ValueError
+        If the left or right margin in the `error_margin` argument is a negative number.
+
     """
 
     def __init__(self, error_margin: tuple[int, int]) -> None:
+        if error_margin[0] < 0 or error_margin[1] < 0:
+            raise ValueError("The left and right margins must be non-negative numbers")
+
         self._error_margin = error_margin
 
     @staticmethod
