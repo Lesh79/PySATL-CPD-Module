@@ -144,8 +144,11 @@ class OnlineDetectionTrace[StateT: OnlineAlgorithmState](DetectionTrace):
     signal_change_points : list[int], optional
         Indices where changepoints were detected due to the algorithm's
         detection function exceeding the threshold. Default is empty list.
+    TODO
     """
 
+    algorithm_name: str
+    configuration_hash: int
     threshold: Number | None = None
     processing_time: UnivariateNumericArray
     detection_function: UnivariateNumericArray
@@ -159,6 +162,8 @@ class OnlineDetectionTrace[StateT: OnlineAlgorithmState](DetectionTrace):
     def from_run(
         cls,
         steps: Sequence[OnlineDetectionStepResult[StateT]],
+        algorithm_name: str,
+        configuration_hash: int,
         threshold: Number | None = None,
     ) -> "OnlineDetectionTrace[StateT]":
         """
@@ -214,6 +219,8 @@ class OnlineDetectionTrace[StateT: OnlineAlgorithmState](DetectionTrace):
         signal_indices: list[int] = [step.step_num for step in steps if step.is_signal_change_point]
 
         return cls(
+            algorithm_name=algorithm_name,
+            configuration_hash=configuration_hash,
             detected_change_points=detected_indices,
             forced_change_points=forced_indices,
             signal_change_points=signal_indices,
