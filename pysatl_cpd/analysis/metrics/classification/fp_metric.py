@@ -19,7 +19,7 @@ from pysatl_cpd.analysis.metrics.classification.classification_metric import Cla
 from pysatl_cpd.core.detection_trace import DetectionTrace
 
 
-class FalsePositiveMetric[T: DetectionTrace, D: LabeledData[Any]](ClassificationMetric[T, D]):
+class FalsePositiveMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](ClassificationMetric[TraceT, ProviderT]):
     """
     Metric for counting False Positives (FP), which are detected change points
     that do not correspond to any actual change point within the error margin.
@@ -49,15 +49,15 @@ class FalsePositiveMetric[T: DetectionTrace, D: LabeledData[Any]](Classification
 
         return len(detected_changes) - len(cls.match(detected_changes, true_changes, error_margin))
 
-    def evaluate(self, trace: T, data: D) -> float:
+    def evaluate(self, trace: TraceT, data: ProviderT) -> float:
         """
         Evaluate the False Positive metric.
 
         Parameters
         ----------
-        trace : T
+        trace : TraceT
             The trace containing detected change points.
-        data : D
+        data : ProviderT
             The ground truth data.
 
         Returns

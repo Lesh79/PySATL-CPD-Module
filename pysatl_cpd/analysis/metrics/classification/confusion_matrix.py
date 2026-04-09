@@ -19,7 +19,9 @@ from pysatl_cpd.analysis.metrics.run_metric import RunMetric
 from pysatl_cpd.core.detection_trace import DetectionTrace
 
 
-class ConfusionMatrix[T: DetectionTrace, D: LabeledData[Any]](RunMetric[T, D, dict[str, float]]):
+class ConfusionMatrix[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
+    RunMetric[TraceT, ProviderT, dict[str, float]]
+):
     """
     Computes True Positives (TP), False Positives (FP), and False Negatives (FN)
     in a single pass to avoid computational overhead.
@@ -33,15 +35,15 @@ class ConfusionMatrix[T: DetectionTrace, D: LabeledData[Any]](RunMetric[T, D, di
     def __init__(self, error_margin: tuple[int, int]) -> None:
         self.__error_margin = error_margin
 
-    def evaluate(self, trace: T, data: D) -> dict[str, float]:
+    def evaluate(self, trace: TraceT, data: ProviderT) -> dict[str, float]:
         """
         Calculate TP, FP, and FN based on detection matches.
 
         Parameters
         ----------
-        trace : T
+        trace : TraceT
             The trace containing detected change points.
-        data : D
+        data : ProviderT
             The ground truth data containing actual change points.
 
         Returns

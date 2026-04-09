@@ -18,7 +18,7 @@ from pysatl_cpd.analysis.labeled_data import LabeledData
 from pysatl_cpd.core.detection_trace import DetectionTrace
 
 
-class RunMetric[T: DetectionTrace, D: LabeledData[Any], R]:
+class RunMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any], ResultT]:
     """
     Base class for all run evaluation metrics in change point detection.
 
@@ -27,20 +27,20 @@ class RunMetric[T: DetectionTrace, D: LabeledData[Any], R]:
     """
 
     @abstractmethod
-    def evaluate(self, trace: T, data: D) -> R:
+    def evaluate(self, trace: TraceT, data: ProviderT) -> ResultT:
         """
         Evaluate the detection trace against the provided labeled data.
 
         Parameters
         ----------
-        trace : T
+        trace : TraceT
             The trace containing detected change points.
-        data : D
+        data : ProviderT
             The ground truth data containing actual change points.
 
         Returns
         -------
-        R
+        ResultT
             The computed metric result. The type depends on the specific metric
             implementation (e.g., float, dict, or sequence of integers).
         """

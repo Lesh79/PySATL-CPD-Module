@@ -19,7 +19,9 @@ from pysatl_cpd.analysis.metrics.run_metric import RunMetric
 from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 
 
-class DelayMetric[T: OnlineDetectionTrace[Any], D: LabeledData[Any]](RunMetric[T, D, Sequence[int]]):
+class DelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[Any]](
+    RunMetric[TraceT, ProviderT, Sequence[int]]
+):
     """
     Computes the detection delay for online change point detection algorithms.
 
@@ -37,15 +39,15 @@ class DelayMetric[T: OnlineDetectionTrace[Any], D: LabeledData[Any]](RunMetric[T
     def __init__(self, max_delay: int) -> None:
         self.__max_delay = max_delay
 
-    def evaluate(self, trace: T, data: D) -> Sequence[int]:
+    def evaluate(self, trace: TraceT, data: ProviderT) -> Sequence[int]:
         """
-        Calculate delays for all true change points.
+        Calculate delays for all true change points
 
         Parameters
         ----------
-        trace : T
+        trace : TraceT
             The online detection trace.
-        data : D
+        data : ProviderT
             The ground truth data.
 
         Returns

@@ -19,7 +19,9 @@ from pysatl_cpd.analysis.metrics.run_metric import RunMetric
 from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 
 
-class RunLengthMetric[T: OnlineDetectionTrace[Any], D: LabeledData[Any]](RunMetric[T, D, Sequence[int]]):
+class RunLengthMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[Any]](
+    RunMetric[TraceT, ProviderT, Sequence[int]]
+):
     """
     Computes the Run Lengths to False Alarms (ARL) for online detection traces.
 
@@ -38,15 +40,15 @@ class RunLengthMetric[T: OnlineDetectionTrace[Any], D: LabeledData[Any]](RunMetr
     def __init__(self, max_delay: int) -> None:
         self.__max_delay = max_delay
 
-    def evaluate(self, trace: T, data: D) -> Sequence[int]:
+    def evaluate(self, trace: TraceT, data: ProviderT) -> Sequence[int]:
         """
         Calculate the run lengths to false alarms.
 
         Parameters
         ----------
-        trace : T
+        trace : TraceT
             The online detection trace.
-        data : D
+        data : ProviderT
             The ground truth data.
 
         Returns

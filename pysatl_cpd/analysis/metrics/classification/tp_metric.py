@@ -19,7 +19,7 @@ from pysatl_cpd.analysis.metrics.classification.classification_metric import Cla
 from pysatl_cpd.core.detection_trace import DetectionTrace
 
 
-class TruePositiveMetric[T: DetectionTrace, D: LabeledData[Any]](ClassificationMetric[T, D]):
+class TruePositiveMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](ClassificationMetric[TraceT, ProviderT]):
     """
     Metric for counting True Positives (TP), which are correctly identified
     actual change points within the defined error margin.
@@ -49,15 +49,15 @@ class TruePositiveMetric[T: DetectionTrace, D: LabeledData[Any]](ClassificationM
 
         return len(cls.match(detected_changes, true_changes, error_margin))
 
-    def evaluate(self, trace: T, data: D) -> float:
+    def evaluate(self, trace: TraceT, data: ProviderT) -> float:
         """
         Evaluate the True Positive metric.
 
         Parameters
         ----------
-        trace : T
+        trace : TraceT
             The trace containing detected change points.
-        data : D
+        data : ProviderT
             The ground truth data.
 
         Returns

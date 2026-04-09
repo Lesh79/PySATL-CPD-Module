@@ -21,7 +21,7 @@ from pysatl_cpd.analysis.metrics.run_metric import RunMetric
 from pysatl_cpd.core.detection_trace import DetectionTrace
 
 
-class ClassificationMetric[T: DetectionTrace, D: LabeledData[Any]](RunMetric[T, D, float]):
+class ClassificationMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](RunMetric[TraceT, ProviderT, float]):
     """
     Base class for classification metrics (TP, FP, FN) in change point detection.
 
@@ -73,15 +73,15 @@ class ClassificationMetric[T: DetectionTrace, D: LabeledData[Any]](RunMetric[T, 
         return used_detections
 
     @abstractmethod
-    def evaluate(self, trace: T, data: D) -> float:
+    def evaluate(self, trace: TraceT, data: ProviderT) -> float:
         """
         Evaluate the metric.
 
         Parameters
         ----------
-        trace : T
+        trace : TraceT
             The trace containing detected change points.
-        data : D
+        data : ProviderT
             The ground truth data containing actual change points.
 
         Returns
