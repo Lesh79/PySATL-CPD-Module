@@ -30,9 +30,17 @@ class ConfusionMatrix[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
     ----------
     error_margin : tuple[int, int]
         Tolerance window `(left, right)` around true change points for matching.
+
+    Raises
+    ------
+    ValueError
+        If the left or right margin in the `error_margin` argument is a negative number.
     """
 
     def __init__(self, error_margin: tuple[int, int]) -> None:
+        if error_margin[0] < 0 or error_margin[1] < 0:
+            raise ValueError("The left and right margins must be non-negative numbers")
+
         self.__error_margin = error_margin
 
     def evaluate(self, trace: TraceT, data: ProviderT) -> dict[str, float]:
