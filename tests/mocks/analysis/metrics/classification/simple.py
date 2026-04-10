@@ -11,6 +11,7 @@ __author__ = "Danil Totmyanin"
 __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
+
 from typing import Any
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
@@ -18,7 +19,9 @@ from pysatl_cpd.analysis.metrics.classification.classification_metric import Cla
 from pysatl_cpd.core.detection_trace import DetectionTrace
 
 
-class MockClassificationMetric(ClassificationMetric[DetectionTrace, LabeledData[Any]]):
+class MockClassificationMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
+    ClassificationMetric[TraceT, ProviderT]
+):
     """
     Mock implementation of the ClassificationMetric class for testing purposes.
 

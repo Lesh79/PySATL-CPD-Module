@@ -12,12 +12,11 @@ __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
 from collections.abc import Sequence
-from typing import Any
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
 
 
-class MockLabeledData(LabeledData[Any]):
+class MockLabeledData(LabeledData[float]):
     """
     Mock implementation of LabeledData for testing purposes.
 
