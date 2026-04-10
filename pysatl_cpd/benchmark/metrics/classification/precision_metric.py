@@ -1,5 +1,12 @@
 # -*- coding: ascii -*-
 
+"""
+Module for computing micro-averaged Precision over a dataset.
+
+Precision measures the proportion of detected change points that are actual
+true change points, calculated globally across all benchmark runs.
+"""
+
 __author__ = "Danil Totmyanin"
 __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
@@ -16,6 +23,18 @@ from pysatl_cpd.core.detection_trace import DetectionTrace
 class PrecisionMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
     AggregationMetric[TraceT, ProviderT, dict[str, float], float]
 ):
+    """
+    Computes the micro-averaged Precision metric over the entire dataset.
+
+    Precision is calculated globally by summing True Positives (TP) and
+    False Positives (FP) across all runs before applying the formula.
+
+    Parameters
+    ----------
+    error_margin : tuple[int, int]
+        Tolerance window `(left, right)` around true change points for matching.
+    """
+
     def __init__(self, error_margin: tuple[int, int]) -> None:
         self._base_metric = ConfusionMatrix[TraceT, ProviderT](error_margin)
 

@@ -1,5 +1,12 @@
 # -*- coding: ascii -*-
 
+"""
+Module for computing a comprehensive classification report over a dataset.
+
+Calculates micro-averaged Precision, Recall, and F1 Score simultaneously
+to optimize computational overhead across multiple benchmark runs.
+"""
+
 __author__ = "Danil Totmyanin"
 __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
@@ -16,6 +23,19 @@ from pysatl_cpd.core.detection_trace import DetectionTrace
 class ClassificationReport[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
     AggregationMetric[TraceT, ProviderT, dict[str, float], dict[str, float]]
 ):
+    """
+    Computes a comprehensive classification report over the entire dataset.
+
+    Calculates micro-averaged Precision, Recall, and F1 Score by summing
+    True Positives (TP), False Positives (FP), and False Negatives (FN)
+    across all runs before applying the metric formulas.
+
+    Parameters
+    ----------
+    error_margin : tuple[int, int]
+        Tolerance window `(left, right)` around true change points for matching.
+    """
+
     def __init__(self, error_margin: tuple[int, int]) -> None:
         self._base_metric = ConfusionMatrix[TraceT, ProviderT](error_margin)
 

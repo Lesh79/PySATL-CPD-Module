@@ -1,5 +1,13 @@
 # -*- coding: ascii -*-
 
+"""
+Module for computing the F1 Score over a dataset.
+
+The F1 Score is the harmonic mean of precision and recall, calculated
+by globally aggregating True Positives, False Positives, and False
+Negatives across all benchmark runs.
+"""
+
 __author__ = "Danil Totmyanin"
 __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
@@ -16,6 +24,18 @@ from pysatl_cpd.core.detection_trace import DetectionTrace
 class F1Metric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
     AggregationMetric[TraceT, ProviderT, dict[str, float], float]
 ):
+    """
+    Computes the F1 Score over the entire dataset.
+
+    F1 Score is the harmonic mean of precision and recall. Micro-averaging
+    is performed by globally aggregating TP, FP, and FN across all runs.
+
+    Parameters
+    ----------
+    error_margin : tuple[int, int]
+        Tolerance window `(left, right)` around true change points for matching.
+    """
+
     def __init__(self, error_margin: tuple[int, int]) -> None:
         self._base_metric = ConfusionMatrix[TraceT, ProviderT](error_margin)
 
