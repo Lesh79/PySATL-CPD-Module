@@ -18,7 +18,6 @@ __author__ = "Danil Totmyanin"
 __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
-from collections.abc import Sequence
 from typing import Any, cast
 
 import numpy as np
@@ -29,7 +28,7 @@ from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 
 
 class RunLengthMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[Any]](
-    RunMetric[TraceT, ProviderT, Sequence[int]]
+    RunMetric[TraceT, ProviderT, list[int]]
 ):
     """
     Computes run lengths between consecutive detections.
@@ -39,7 +38,7 @@ class RunLengthMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[
     (ARL) - every detection is treated as a positive, ground-truth is ignored.
     """
 
-    def evaluate(self, trace: TraceT, data: ProviderT) -> Sequence[int]:
+    def evaluate(self, trace: TraceT, data: ProviderT) -> list[int]:
         """
         Calculate run lengths between consecutive detections.
 
@@ -52,7 +51,7 @@ class RunLengthMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[
 
         Returns
         -------
-        Sequence[int]
+        list[int]
             Distances between consecutive detections, with the first distance measured
             from 0 to the first detection.
         """

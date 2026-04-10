@@ -11,7 +11,6 @@ __author__ = "Danil Totmyanin"
 __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
-from collections.abc import Sequence
 from typing import Any
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
@@ -21,7 +20,7 @@ from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 
 
 class DelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[Any]](
-    RunMetric[TraceT, ProviderT, Sequence[int]]
+    RunMetric[TraceT, ProviderT, list[int]]
 ):
     """
     Computes the detection delay for online change point detection algorithms.
@@ -40,7 +39,7 @@ class DelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[Any]
     def __init__(self, max_delay: int) -> None:
         self._max_delay = max_delay
 
-    def evaluate(self, trace: TraceT, data: ProviderT) -> Sequence[int]:
+    def evaluate(self, trace: TraceT, data: ProviderT) -> list[int]:
         """
         Calculate delays for all true change points
 
@@ -57,8 +56,8 @@ class DelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[Any]
 
         Returns
         -------
-        Sequence[int]
-            A sequence of delays where each element corresponds to the true
+        list[int]
+            A list of delays where each element corresponds to the true
             change point at the same index in ``data.change_points``.
             Length is exactly equal to the number of true change points.
         """
