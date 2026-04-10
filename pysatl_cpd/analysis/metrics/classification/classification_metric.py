@@ -1,0 +1,118 @@
+# -*- coding: ascii -*-
+
+"""
+Base module for classification-based evaluation metrics.
+
+This module provides the `ClassificationMetric` base class and the core
+matching algorithm used to align predicted change points with true change points
+within a defined tolerance window.
+"""
+
+__author__ = "Danil Totmyanin"
+__copyright__ = "Copyright (c) 2026 PySATL project"
+__license__ = "SPDX-License-Identifier: MIT"
+
+from abc import abstractmethod
+from collections.abc import Sequence
+from typing import Any
+
+from pysatl_cpd.analysis.labeled_data import LabeledData
+from pysatl_cpd.analysis.metrics.run_metric import RunMetric
+from pysatl_cpd.core.detection_trace import DetectionTrace
+
+
+class ClassificationMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](RunMetric[TraceT, ProviderT, float]):
+    """
+    Base class for classification metrics (TP, FP, FN) in change point detection.
+
+    Parameters
+    ----------
+    error_margin : tuple[int, int]
+        A tuple `(left, right)` representing the tolerance window around a true
+        change point. A detected change point is considered a match if it falls
+        within `[true_change - left, true_change + right]`.
+
+    Raises
+    ------
+    ValueError
+        If the left or right margin in the `error_margin` argument is a negative number.
+
+    """
+
+    def __init__(self, error_margin: tuple[int, int]) -> None:
+        if error_margin[0] < 0 or error_margin[1] < 0:
+            raise ValueError("The left and right margins must be non-negative numbers")
+
+        self._error_margin = error_margin
+
+    @staticmethod
+    def match(
+        detected_change_points: Sequence[int], true_change_points: Sequence[int], error_margin: tuple[int, int]
+    ) -> dict[int, set[int]]:
+        """
+        Match detected change points to true change points within a given error margin.
+
+        Matching policy
+        ---------------
+        - For every true change point we collect all detected points that fall into
+          the tolerance window: [true_change - left, true_change + right].
+        - Each detected change point can be assigned to at most one true change point
+          (enforced via `used_detections`).
+        - The returned mapping contains **all** true change points as keys; if a true
+          change point has no matches, its value is an empty set.
+
+        Parameters
+        ----------
+        detected_change_points : Sequence[int]
+            Predicted change point indices.
+        true_change_points : Sequence[int]
+            Ground truth change point indices.
+        error_margin : tuple[int, int]
+            Tolerance window (left, right).
+
+        Returns
+        -------
+        dict[int, set[int]]
+            Mapping: true change point -> set of matched detected change points.
+            Note: sets are unordered; use `min()`/`max()` if you need a stable choice.
+
+        Note
+        ----
+            Both input sequences are sorted internally to ensure deterministic
+            matching results regardless of input order.
+        """
+        sorted_true = sorted(true_change_points)
+        sorted_detected = sorted(detected_change_points)
+
+        left, right = error_margin
+        used_detections: set[int] = set()
+        detections: dict[int, set[int]] = {}
+
+        for true_change in sorted_true:
+            detections[true_change] = set()
+            for detected_change in sorted_detected:
+                if detected_change in used_detections:
+                    continue
+                if true_change - left <= detected_change <= true_change + right:
+                    detections[true_change].add(detected_change)
+                    used_detections.add(detected_change)
+
+        return detections
+
+    @abstractmethod
+    def evaluate(self, trace: TraceT, data: ProviderT) -> float:
+        """
+        Evaluate the metric.
+
+        Parameters
+        ----------
+        trace : TraceT
+            The trace containing detected change points.
+        data : ProviderT
+            The ground truth data containing actual change points.
+
+        Returns
+        -------
+        float
+            The computed metric value.
+        """
