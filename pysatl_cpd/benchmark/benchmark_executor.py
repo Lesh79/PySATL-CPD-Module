@@ -12,7 +12,6 @@ __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
 import csv
-import hashlib
 import itertools
 import math
 import pickle
@@ -51,19 +50,19 @@ class BenchmarkRecord:
     """
 
     algorithm: str
-    configuration_hash: str
+    configuration_hash: int
     data: str
     threshold: float
     trace_path: str | None = None
 
     @property
-    def key(self) -> tuple[str, str, str, float]:
+    def key(self) -> tuple[str, int, str, float]:
         """
         Get the unique composite key for this benchmark run.
 
         Returns
         -------
-        tuple[str, str, str, float]
+        tuple[str, int, str, float]
             A tuple containing (algorithm, configuration_hash, data, threshold)
             used for identifying the record in the registry.
         """
@@ -122,7 +121,7 @@ class BenchmarkExecutor[DataT]:
             the benchmark metadata record and the corresponding detection trace.
         """
         results: list[tuple[BenchmarkRecord, OnlineDetectionTrace[Any]]] = []
-        registry: dict[tuple[str, str, str, float], BenchmarkRecord] = {}
+        registry: dict[tuple[str, int, str, float], BenchmarkRecord] = {}
         registry_path: Path | None = None
 
         if self.__dump_dir is not None:
@@ -135,7 +134,7 @@ class BenchmarkExecutor[DataT]:
                     for row in reader:
                         record = BenchmarkRecord(
                             algorithm=row["algorithm"],
-                            configuration_hash=row["configuration_hash"],
+                            configuration_hash=int(row["configuration_hash"]),
                             data=row["data"],
                             threshold=float(row["threshold"]),
                             trace_path=row["trace_path"] if row["trace_path"] else None,
@@ -144,7 +143,7 @@ class BenchmarkExecutor[DataT]:
 
         for (algorithm, thresholds), provider in itertools.product(self.__algorithms, self.__providers):
             algo_name = str(algorithm)
-            config_hash = str(hashlib.md5(algo_name.encode("utf-8")).hexdigest()[:8])
+            config_hash = hash(algorithm.configuration)
             data_name = provider.name
 
             for threshold in thresholds:
@@ -161,7 +160,7 @@ class BenchmarkExecutor[DataT]:
                             continue
 
                 steps = list(self.__solver.run(algorithm, provider, threshold))
-                trace = OnlineDetectionTrace.from_run(steps)
+                trace = OnlineDetectionTrace.from_run(steps, algo_name, config_hash)
 
                 record = BenchmarkRecord(algo_name, config_hash, data_name, threshold, None)
 
