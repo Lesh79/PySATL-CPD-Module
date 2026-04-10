@@ -38,11 +38,12 @@ class DelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[Any]
     """
 
     def __init__(self, max_delay: int) -> None:
-        self.__max_delay = max_delay
+        self._max_delay = max_delay
 
     def evaluate(self, trace: TraceT, data: ProviderT) -> Sequence[int]:
         """
         Calculate delays for all true change points
+
         Delay is computed per true change point as the minimum non-negative delay
         among matched detections within [true_change, true_change + max_delay].
         If there is no match, `max_delay` is returned for that change point.
@@ -57,13 +58,19 @@ class DelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[Any]
         Returns
         -------
         Sequence[int]
-            A sequence of delays corresponding to each true change point. Length
-            is exactly equal to the number of true change points.
+            A sequence of delays where each element corresponds to the true
+            change point at the same index in ``data.change_points``.
+            Length is exactly equal to the number of true change points.
         """
 
         detected_changes = trace.detected_change_points
         true_changes = data.change_points
 
-        matching = ClassificationMetric.match(detected_changes, true_changes, (0, self.__max_delay))
-        delays = [min(v) - k if v else self.__max_delay for k, v in matching.items()]
+        matching = ClassificationMetric.match(detected_changes, true_changes, (0, self._max_delay))
+
+        delays = []
+        for cp in true_changes:
+            matched_detections = matching[cp]
+            delays.append(min(matched_detections) - cp if matched_detections else self._max_delay)
+
         return delays
