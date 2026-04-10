@@ -75,15 +75,22 @@ class ClassificationMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
         dict[int, set[int]]
             Mapping: true change point -> set of matched detected change points.
             Note: sets are unordered; use `min()`/`max()` if you need a stable choice.
+
+        Note
+        ----
+            Both input sequences are sorted internally to ensure deterministic
+            matching results regardless of input order.
         """
+        sorted_true = sorted(true_change_points)
+        sorted_detected = sorted(detected_change_points)
 
         left, right = error_margin
         used_detections: set[int] = set()
         detections: dict[int, set[int]] = {}
 
-        for true_change in true_change_points:
+        for true_change in sorted_true:
             detections[true_change] = set()
-            for detected_change in detected_change_points:
+            for detected_change in sorted_detected:
                 if detected_change in used_detections:
                     continue
                 if true_change - left <= detected_change <= true_change + right:

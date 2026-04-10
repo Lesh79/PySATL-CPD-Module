@@ -7,9 +7,12 @@ __license__ = "SPDX-License-Identifier: MIT"
 from collections.abc import Sequence
 from typing import Any
 
+import hypothesis.strategies as st
 import pytest
+from hypothesis import given
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
+from pysatl_cpd.analysis.metrics.classification.classification_metric import ClassificationMetric
 from pysatl_cpd.core.detection_trace import DetectionTrace
 from tests.mocks.analysis.metrics.classification.simple import MockClassificationMetric
 
@@ -86,3 +89,27 @@ def test_classification_metric_match(
     )
 
     assert result == expected
+
+
+@given(
+    detected=st.lists(st.integers(min_value=1, max_value=1000), unique=True),
+    true_cps=st.lists(st.integers(min_value=1, max_value=1000), unique=True),
+    margin=st.tuples(st.integers(min_value=0, max_value=100), st.integers(min_value=0, max_value=100)),
+)
+def test_tp_metric_order_independence(detected: list[int], true_cps: list[int], margin: tuple[int, int]) -> None:
+    """
+    Property-based test: The metric calculation must be completely independent
+    of the order of elements in the detected and true change point arrays.
+    """
+
+    sorted_detected = sorted(detected)
+    sorted_true = sorted(true_cps)
+
+    # Compute on raw (potentially completely unsorted) lists
+    result_unsorted = ClassificationMetric.match(detected, true_cps, margin)
+
+    # Compute on strictly sorted lists
+    result_sorted = ClassificationMetric.match(sorted_detected, sorted_true, margin)
+
+    # The result must be identical
+    assert result_unsorted == result_sorted

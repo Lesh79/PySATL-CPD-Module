@@ -11,7 +11,9 @@ __license__ = "SPDX-License-Identifier: MIT"
 from collections.abc import Sequence
 from typing import Any
 
+import hypothesis.strategies as st
 import pytest
+from hypothesis import given
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
 from pysatl_cpd.analysis.metrics.classification.fn_metric import FalseNegativeMetric
@@ -109,3 +111,27 @@ def test_fn_metric_evaluate() -> None:
     # We expect exactly 2.0 FNs (points 30 and 40), and the type must be float.
     assert result == 2.0
     assert isinstance(result, float)
+
+
+@given(
+    detected=st.lists(st.integers(min_value=1, max_value=1000), unique=True),
+    true_cps=st.lists(st.integers(min_value=1, max_value=1000), unique=True),
+    margin=st.tuples(st.integers(min_value=0, max_value=100), st.integers(min_value=0, max_value=100)),
+)
+def test_tp_metric_order_independence(detected: list[int], true_cps: list[int], margin: tuple[int, int]) -> None:
+    """
+    Property-based test: The metric calculation must be completely independent
+    of the order of elements in the detected and true change point arrays.
+    """
+
+    sorted_detected = sorted(detected)
+    sorted_true = sorted(true_cps)
+
+    # Compute on raw (potentially completely unsorted) lists
+    result_unsorted = FalseNegativeMetric.compute(detected, true_cps, margin)
+
+    # Compute on strictly sorted lists
+    result_sorted = FalseNegativeMetric.compute(sorted_detected, sorted_true, margin)
+
+    # The result must be identical
+    assert result_unsorted == result_sorted

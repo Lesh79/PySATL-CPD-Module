@@ -10,7 +10,9 @@ __license__ = "SPDX-License-Identifier: MIT"
 
 from typing import Any
 
+import hypothesis.strategies as st
 import pytest
+from hypothesis import given
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
 from pysatl_cpd.analysis.metrics.classification.confusion_matrix import ConfusionMatrix
@@ -116,3 +118,36 @@ def test_confusion_matrix_evaluate(
 
     assert result["fn"] == expected_fn
     assert isinstance(result["fn"], float)
+
+
+@given(
+    detected=st.lists(st.integers(min_value=1, max_value=1000), unique=True).map(sorted),
+    true_cps=st.lists(st.integers(min_value=1, max_value=1000), unique=True).map(sorted),
+    margin=st.tuples(st.integers(min_value=0, max_value=100), st.integers(min_value=0, max_value=100)),
+)
+def test_confusion_matrix_invariants(detected: list[int], true_cps: list[int], margin: tuple[int, int]) -> None:
+    """
+    Hypothesis property-based test to verify mathematical invariants of Confusion Matrix.
+    """
+
+    metric: ConfusionMatrix[MockDetectionTrace, MockLabeledData] = ConfusionMatrix(error_margin=margin)
+
+    trace_mock = MockDetectionTrace(detected_change_points=detected)
+    data_mock = MockLabeledData(change_points=true_cps)
+
+    res = metric.evaluate(trace=trace_mock, data=data_mock)
+
+    tp = res["tp"]
+    fp = res["fp"]
+    fn = res["fn"]
+
+    # Invariant 1: Every true change point is either detected (TP) or missed (FN)
+    assert tp + fn == float(len(true_cps))
+
+    # Invariant 2: False positives cannot exceed total detections
+    assert fp <= float(len(detected))
+
+    # Invariant 3: All metrics must be non-negative
+    assert tp >= 0.0
+    assert fp >= 0.0
+    assert fn >= 0.0

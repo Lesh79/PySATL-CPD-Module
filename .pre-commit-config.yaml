@@ -69,3 +69,4 @@ repos:
           - scipy-stubs>=1.13
           - pytest>=8
           - types-setuptools>=75
+          - hypothesis
