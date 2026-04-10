@@ -5,9 +5,12 @@ __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
 from collections.abc import Sequence
+from typing import Any
 
 import pytest
 
+from pysatl_cpd.analysis.labeled_data import LabeledData
+from pysatl_cpd.core.detection_trace import DetectionTrace
 from tests.mocks.analysis.metrics.classification.simple import MockClassificationMetric
 
 
@@ -16,7 +19,7 @@ def test_classification_metric_init_valid() -> None:
     Test successful initialization of the metric with valid (non-negative) error margins.
     """
     margin = (2, 3)
-    metric = MockClassificationMetric(error_margin=margin)
+    metric = MockClassificationMetric[DetectionTrace, LabeledData[Any]](error_margin=margin)
 
     assert metric._error_margin == margin
 
