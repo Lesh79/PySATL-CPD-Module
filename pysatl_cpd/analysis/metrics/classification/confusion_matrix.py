@@ -41,7 +41,7 @@ class ConfusionMatrix[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
         if error_margin[0] < 0 or error_margin[1] < 0:
             raise ValueError("The left and right margins must be non-negative numbers")
 
-        self.__error_margin = error_margin
+        self._error_margin = error_margin
 
     def evaluate(self, trace: TraceT, data: ProviderT) -> dict[str, float]:
         """
@@ -65,7 +65,7 @@ class ConfusionMatrix[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
         detected_changes = trace.detected_change_points
         true_changes = data.change_points
 
-        matching = ClassificationMetric.match(detected_changes, true_changes, self.__error_margin)
+        matching = ClassificationMetric.match(detected_changes, true_changes, self._error_margin)
         tp = len([v for v in matching.values() if v])
         fn = len(true_changes) - tp
         fp = len(detected_changes) - sum(len(v) for v in matching.values())
