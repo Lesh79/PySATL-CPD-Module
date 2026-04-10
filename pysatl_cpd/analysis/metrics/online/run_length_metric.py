@@ -19,7 +19,9 @@ __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, cast
+
+import numpy as np
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
 from pysatl_cpd.analysis.metrics.run_metric import RunMetric
@@ -55,13 +57,11 @@ class RunLengthMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[
             from 0 to the first detection.
         """
 
-        detected_changes = sorted(trace.detected_change_points)
+        detected_changes = trace.detected_change_points
+        if not detected_changes:
+            return []
 
-        run_lengths = []
-        last_reset_point = 0
-
-        for detected in detected_changes:
-            run_lengths.append(detected - last_reset_point)
-            last_reset_point = detected
-
-        return run_lengths
+        sorted_changes = np.sort(detected_changes)
+        points_with_zero = np.insert(sorted_changes, 0, 0)
+        diff_arr = np.diff(points_with_zero)
+        return cast(list[int], diff_arr.tolist())

@@ -103,9 +103,6 @@ def test_delay_metric_evaluate(
     assert result == expected_delays
 
 
-indices_strategy = st.lists(st.integers(min_value=1, max_value=1000), unique=True)
-
-
 @given(
     detected=st.lists(st.integers(min_value=1, max_value=1000), unique=True).map(sorted),
     true_cps=st.lists(st.integers(min_value=1, max_value=1000), unique=True).map(sorted),
