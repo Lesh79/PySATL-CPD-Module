@@ -34,9 +34,17 @@ class DelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[Any]
     max_delay : int
         The maximum allowable delay window for a valid detection. Also used
         as the penalty value for missed detections (FN).
+
+    Raises
+    ------
+    ValueError
+        If maximum delay is negative
     """
 
     def __init__(self, max_delay: int) -> None:
+        if max_delay < 0:
+            raise ValueError("Maximum delay must be non-negative")
+
         self._max_delay = max_delay
 
     def evaluate(self, trace: TraceT, data: ProviderT) -> list[int]:

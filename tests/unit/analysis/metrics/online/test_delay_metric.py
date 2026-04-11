@@ -29,6 +29,14 @@ def test_delay_metric_init() -> None:
     assert metric._max_delay == max_delay
 
 
+def test_delay_metric_invalid_init() -> None:
+    """
+    Test invalid initialization of DelayMetric.
+    """
+    with pytest.raises(ValueError):
+        DelayMetric(max_delay=-50)
+
+
 @pytest.mark.parametrize(
     "detected, true_cps, max_delay, expected_delays",
     [

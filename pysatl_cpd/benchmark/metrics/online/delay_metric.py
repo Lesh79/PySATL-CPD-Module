@@ -38,9 +38,17 @@ class MeanDelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[
     max_delay : int
         The maximum allowable delay window. Used as a penalty for missed
         change points and as the fallback result if no delays exist.
+
+    Raises
+    ------
+    ValueError
+        If maximum delay is negative
     """
 
     def __init__(self, max_delay: int) -> None:
+        if max_delay < 0:
+            raise ValueError("Maximum delay must be non-negative")
+
         self.__base_metric = DelayMetric[TraceT, ProviderT](max_delay)
         self.__max_delay = max_delay
 
@@ -85,9 +93,17 @@ class MedianDelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledDat
     max_delay : int
         The maximum allowable delay window. Used as a penalty for missed
         change points and as the fallback result if no delays exist.
+
+    Raises
+    ------
+    ValueError
+        If maximum delay is negative
     """
 
     def __init__(self, max_delay: int) -> None:
+        if max_delay < 0:
+            raise ValueError("Maximum delay must be non-negative")
+
         self.__base_metric = DelayMetric[TraceT, ProviderT](max_delay)
         self.__max_delay = max_delay
 
