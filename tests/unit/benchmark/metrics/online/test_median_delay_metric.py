@@ -1,5 +1,9 @@
 # -*- coding: ascii -*-
 
+__author__ = "Danil Totmyanin"
+__copyright__ = "Copyright (c) 2026 PySATL project"
+__license__ = "SPDX-License-Identifier: MIT"
+
 import pytest
 
 from pysatl_cpd.analysis.metrics.online.delay_metric import DelayMetric as SingleDelayMetric
