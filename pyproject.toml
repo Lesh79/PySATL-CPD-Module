@@ -26,6 +26,7 @@ scipy = ">=1.14.0"
 matplotlib = ">=3.9.1"
 scikit-learn = ">=1.5.2"
 plotly = "^6.6.0"
+jupyter = "^1.1.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.2.2"
@@ -35,6 +36,7 @@ pre-commit = ">=4.1.0"
 hypothesis = ">=6.122.1"
 scipy-stubs = ">=1.15.2"
 pytest-cov = ">=6.0.0"
+gitpython = "^3.1.46"
 
 [tool.poetry.group.docs.dependencies]
 jupyter = ">=1.1.1"
