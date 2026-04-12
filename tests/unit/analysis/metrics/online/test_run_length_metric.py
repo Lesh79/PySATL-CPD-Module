@@ -8,6 +8,8 @@ __author__ = "Danil Totmyanin"
 __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
+import warnings
+
 import hypothesis.strategies as st
 import pytest
 from hypothesis import given
@@ -43,6 +45,7 @@ def test_run_length_metric_evaluate(
     """
     Test the `evaluate` method for correct calculation of distances between detections.
     """
+    warnings.filterwarnings("ignore")
     metric: RunLengthMetric[MockOnlineDetectionTrace, MockLabeledData] = RunLengthMetric()
 
     trace_mock = MockOnlineDetectionTrace(detected_change_points=detected)
@@ -74,6 +77,7 @@ def test_run_length_metric_invariants(detected: list[int]) -> None:
     """
     Hypothesis property-based test for RunLengthMetric invariants.
     """
+    warnings.filterwarnings("ignore")
     metric: RunLengthMetric[MockOnlineDetectionTrace, MockLabeledData] = RunLengthMetric()
     trace = MockOnlineDetectionTrace(detected_change_points=detected)
     data = MockLabeledData(change_points=[])
