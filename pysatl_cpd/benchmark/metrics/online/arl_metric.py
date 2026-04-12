@@ -36,11 +36,11 @@ class ARLMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[Any]](
     """
 
     def __init__(self) -> None:
-        self.__base_metric = RunLengthMetric[TraceT, ProviderT]()
+        self._base_metric = RunLengthMetric[TraceT, ProviderT]()
 
     @property
     def base_metric(self) -> RunLengthMetric[TraceT, ProviderT]:
-        return self.__base_metric
+        return self._base_metric
 
     def aggregate(self, results: Sequence[list[int]]) -> float:
         """

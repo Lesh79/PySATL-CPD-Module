@@ -34,6 +34,11 @@ class ClassificationReport[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
     ----------
     error_margin : tuple[int, int]
         Tolerance window `(left, right)` around true change points for matching.
+
+    Raises
+    ------
+    ValueError
+        If the left or right margin in the `error_margin` argument is a negative number.
     """
 
     def __init__(self, error_margin: tuple[int, int]) -> None:
@@ -51,5 +56,7 @@ class ClassificationReport[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
         precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0.0
         recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0.0
         f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
+
+        print(total_fp)
 
         return {"tp": total_tp, "fp": total_fp, "fn": total_fn, "precision": precision, "recall": recall, "f1": f1}

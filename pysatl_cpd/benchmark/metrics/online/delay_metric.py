@@ -49,12 +49,12 @@ class MeanDelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[
         if max_delay < 0:
             raise ValueError("Maximum delay must be non-negative")
 
-        self.__base_metric = DelayMetric[TraceT, ProviderT](max_delay)
-        self.__max_delay = max_delay
+        self._base_metric = DelayMetric[TraceT, ProviderT](max_delay)
+        self._max_delay = max_delay
 
     @property
     def base_metric(self) -> DelayMetric[TraceT, ProviderT]:
-        return self.__base_metric
+        return self._base_metric
 
     def aggregate(self, results: Sequence[list[int]]) -> float:
         """
@@ -74,7 +74,7 @@ class MeanDelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[
 
         all_delays = list(chain.from_iterable(results))
         if not all_delays:
-            return float(self.__max_delay)
+            return float(self._max_delay)
 
         return float(mean(all_delays))
 
@@ -101,15 +101,12 @@ class MedianDelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledDat
     """
 
     def __init__(self, max_delay: int) -> None:
-        if max_delay < 0:
-            raise ValueError("Maximum delay must be non-negative")
-
-        self.__base_metric = DelayMetric[TraceT, ProviderT](max_delay)
-        self.__max_delay = max_delay
+        self._base_metric = DelayMetric[TraceT, ProviderT](max_delay)
+        self._max_delay = max_delay
 
     @property
     def base_metric(self) -> DelayMetric[TraceT, ProviderT]:
-        return self.__base_metric
+        return self._base_metric
 
     def aggregate(self, results: Sequence[list[int]]) -> float:
         """
@@ -129,6 +126,6 @@ class MedianDelayMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledDat
 
         all_delays = list(chain.from_iterable(results))
         if not all_delays:
-            return float(self.__max_delay)
+            return float(self._max_delay)
 
         return float(median(all_delays))

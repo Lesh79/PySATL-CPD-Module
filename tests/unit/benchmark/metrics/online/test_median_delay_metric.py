@@ -19,7 +19,7 @@ def test_median_delay_initialization() -> None:
 
     assert isinstance(metric.base_metric, SingleDelayMetric)
     assert metric.base_metric._max_delay == max_delay
-    assert metric._MedianDelayMetric__max_delay == max_delay  # type: ignore
+    assert metric._max_delay == max_delay
 
 
 def test_median_delay_invalid_max_delay() -> None:

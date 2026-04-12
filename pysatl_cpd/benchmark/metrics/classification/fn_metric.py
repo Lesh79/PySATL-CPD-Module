@@ -30,6 +30,11 @@ class FalseNegativeMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
     ----------
     error_margin : tuple[int, int]
         Tolerance window `(left, right)` around true change points for matching.
+
+    Raises
+    ------
+    ValueError
+        If the left or right margin in the `error_margin` argument is a negative number.
     """
 
     def __init__(self, error_margin: tuple[int, int]) -> None:
