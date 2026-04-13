@@ -79,11 +79,11 @@ class BenchmarkExecutor[DataT]:
 
     Parameters
     ----------
-    algorithms : list[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]]
-        A list of tuples, where each tuple contains an instantiated online
+    algorithms : Sequence[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]]
+        A sequence of tuples, where each tuple contains an instantiated online
         algorithm and a sequence of thresholds to test it against.
-    providers : list[DataProvider[DataT]]
-        A list of data providers to be fed into the algorithms.
+    providers : Sequence[DataProvider[DataT]]
+        A sequence of data providers to be fed into the algorithms.
     solver : OnlineCpdSolver
         The solver instance responsible for iterating over the data providers
         and running the algorithmic logic.
@@ -94,8 +94,8 @@ class BenchmarkExecutor[DataT]:
 
     def __init__(
         self,
-        algorithms: list[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]],
-        providers: list[DataProvider[DataT]],
+        algorithms: Sequence[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]],
+        providers: Sequence[DataProvider[DataT]],
         solver: OnlineCpdSolver,
         dump_dir: str | Path | None = None,
     ) -> None:

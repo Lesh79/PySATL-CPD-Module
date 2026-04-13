@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +14,7 @@ class ARLBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledDa
 ):
     def __init__(
         self,
-        algorithms: list[tuple[OnlineAlgorithm[Any, Any, Any], list[float]]],
+        algorithms: Sequence[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]],
         providers: list[ProviderT],
         solver: OnlineCpdSolver,
         dump_dir: Path | None = None,
@@ -24,6 +25,6 @@ class ARLBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledDa
         self,
         algorithm: OnlineAlgorithm[Any, Any, Any],
         threshold: float,
-        providers: list[ProviderT],
+        providers: Sequence[ProviderT],
     ) -> list[tuple[TraceT, ProviderT]]:
         raise NotImplementedError("Method `_collect_runs` is not implemented yet.")

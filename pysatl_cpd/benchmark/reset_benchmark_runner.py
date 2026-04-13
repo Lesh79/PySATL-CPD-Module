@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -14,8 +15,8 @@ class ResetBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labeled
 ):
     def __init__(
         self,
-        algorithms: list[tuple[OnlineAlgorithm[Any, Any, Any], list[float]]],
-        providers: list[ProviderT],
+        algorithms: Sequence[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]],
+        providers: Sequence[ProviderT],
         metrics: dict[str, MultipleRunMetric[TraceT, ProviderT, Any]],
         solver: OnlineCpdSolver,
         dump_dir: Path | None = None,
@@ -26,6 +27,6 @@ class ResetBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labeled
         self,
         algorithm: OnlineAlgorithm[Any, Any, Any],
         threshold: float,
-        providers: list[ProviderT],
+        providers: Sequence[ProviderT],
     ) -> list[tuple[TraceT, ProviderT]]:
         raise NotImplementedError("Method `_collect_runs` is not implemented yet.")

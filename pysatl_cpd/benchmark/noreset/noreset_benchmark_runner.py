@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -14,8 +15,8 @@ from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[NoResetDetectionTrace[Any], ProviderT]):
     def __init__(
         self,
-        algorithms: list[tuple[OnlineAlgorithm[Any, Any, Any], list[float]]],
-        providers: list[ProviderT],
+        algorithms: Sequence[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]],
+        providers: Sequence[ProviderT],
         metrics: dict[str, MultipleRunMetric[NoResetDetectionTrace[Any], ProviderT, Any]],
         solver: OnlineCpdSolver,
         policy: ThresholdPolicy,
@@ -27,7 +28,7 @@ class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[
         self,
         algorithm: OnlineAlgorithm[Any, Any, Any],
         threshold: float,
-        providers: list[ProviderT],
+        providers: Sequence[ProviderT],
     ) -> list[tuple[NoResetDetectionTrace[Any], ProviderT]]:
         raise NotImplementedError("Method '_collect_runs' is not implemented yet.")
 
