@@ -20,7 +20,7 @@ from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 from pysatl_cpd.core.typedefs import Number
 from tests.mocks.algorithms.online import MockOnlineAlgorithm
-from tests.mocks.analysis.labeled_data import MockLabeledData
+from tests.mocks.analysis.labeled_data import MockLabeledDataWithPadding
 from tests.mocks.analysis.metrics.mock_run_metric import MockRunMetric
 from tests.mocks.benchmark.metrics.mock_aggregation_metric import MockAggregationMetric
 from tests.mocks.core.online.online_detection_trace import MockOnlineDetectionTrace
@@ -39,43 +39,45 @@ def solver() -> OnlineCpdSolver:
 @pytest.fixture
 def algorithm() -> MockOnlineAlgorithm[Number]:
     """Algorithm that always returns 0.5 - below threshold 1.0."""
-    return MockOnlineAlgorithm[Number](name="AlgoA", return_sequence=[0.5])
+    return MockOnlineAlgorithm[Number](name="AlgoA", return_sequence=[0.5], learning_period_size=2)
 
 
 @pytest.fixture
 def algorithm_with_signal() -> MockOnlineAlgorithm[Number]:
     """Algorithm that always returns 2.0 - above threshold 1.0."""
-    return MockOnlineAlgorithm[Number](name="AlgoSignal", return_sequence=[2.0])
+    return MockOnlineAlgorithm[Number](name="AlgoSignal", return_sequence=[2.0], learning_period_size=2)
 
 
 @pytest.fixture
-def providers() -> list[MockLabeledData]:
+def providers() -> list[MockLabeledDataWithPadding]:
     """Two labeled data providers."""
     return [
-        MockLabeledData(change_points=[5], name="Provider1"),
-        MockLabeledData(change_points=[10], name="Provider2"),
+        MockLabeledDataWithPadding(change_points=[5], name="Provider1"),
+        MockLabeledDataWithPadding(change_points=[10], name="Provider2"),
     ]
 
 
 @pytest.fixture
-def single_provider() -> MockLabeledData:
+def single_provider() -> MockLabeledDataWithPadding:
     """Single labeled data provider."""
-    return MockLabeledData(change_points=[5], name="Provider1")
+    return MockLabeledDataWithPadding(change_points=[5], name="Provider1")
 
 
 @pytest.fixture
-def mock_metric() -> MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData]:
+def mock_metric() -> MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding]:
     """Standard mock aggregation metric."""
-    return MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData](base=MockRunMetric(return_values=[1.0]))
+    return MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding](
+        base=MockRunMetric(return_values=[1.0])
+    )
 
 
 def make_reset_runner(
     algorithms: Sequence[tuple[MockOnlineAlgorithm[Number], Sequence[float]]],
-    providers: Sequence[MockLabeledData],
-    metrics: dict[str, MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData]],
+    providers: Sequence[MockLabeledDataWithPadding],
+    metrics: dict[str, MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding]],
     solver: OnlineCpdSolver,
     dump_dir: Path | str | None = None,
-) -> ResetBenchmarkRunner[MockOnlineDetectionTrace, MockLabeledData]:
+) -> ResetBenchmarkRunner[MockOnlineDetectionTrace, MockLabeledDataWithPadding]:
     """Helper to construct ResetBenchmarkRunner with given parameters."""
     return ResetBenchmarkRunner(
         algorithms=algorithms,
@@ -97,8 +99,8 @@ class TestResetBenchmarkRunnerInheritance:
     def test_is_instance_of_online_benchmark_runner(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        single_provider: MockLabeledData,
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        single_provider: MockLabeledDataWithPadding,
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """ResetBenchmarkRunner is an instance of OnlineBenchmarkRunner."""
@@ -113,8 +115,8 @@ class TestResetBenchmarkRunnerInheritance:
     def test_collect_runs_is_implemented(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        single_provider: MockLabeledData,
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        single_provider: MockLabeledDataWithPadding,
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """_collect_runs does not raise NotImplementedError."""
@@ -136,8 +138,8 @@ class TestResetBenchmarkRunnerCollectRuns:
     def test_returns_one_run_per_provider(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        providers: list[MockLabeledData],
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        providers: list[MockLabeledDataWithPadding],
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """_collect_runs returns exactly len(providers) (trace, provider) pairs."""
@@ -153,7 +155,7 @@ class TestResetBenchmarkRunnerCollectRuns:
     def test_empty_providers_returns_empty_list(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """_collect_runs with empty providers returns empty list."""
@@ -169,8 +171,8 @@ class TestResetBenchmarkRunnerCollectRuns:
     def test_single_provider_returns_single_run(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        single_provider: MockLabeledData,
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        single_provider: MockLabeledDataWithPadding,
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """_collect_runs with one provider returns exactly one pair."""
@@ -186,8 +188,8 @@ class TestResetBenchmarkRunnerCollectRuns:
     def test_each_run_paired_with_correct_provider(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        providers: list[MockLabeledData],
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        providers: list[MockLabeledDataWithPadding],
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """Each trace is paired with its corresponding provider."""
@@ -204,8 +206,8 @@ class TestResetBenchmarkRunnerCollectRuns:
     def test_trace_is_online_detection_trace(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        single_provider: MockLabeledData,
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        single_provider: MockLabeledDataWithPadding,
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """Each trace in collected runs is an OnlineDetectionTrace."""
@@ -222,8 +224,8 @@ class TestResetBenchmarkRunnerCollectRuns:
     def test_trace_algorithm_name_and_configuration_hash_match_algorithm(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        single_provider: MockLabeledData,
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        single_provider: MockLabeledDataWithPadding,
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """algorithm_name and configuration_hash in trace match the algorithm."""
@@ -241,8 +243,8 @@ class TestResetBenchmarkRunnerCollectRuns:
     def test_detected_change_points_respect_threshold(
         self,
         algorithm_with_signal: MockOnlineAlgorithm[Number],
-        single_provider: MockLabeledData,
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        single_provider: MockLabeledDataWithPadding,
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """High threshold produces no detections, low threshold produces detections."""
@@ -262,8 +264,8 @@ class TestResetBenchmarkRunnerCollectRuns:
     def test_different_thresholds_produce_different_detections(
         self,
         algorithm_with_signal: MockOnlineAlgorithm[Number],
-        single_provider: MockLabeledData,
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        single_provider: MockLabeledDataWithPadding,
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """Lower threshold produces more detections than higher threshold."""
@@ -282,8 +284,8 @@ class TestResetBenchmarkRunnerCollectRuns:
     def test_algorithm_is_reset_between_providers(
         self,
         algorithm_with_signal: MockOnlineAlgorithm[Number],
-        providers: list[MockLabeledData],
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        providers: list[MockLabeledDataWithPadding],
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """Algorithm state is reset between providers by the solver."""
@@ -311,8 +313,8 @@ class TestResetBenchmarkRunnerCaching:
     def test_no_files_created_without_dump_dir(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        single_provider: MockLabeledData,
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        single_provider: MockLabeledDataWithPadding,
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
         tmp_path: Path,
     ) -> None:
@@ -330,8 +332,8 @@ class TestResetBenchmarkRunnerCaching:
     def test_results_cached_to_disk_when_dump_dir_provided(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        single_provider: MockLabeledData,
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        single_provider: MockLabeledDataWithPadding,
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
         tmp_path: Path,
     ) -> None:
@@ -350,8 +352,8 @@ class TestResetBenchmarkRunnerCaching:
     def test_registry_contains_correct_metadata(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        single_provider: MockLabeledData,
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        single_provider: MockLabeledDataWithPadding,
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
         tmp_path: Path,
     ) -> None:
@@ -376,8 +378,8 @@ class TestResetBenchmarkRunnerCaching:
     def test_cached_results_reused_on_second_run(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        single_provider: MockLabeledData,
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        single_provider: MockLabeledDataWithPadding,
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
         tmp_path: Path,
     ) -> None:
@@ -411,8 +413,8 @@ class TestResetBenchmarkRunnerRun:
     def test_run_with_single_algorithm_single_threshold_single_provider(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        single_provider: MockLabeledData,
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        single_provider: MockLabeledDataWithPadding,
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """Basic happy path - one algorithm, one threshold, one provider."""
@@ -433,8 +435,8 @@ class TestResetBenchmarkRunnerRun:
     def test_run_returns_correct_structure(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        providers: list[MockLabeledData],
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        providers: list[MockLabeledDataWithPadding],
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """run() result has correct nested structure."""
@@ -456,8 +458,8 @@ class TestResetBenchmarkRunnerRun:
     def test_run_with_multiple_thresholds(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        single_provider: MockLabeledData,
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        single_provider: MockLabeledDataWithPadding,
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """Multiple thresholds produce multiple entries in result."""
@@ -477,7 +479,7 @@ class TestResetBenchmarkRunnerRun:
     def test_run_with_empty_providers(
         self,
         algorithm: MockOnlineAlgorithm[Number],
-        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData],
+        mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
         """Empty providers list - metric is called with empty batch."""
