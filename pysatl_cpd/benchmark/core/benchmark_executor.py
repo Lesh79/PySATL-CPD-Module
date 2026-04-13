@@ -178,20 +178,20 @@ class BenchmarkExecutor[DataT]:
 
                 results.append((record, trace))
 
-            if registry_path is not None:
-                fieldnames = ["algorithm", "configuration_hash", "data", "threshold", "trace_path"]
-                with open(registry_path, mode="w", encoding="utf-8", newline="") as f:
-                    writer = csv.DictWriter(f, fieldnames=fieldnames)
-                    writer.writeheader()
-                    for rec in registry.values():
-                        writer.writerow(
-                            {
-                                "algorithm": rec.algorithm,
-                                "configuration_hash": rec.configuration_hash,
-                                "data": rec.data,
-                                "threshold": rec.threshold,
-                                "trace_path": rec.trace_path or "",
-                            }
-                        )
+        if registry_path is not None:
+            fieldnames = ["algorithm", "configuration_hash", "data", "threshold", "trace_path"]
+            with open(registry_path, mode="w", encoding="utf-8", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                for rec in registry.values():
+                    writer.writerow(
+                        {
+                            "algorithm": rec.algorithm,
+                            "configuration_hash": rec.configuration_hash,
+                            "data": rec.data,
+                            "threshold": rec.threshold,
+                            "trace_path": rec.trace_path or "",
+                        }
+                    )
 
         return results
