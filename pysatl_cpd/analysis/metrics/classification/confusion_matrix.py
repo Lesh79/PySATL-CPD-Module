@@ -15,12 +15,12 @@ from typing import Any
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
 from pysatl_cpd.analysis.metrics.classification.classification_metric import ClassificationMetric
-from pysatl_cpd.analysis.metrics.run_metric import RunMetric
+from pysatl_cpd.analysis.metrics.single_run_metric import SingleRunMetric
 from pysatl_cpd.core.detection_trace import DetectionTrace
 
 
 class ConfusionMatrix[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
-    RunMetric[TraceT, ProviderT, dict[str, float]]
+    SingleRunMetric[TraceT, ProviderT, dict[str, float]]
 ):
     """
     Computes True Positives (TP), False Positives (FP), and False Negatives (FN)

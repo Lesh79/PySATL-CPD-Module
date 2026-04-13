@@ -23,12 +23,12 @@ from typing import Any, cast
 import numpy as np
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
-from pysatl_cpd.analysis.metrics.run_metric import RunMetric
+from pysatl_cpd.analysis.metrics.single_run_metric import SingleRunMetric
 from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 
 
 class RunLengthMetric[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledData[Any]](
-    RunMetric[TraceT, ProviderT, list[int]]
+    SingleRunMetric[TraceT, ProviderT, list[int]]
 ):
     """
     Computes run lengths between consecutive detections.

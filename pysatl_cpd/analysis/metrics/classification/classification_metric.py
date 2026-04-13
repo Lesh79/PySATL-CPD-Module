@@ -17,11 +17,13 @@ from collections.abc import Sequence
 from typing import Any
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
-from pysatl_cpd.analysis.metrics.run_metric import RunMetric
+from pysatl_cpd.analysis.metrics.single_run_metric import SingleRunMetric
 from pysatl_cpd.core.detection_trace import DetectionTrace
 
 
-class ClassificationMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](RunMetric[TraceT, ProviderT, float]):
+class ClassificationMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
+    SingleRunMetric[TraceT, ProviderT, float]
+):
     """
     Base class for classification metrics (TP, FP, FN) in change point detection.
 
