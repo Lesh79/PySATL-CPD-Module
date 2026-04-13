@@ -10,20 +10,20 @@ from collections.abc import Sequence
 from typing import Self, TypedDict, Unpack
 
 import numpy as np
-import plotly.graph_objects as go  # type: ignore[import-untyped]
+import plotly.graph_objects as go
 
-from pysatl_cpd.analysis.visualization.typedefs import (
-    PltFigure,
-    GoFigure,
-    DrawBackend,
-    PltAxMapping,
-    GoAxMapping,
-    DrawOption,
-)
-from pysatl_cpd.analysis.visualization.online.states.ionline_state_visualiser import (
-    IOnlineStateVisualiser,
-)
 from pysatl_cpd.algorithms.online.shewhart_control_chart import ShewhartControlChartState
+from pysatl_cpd.analysis.visualization.online.states.ionline_state_visualizer import (
+    IOnlineStateVisualizer,
+)
+from pysatl_cpd.analysis.visualization.typedefs import (
+    DrawBackend,
+    DrawOption,
+    GoAxMapping,
+    GoFigure,
+    PltAxMapping,
+    PltFigure,
+)
 
 # Plotly constants
 PLOTLY_GRID_WIDTH = 1
@@ -35,6 +35,7 @@ MPL_GRID_ALPHA = 0.3
 
 class ShewhartStatePlotOpts(TypedDict, total=False):
     """Plot options for Shewhart state subplot."""
+
     xlabel: str
     ylabel: str
     grid: bool
@@ -42,6 +43,7 @@ class ShewhartStatePlotOpts(TypedDict, total=False):
 
 class ShewhartStateDrawOpts(TypedDict, total=False):
     """Drawing options for Shewhart state lines."""
+
     mean_color: str
     mean_linewidth: float
     mean_label: str
@@ -57,10 +59,11 @@ class ShewhartStateDrawOpts(TypedDict, total=False):
 
 class ShewhartStateBandOpts(TypedDict, total=False):
     """Band calculation options for Shewhart control limits."""
+
     band_size: float
 
 
-class ShewhartStateVisualizer(IOnlineStateVisualiser[ShewhartControlChartState]):
+class ShewhartStateVisualizer(IOnlineStateVisualizer[ShewhartControlChartState]):
     """
     Visualizer for Shewhart control chart algorithm state evolution.
 
@@ -147,26 +150,30 @@ class ShewhartStateVisualizer(IOnlineStateVisualiser[ShewhartControlChartState])
 
         # Extract data from states
         self._time_points = np.arange(len(self._states))
-        self._means = np.array([
-            state.mean
-            if (state is not None and not state.is_in_learning_period) else np.nan
-            for state in self._states
-        ])
-        self._stds = np.array([
-            state.standard_deviation
-            if (state is not None and not state.is_in_learning_period) else np.nan
-            for state in self._states
-        ])
-        self._window_means = np.array([
-            state.window_mean
-            if (state is not None and not state.is_in_learning_period) else np.nan
-            for state in self._states
-        ])
-        self._window_sizes = np.array([
-            state.window_size
-            if (state is not None and not state.is_in_learning_period) else 1
-            for state in self._states
-        ])
+        self._means = np.array(
+            [
+                state.mean if (state is not None and not state.is_in_learning_period) else np.nan
+                for state in self._states
+            ]
+        )
+        self._stds = np.array(
+            [
+                state.standard_deviation if (state is not None and not state.is_in_learning_period) else np.nan
+                for state in self._states
+            ]
+        )
+        self._window_means = np.array(
+            [
+                state.window_mean if (state is not None and not state.is_in_learning_period) else np.nan
+                for state in self._states
+            ]
+        )
+        self._window_sizes = np.array(
+            [
+                state.window_size if (state is not None and not state.is_in_learning_period) else 1
+                for state in self._states
+            ]
+        )
 
         # Calculate control limits: μ ± k * σ / √w
         band_scale = self._band_opts["band_size"]
@@ -254,7 +261,7 @@ class ShewhartStateVisualizer(IOnlineStateVisualiser[ShewhartControlChartState])
         """
         self._band_opts.update(options)
         # Recalculate control limits with new band size
-        if hasattr(self, '_states') and self._states:
+        if hasattr(self, "_states") and self._states:
             band_scale = self._band_opts["band_size"]
             self._half_band = band_scale * self._stds / np.sqrt(self._window_sizes)
             self._upper_limits = self._means + self._half_band
@@ -349,10 +356,10 @@ class ShewhartStateVisualizer(IOnlineStateVisualiser[ShewhartControlChartState])
                 y=self._window_means,
                 mode="lines",
                 name=self._draw_opts["window_mean_label"],
-                line=dict(
-                    color=self._draw_opts["window_mean_color"],
-                    width=self._draw_opts["window_mean_linewidth"],
-                ),
+                line={
+                    "color": self._draw_opts["window_mean_color"],
+                    "width": self._draw_opts["window_mean_linewidth"],
+                },
             ),
             row=row,
             col=col,
@@ -365,7 +372,7 @@ class ShewhartStateVisualizer(IOnlineStateVisualiser[ShewhartControlChartState])
                 y=np.concatenate([self._upper_limits, self._lower_limits[::-1]]),
                 fill="toself",
                 fillcolor=f"rgba(255, 0, 0, {self._draw_opts['fill_alpha']})",
-                line=dict(color="rgba(255, 0, 0, 0)"),
+                line={"color": "rgba(255, 0, 0, 0)"},
                 name="Control Band",
                 showlegend=True,
             ),
@@ -380,11 +387,11 @@ class ShewhartStateVisualizer(IOnlineStateVisualiser[ShewhartControlChartState])
                 y=self._upper_limits,
                 mode="lines",
                 name=self._draw_opts["control_limit_label"],
-                line=dict(
-                    color=self._draw_opts["control_limit_color"],
-                    dash=self._draw_opts["control_limit_linestyle"],
-                    width=self._draw_opts["control_limit_linewidth"],
-                ),
+                line={
+                    "color": self._draw_opts["control_limit_color"],
+                    "dash": self._draw_opts["control_limit_linestyle"],
+                    "width": self._draw_opts["control_limit_linewidth"],
+                },
             ),
             row=row,
             col=col,
@@ -398,11 +405,11 @@ class ShewhartStateVisualizer(IOnlineStateVisualiser[ShewhartControlChartState])
                 mode="lines",
                 name=None,
                 showlegend=False,
-                line=dict(
-                    color=self._draw_opts["control_limit_color"],
-                    dash=self._draw_opts["control_limit_linestyle"],
-                    width=self._draw_opts["control_limit_linewidth"],
-                ),
+                line={
+                    "color": self._draw_opts["control_limit_color"],
+                    "dash": self._draw_opts["control_limit_linestyle"],
+                    "width": self._draw_opts["control_limit_linewidth"],
+                },
             ),
             row=row,
             col=col,
@@ -415,10 +422,10 @@ class ShewhartStateVisualizer(IOnlineStateVisualiser[ShewhartControlChartState])
                 y=self._means,
                 mode="lines",
                 name=self._draw_opts["mean_label"],
-                line=dict(
-                    color=self._draw_opts["mean_color"],
-                    width=self._draw_opts["mean_linewidth"],
-                ),
+                line={
+                    "color": self._draw_opts["mean_color"],
+                    "width": self._draw_opts["mean_linewidth"],
+                },
             ),
             row=row,
             col=col,
