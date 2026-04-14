@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
-from pysatl_cpd.analysis.metrics.run_metric import RunMetric as SingleRunMetric
+from pysatl_cpd.analysis.metrics.single_run_metric import SingleRunMetric as SingleRunMetric
 from pysatl_cpd.core.detection_trace import DetectionTrace
 
 

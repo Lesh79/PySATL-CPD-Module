@@ -3,7 +3,7 @@
 """
 Base module defining the interface for benchmark evaluation metrics.
 
-This module provides the generic `RunMetric` base class, establishing
+This module provides the generic `MultipleRunMetric` base class, establishing
 the standard evaluation protocol for change point detection algorithms
 over a complete dataset or benchmark suite.
 """
@@ -20,7 +20,7 @@ from pysatl_cpd.analysis.labeled_data import LabeledData
 from pysatl_cpd.core.detection_trace import DetectionTrace
 
 
-class RunMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any], ResultT](ABC):
+class MultipleRunMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any], ResultT](ABC):
     """
     Abstract base class for all benchmark evaluation metrics.
 

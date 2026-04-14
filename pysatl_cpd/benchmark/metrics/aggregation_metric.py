@@ -17,13 +17,13 @@ from collections.abc import Sequence
 from typing import Any
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
-from pysatl_cpd.analysis.metrics.run_metric import RunMetric as SingleRunMetric
-from pysatl_cpd.benchmark.metrics.run_metric import RunMetric
+from pysatl_cpd.analysis.metrics.single_run_metric import SingleRunMetric
+from pysatl_cpd.benchmark.metrics.multiple_run_metric import MultipleRunMetric
 from pysatl_cpd.core.detection_trace import DetectionTrace
 
 
 class AggregationMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any], ResultInT, ResultOutT](
-    RunMetric[TraceT, ProviderT, ResultOutT]
+    MultipleRunMetric[TraceT, ProviderT, ResultOutT]
 ):
     """
     Abstract base class for metrics that aggregate results over a full benchmark.

@@ -168,7 +168,5 @@ class MockErrorOnlineAlgorithm[T](OnlineAlgorithm[T, MockAlgorithmConfiguration,
         return (
             f"{self.__class__.__name__}("
             f"name={self._name!r}, "
-            f"error_on_call={self._error_on_call}, "
             f"learning_period_size={self._config.learning_period_size}, "
-            f"process_count={self._process_count})"
         )

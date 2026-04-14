@@ -155,5 +155,4 @@ class MockOnlineAlgorithm[T](OnlineAlgorithm[T, MockAlgorithmConfiguration, Mock
             f"{self.__class__.__name__}("
             f"name={self._name!r}, "
             f"learning_period_size={self._config.learning_period_size}, "
-            f"process_count={self._process_count})"
         )
