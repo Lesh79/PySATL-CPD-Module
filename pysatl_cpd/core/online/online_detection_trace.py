@@ -155,6 +155,41 @@ class OnlineDetectionTrace[StateT: OnlineAlgorithmState](DetectionTrace):
     learning_periods: list[tuple[int, int]] = field(default_factory=list)
     algorithm_states: list[StateT | None]
 
+    def slice(self, start: int, end: int) -> "OnlineDetectionTrace[StateT]":
+        """
+        Create a new trace representing a slice of the current trace [start, end] (inclusive).
+        Automatically recalculates all relative indices (change points, periods).
+        """
+        new_df = self.detection_function[start : end + 1].copy()
+        new_pt = self.processing_time[start : end + 1].copy()
+
+        new_states = self.algorithm_states[start : end + 1] if self.algorithm_states else []
+
+        def shift_points(pts: Sequence[int]) -> list[int]:
+            return [p - start for p in pts if start <= p <= end]
+
+        def shift_periods(periods: list[tuple[int, int]]) -> list[tuple[int, int]]:
+            res = []
+            for p_start, p_end in periods:
+                if p_end < start or p_start > end:
+                    continue
+                res.append((max(0, p_start - start), min(end - start, p_end - start)))
+            return res
+
+        return type(self)(
+            algorithm_name=self.algorithm_name,
+            configuration_hash=self.configuration_hash,
+            threshold=self.threshold,
+            detected_change_points=shift_points(self.detected_change_points),
+            forced_change_points=shift_points(self.forced_change_points),
+            signal_change_points=shift_points(self.signal_change_points),
+            detection_function=new_df,
+            processing_time=new_pt,
+            algorithm_states=new_states,
+            skip_periods=shift_periods(self.skip_periods),
+            learning_periods=shift_periods(self.learning_periods),
+        )
+
     @classmethod
     def from_run(
         cls,
