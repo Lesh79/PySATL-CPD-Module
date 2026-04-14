@@ -74,37 +74,18 @@ class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[
         )
         self._policy = policy
 
-    def _get_inf_trace(
-        self,
-        algorithm: OnlineAlgorithm[Any, Any, Any],
-        provider: ProviderT,
-    ) -> OnlineDetectionTrace[Any]:
-        """
-        Compute or retrieve the infinite-threshold trace for a given pair.
-
-        Delegates entirely to BenchmarkExecutor which handles disk caching
-        when dump_dir is set.
-
-        Parameters
-        ----------
-        algorithm : OnlineAlgorithm[Any, Any, Any]
-            The algorithm to run.
-        provider : ProviderT
-            The data provider to run against.
-
-        Returns
-        -------
-        OnlineDetectionTrace[Any]
-            Trace produced with threshold=inf.
-        """
         executor: BenchmarkExecutor[Any] = BenchmarkExecutor(
-            algorithms=[(algorithm, [float("inf")])],
-            providers=[provider],
+            algorithms=[(algorithm, [float("inf")]) for algorithm, _ in algorithms],
+            providers=list(providers),
             solver=self._solver,
             dump_dir=self._dump_dir,
         )
-        _, inf_trace = executor.execute()[0]
-        return inf_trace
+
+        self._inf_trace_cache: dict[tuple[str, int, str], OnlineDetectionTrace[Any]] = {}
+
+        for record, trace in executor.execute():
+            key = (record.algorithm, record.configuration_hash, record.data)
+            self._inf_trace_cache[key] = trace
 
     def _collect_runs(
         self,
@@ -136,10 +117,13 @@ class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[
         if not providers:
             return []
 
+        algo_name = str(algorithm)
+        config_hash = hash(algorithm.configuration)
         runs: list[tuple[NoResetDetectionTrace[Any], ProviderT]] = []
 
         for provider in providers:
-            inf_trace = self._get_inf_trace(algorithm, provider)
+            cache_key = (algo_name, config_hash, provider.name)
+            inf_trace = self._inf_trace_cache[cache_key]
 
             detected_change_points: list[int] = self._policy.apply(
                 inf_trace.detection_function,

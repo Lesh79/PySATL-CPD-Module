@@ -150,10 +150,10 @@ class TestNoResetBenchmarkRunnerInheritance:
             pytest.fail("_collect_runs raised NotImplementedError")
 
 
-class TestNoResetBenchmarkRunnerInfTrace:
-    """Tests for NoResetBenchmarkRunner._get_inf_trace."""
+class TestNoResetBenchmarkRunnerCacheInitialization:
+    """Tests for NoResetBenchmarkRunner inf trace cache initialization."""
 
-    def test_inf_trace_has_no_detected_change_points(
+    def test_inf_trace_cache_populated_on_init(
         self,
         algorithm: MockOnlineAlgorithm[Number],
         single_provider: MockLabeledDataWithPadding,
@@ -161,7 +161,7 @@ class TestNoResetBenchmarkRunnerInfTrace:
         solver: OnlineCpdSolver,
         point_policy: PointBasedPolicy,
     ) -> None:
-        """Inf trace produced with threshold=inf has no detected change points."""
+        """Cache is populated during __init__ via BenchmarkExecutor."""
         runner = make_noreset_runner(
             [(algorithm, [1.0])],
             [single_provider],
@@ -169,10 +169,14 @@ class TestNoResetBenchmarkRunnerInfTrace:
             solver,
             point_policy,
         )
-        inf_trace = runner._get_inf_trace(algorithm, single_provider)
+        key = (str(algorithm), hash(algorithm.configuration), single_provider.name)
+        assert key in runner._inf_trace_cache
+
+        # Inf trace produced with threshold=inf has no detected change points
+        inf_trace = runner._inf_trace_cache[key]
         assert len(inf_trace.detected_change_points) == 0
 
-    def test_inf_trace_detection_function_has_correct_length(
+    def test_cached_trace_detection_function_has_correct_length(
         self,
         algorithm: MockOnlineAlgorithm[Number],
         single_provider: MockLabeledDataWithPadding,
@@ -188,10 +192,11 @@ class TestNoResetBenchmarkRunnerInfTrace:
             solver,
             point_policy,
         )
-        inf_trace = runner._get_inf_trace(algorithm, single_provider)
+        key = (str(algorithm), hash(algorithm.configuration), single_provider.name)
+        inf_trace = runner._inf_trace_cache[key]
         assert len(inf_trace.detection_function) == len(single_provider)
 
-    def test_inf_trace_algorithm_name_matches(
+    def test_cached_trace_algorithm_name_matches(
         self,
         algorithm: MockOnlineAlgorithm[Number],
         single_provider: MockLabeledDataWithPadding,
@@ -207,7 +212,8 @@ class TestNoResetBenchmarkRunnerInfTrace:
             solver,
             point_policy,
         )
-        inf_trace = runner._get_inf_trace(algorithm, single_provider)
+        key = (str(algorithm), hash(algorithm.configuration), single_provider.name)
+        inf_trace = runner._inf_trace_cache[key]
         assert inf_trace.algorithm_name == str(algorithm)
 
 
@@ -347,7 +353,11 @@ class TestNoResetBenchmarkRunnerCollectRuns:
             solver,
             point_policy,
         )
-        inf_trace = runner._get_inf_trace(algorithm_with_signal, single_provider)
+
+        # Get the cached inf trace
+        key = (str(algorithm_with_signal), hash(algorithm_with_signal.configuration), single_provider.name)
+        inf_trace = runner._inf_trace_cache[key]
+
         expected_cps = point_policy.apply(
             inf_trace.detection_function,
             1.0,
@@ -394,7 +404,7 @@ class TestNoResetBenchmarkRunnerRun:
         point_policy: PointBasedPolicy,
         tmp_path: Path,
     ) -> None:
-        """Multiple thresholds - solver runs only once per provider."""
+        """Multiple thresholds - solver runs only once per provider (checked via caching behaviour)."""
         runner = make_noreset_runner(
             [(algorithm_with_signal, [0.5, 1.0, 2.0])],
             [single_provider],
@@ -403,9 +413,14 @@ class TestNoResetBenchmarkRunnerRun:
             point_policy,
             dump_dir=tmp_path,
         )
-        runner.run()
+        # Because execution happens in __init__, we already have our files
         pkl_files = list(tmp_path.glob("*.pkl"))
-        assert len(pkl_files) == 1
+        assert len(pkl_files) == 1  # 1 trace per provider, NOT 3 traces
+
+        # Ensure run completes successfully using the cached inf trace
+        result = runner.run()
+        entries = next(iter(result.values()))
+        assert len(entries) == 3
 
     def test_run_returns_correct_structure(
         self,
@@ -499,8 +514,8 @@ class TestNoResetBenchmarkRunnerCaching:
         point_policy: PointBasedPolicy,
         tmp_path: Path,
     ) -> None:
-        """Without dump_dir no files are created."""
-        runner = make_noreset_runner(
+        """Without dump_dir no files are created during init."""
+        _ = make_noreset_runner(
             [(algorithm, [1.0])],
             [single_provider],
             {"m": mock_metric},
@@ -508,7 +523,6 @@ class TestNoResetBenchmarkRunnerCaching:
             point_policy,
             dump_dir=None,
         )
-        runner.run()
         assert not any(tmp_path.iterdir())
 
     def test_inf_trace_cached_to_disk_when_dump_dir_provided(
@@ -520,8 +534,8 @@ class TestNoResetBenchmarkRunnerCaching:
         point_policy: PointBasedPolicy,
         tmp_path: Path,
     ) -> None:
-        """With dump_dir, inf trace registry and pickle are created."""
-        runner = make_noreset_runner(
+        """With dump_dir, inf trace registry and pickle are created synchronously during init."""
+        _ = make_noreset_runner(
             [(algorithm, [1.0])],
             [single_provider],
             {"m": mock_metric},
@@ -529,8 +543,8 @@ class TestNoResetBenchmarkRunnerCaching:
             point_policy,
             dump_dir=tmp_path,
         )
-        runner.run()
         registry = tmp_path / "benchmark_registry.csv"
         pkl_files = list(tmp_path.glob("*.pkl"))
+
         assert registry.exists()
         assert len(pkl_files) == 1
