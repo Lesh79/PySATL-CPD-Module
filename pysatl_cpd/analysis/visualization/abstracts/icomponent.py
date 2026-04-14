@@ -116,6 +116,7 @@ class IVisualComponent(ABC):
         This allows to group traces by multiple criteria and toggle them
         collectively.
         """
+        # TODO: Move to IVisualizer interface
         if self._legend_label is None and add_legend:
             raise ValueError("Can not draw with legend: label is set to None")
 

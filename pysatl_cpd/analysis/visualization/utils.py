@@ -13,6 +13,7 @@ __license__ = "SPDX-License-Identifier: MIT"
 
 from pysatl_cpd.analysis.visualization.typedefs import GoAxes, GoFigure
 
+# TODO: Move to plotply color here
 
 def translate_linestyle(linestyle: str) -> str:
     """

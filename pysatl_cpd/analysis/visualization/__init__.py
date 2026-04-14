@@ -13,6 +13,13 @@ __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
 from pysatl_cpd.analysis.visualization.abstracts import IVisualComponent
+from pysatl_cpd.analysis.visualization.benchmarking import (
+    ARLBasedMetricVisualizer,
+    BenchmarkPlotter,
+    MetricVisualizer,
+    PrAucVisualizer,
+    ThresholdBasedMetricVisualizer,
+)
 from pysatl_cpd.analysis.visualization.components import (
     VerticalFillComponent,
     VerticalLineVisualComponent,
@@ -53,6 +60,12 @@ __all__ = [
     "ProcessingTimeDrawOpts",
     "IOnlineStateVisualizer",
     "DummyStateVisualizer",
+    # Benchmark visualizers
+    "BenchmarkPlotter",
+    "MetricVisualizer",
+    "PrAucVisualizer",
+    "ThresholdBasedMetricVisualizer",
+    "ARLBasedMetricVisualizer",
     # Components
     "IVisualComponent",
     "VerticalLineVisualComponent",
