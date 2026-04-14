@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
 from pysatl_cpd.benchmark.online_benchmark_runner import OnlineBenchmarkRunner
@@ -17,6 +17,7 @@ class ARLBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledDa
         algorithms: Sequence[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]],
         providers: list[ProviderT],
         solver: OnlineCpdSolver,
+        mode: Literal["reset", "noreset"],
         dump_dir: Path | None = None,
     ) -> None:
         return
