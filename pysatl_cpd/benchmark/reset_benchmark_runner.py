@@ -58,6 +58,7 @@ class ResetBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labeled
         metrics: dict[str, MultipleRunMetric[TraceT, ProviderT, Any]],
         solver: OnlineCpdSolver,
         dump_dir: Path | str | None = None,
+        verbose: bool = False,
     ) -> None:
         super().__init__(
             algorithms=algorithms,
@@ -65,6 +66,7 @@ class ResetBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labeled
             metrics=metrics,
             solver=solver,
             dump_dir=dump_dir,
+            verbose=verbose,
         )
 
     def _collect_runs(

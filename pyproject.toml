@@ -28,6 +28,7 @@ scikit-learn = ">=1.5.2"
 plotly = "^6.6.0"
 jupyter = "^1.1.1"
 pandas = "^3.0.2"
+tqdm = "^4.67.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.2.2"

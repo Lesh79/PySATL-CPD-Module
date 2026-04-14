@@ -64,6 +64,7 @@ class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[
         solver: OnlineCpdSolver,
         policy: ThresholdPolicy,
         dump_dir: Path | str | None = None,
+        verbose: bool = False,
     ) -> None:
         super().__init__(
             algorithms=algorithms,
@@ -71,6 +72,7 @@ class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[
             metrics=metrics,
             solver=solver,
             dump_dir=dump_dir,
+            verbose=verbose,
         )
         self._policy = policy
 

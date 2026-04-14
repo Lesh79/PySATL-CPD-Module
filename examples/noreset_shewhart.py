@@ -141,7 +141,7 @@ def main() -> None:
     WINDOW_SIZE = 50
 
     # Thresholds to evaluate
-    THRESHOLDS = np.linspace(0, 7, 30)
+    THRESHOLDS = np.linspace(0, 7, 3000)
 
     # Error margin for TP/FP/FN matching & Delays
     ERROR_MARGIN = (0, 100)
@@ -168,7 +168,8 @@ def main() -> None:
 
     print(f"Algorithm: ShewhartControlChart(learning_period={LEARNING_PERIOD}, window={WINDOW_SIZE})")
     print(
-        f"Dataset (NoReset): {N_SERIES} series, length={SERIES_LENGTH}, change_point={CHANGE_POINT}, shift={MU_AFTER - MU_BEFORE:.1f}σ"
+        f"Dataset (NoReset): {N_SERIES} series, length={SERIES_LENGTH}, change_point={CHANGE_POINT},"
+        "shift={MU_AFTER - MU_BEFORE:.1f}*sigma"
     )
     print(f"Dataset (ARL):     {N_SERIES} series, length={SERIES_LENGTH}, no change points")
     print(f"Error margin: {ERROR_MARGIN}")
@@ -197,6 +198,7 @@ def main() -> None:
         solver=solver,
         policy=policy,
         dump_dir="benchmark_cache/noreset",
+        verbose=True,
     )
     noreset_results = runner.run()
 
@@ -209,6 +211,7 @@ def main() -> None:
         solver=solver,
         mode="noreset",  # uses rapid point-based extraction behind the scenes
         dump_dir="benchmark_cache/arl",
+        verbose=True,
     )
     arl_results = arl_runner.run()
 

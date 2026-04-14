@@ -71,6 +71,7 @@ class ARLBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledDa
         solver: OnlineCpdSolver,
         mode: Literal["reset", "noreset"],
         dump_dir: Path | str | None = None,
+        verbose: bool = False,
     ) -> None:
         for provider in providers:
             if provider.change_points:
@@ -87,6 +88,7 @@ class ARLBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledDa
             metrics=metrics,  # type: ignore[arg-type]
             solver=solver,
             dump_dir=dump_dir,
+            verbose=verbose,
         )
 
         self._mode = mode
