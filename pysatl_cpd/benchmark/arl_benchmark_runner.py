@@ -52,7 +52,7 @@ class ARLBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledDa
         Solver used to run algorithms against providers.
     mode : Literal["reset", "noreset"]
         Evaluation mode determining whether the algorithm resets after a detection.
-    dump_dir : Path | None, optional
+    dump_dir : Path | str | None, optional
         Directory for caching results via BenchmarkExecutor.
         If None, caching is disabled. Default is None.
 
@@ -70,7 +70,7 @@ class ARLBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledDa
         providers: list[ProviderT],
         solver: OnlineCpdSolver,
         mode: Literal["reset", "noreset"],
-        dump_dir: Path | None = None,
+        dump_dir: Path | str | None = None,
     ) -> None:
         for provider in providers:
             if provider.change_points:
