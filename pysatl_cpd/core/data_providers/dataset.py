@@ -1,4 +1,3 @@
-# -*- coding: ascii -*-
 """
 Терминология
 -----------
@@ -183,7 +182,7 @@ class PandasLabeledDataProvider(LabeledData[NumericArray]):
     def change_point(self) -> tuple[int, ...]:
         segments = self.__dataset[SEGMENT_COLUMN].to_numpy(copy=False)
         if len(segments) <= 1:
-            return tuple()
+            return ()
 
         change_points = np.flatnonzero(segments[1:] != segments[:-1]) + 1
         return tuple(int(position) for position in change_points.tolist())
