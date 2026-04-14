@@ -2,7 +2,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
 # C extensions
 *.so
 
@@ -169,3 +168,5 @@ cython_debug/
 *.png
 *.jpg
 *.jpeg
+
+assets/data

@@ -9,7 +9,7 @@ __license__ = "SPDX-License-Identifier: MIT"
 
 from collections.abc import Collection, Iterator, Sequence
 
-from pysatl_cpd.core.data_providers import DataProvider
+from pysatl_cpd.core.data_providers.idata_provider import DataProvider
 
 
 class LabeledData[T](DataProvider[T]):
