@@ -3,12 +3,13 @@
 Container for benchmark algorithm execution entries.
 """
 
-__author__ = "PySATL contributors"
+__author__ = "Danil Totmyanin"
 __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Any
 
 from pysatl_cpd.core.data_transformers.idata_transformer import IDataTransformer
 from pysatl_cpd.core.online.ionline_algorithm import OnlineAlgorithm, OnlineAlgorithmConfiguration, OnlineAlgorithmState
@@ -36,7 +37,7 @@ class AlgorithmEntry[DataT, ConfigT: OnlineAlgorithmConfiguration, StateT: Onlin
 
     algorithm: OnlineAlgorithm[DataT, ConfigT, StateT]
     thresholds: Sequence[float]
-    transformer: IDataTransformer | None = None
+    transformer: IDataTransformer[Any, Any] | None = None
 
     @property
     def full_name(self) -> str:
