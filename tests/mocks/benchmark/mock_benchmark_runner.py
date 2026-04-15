@@ -15,7 +15,7 @@ from typing import Any
 from pysatl_cpd.analysis.labeled_data import LabeledData
 from pysatl_cpd.benchmark.metrics.multiple_run_metric import MultipleRunMetric
 from pysatl_cpd.benchmark.online_benchmark_runner import OnlineBenchmarkRunner
-from pysatl_cpd.core.online.ionline_algorithm import OnlineAlgorithm
+from pysatl_cpd.core.algorithm_entry import AlgorithmEntry
 from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 
@@ -31,8 +31,9 @@ class MockBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledD
 
     Parameters
     ----------
-    algorithms : Sequence[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]]
-        Sequence of (algorithm, thresholds) pairs.
+    entries : Sequence[AlgorithmEntry]
+        Sequence of AlgorithmEntry objects containing algorithm, thresholds,
+        and an optional data transformer.
     providers : Sequence[ProviderT]
         Sequence of data providers.
     metrics : dict[str, MultipleRunMetric[TraceT, ProviderT, Any]]
@@ -48,7 +49,7 @@ class MockBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledD
 
     def __init__(
         self,
-        algorithms: Sequence[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]],
+        entries: Sequence[AlgorithmEntry[Any, Any, Any]],
         providers: Sequence[ProviderT],
         metrics: dict[str, MultipleRunMetric[TraceT, ProviderT, Any]],
         solver: OnlineCpdSolver,
@@ -56,18 +57,18 @@ class MockBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledD
         runs_to_return: list[tuple[TraceT, ProviderT]] | None = None,
     ) -> None:
         super().__init__(
-            algorithms=algorithms,
+            entries=entries,
             providers=providers,
             metrics=metrics,
             solver=solver,
             dump_dir=dump_dir,
         )
         self._runs_to_return: list[tuple[TraceT, ProviderT]] = runs_to_return or []
-        self.collect_runs_calls: list[tuple[OnlineAlgorithm[Any, Any, Any], float, Sequence[ProviderT]]] = []
+        self.collect_runs_calls: list[tuple[AlgorithmEntry[Any, Any, Any], float, Sequence[ProviderT]]] = []
 
     def _collect_runs(
         self,
-        algorithm: OnlineAlgorithm[Any, Any, Any],
+        entry: AlgorithmEntry[Any, Any, Any],
         threshold: float,
         providers: Sequence[ProviderT],
     ) -> list[tuple[TraceT, ProviderT]]:
@@ -76,8 +77,8 @@ class MockBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledD
 
         Parameters
         ----------
-        algorithm : OnlineAlgorithm[Any, Any, Any]
-            The algorithm being evaluated.
+        entry : AlgorithmEntry
+            The algorithm configuration entry being evaluated.
         threshold : float
             The detection threshold.
         providers : Sequence[ProviderT]
@@ -88,5 +89,5 @@ class MockBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: LabeledD
         list[tuple[TraceT, ProviderT]]
             Pre-configured runs set at construction time.
         """
-        self.collect_runs_calls.append((algorithm, threshold, providers))
+        self.collect_runs_calls.append((entry, threshold, providers))
         return self._runs_to_return

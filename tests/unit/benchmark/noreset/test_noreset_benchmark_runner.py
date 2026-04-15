@@ -17,6 +17,7 @@ from pysatl_cpd.benchmark.noreset.noreset_benchmark_runner import NoResetBenchma
 from pysatl_cpd.benchmark.noreset.noreset_detection_trace import NoResetDetectionTrace
 from pysatl_cpd.benchmark.noreset.threshold_policy import EventBasedPolicy, PointBasedPolicy
 from pysatl_cpd.benchmark.online_benchmark_runner import OnlineBenchmarkRunner
+from pysatl_cpd.core.algorithm_entry import AlgorithmEntry
 from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 from pysatl_cpd.core.typedefs import Number
 from tests.mocks.algorithms.online import MockOnlineAlgorithm
@@ -84,7 +85,7 @@ def mock_metric() -> MockAggregationMetric[MockOnlineDetectionTrace, MockLabeled
 
 
 def make_noreset_runner(
-    algorithms: Sequence[tuple[MockOnlineAlgorithm[Number], Sequence[float]]],
+    entries: Sequence[AlgorithmEntry],
     providers: Sequence[MockLabeledDataWithPadding],
     metrics: dict[str, MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding]],
     solver: OnlineCpdSolver,
@@ -93,7 +94,7 @@ def make_noreset_runner(
 ) -> NoResetBenchmarkRunner[MockLabeledDataWithPadding]:
     """Helper to construct NoResetBenchmarkRunner with given parameters."""
     return NoResetBenchmarkRunner(
-        algorithms=algorithms,
+        entries=entries,
         providers=providers,
         metrics=metrics,  # type: ignore[arg-type]
         solver=solver,
@@ -120,7 +121,7 @@ class TestNoResetBenchmarkRunnerInheritance:
     ) -> None:
         """NoResetBenchmarkRunner is an instance of OnlineBenchmarkRunner."""
         runner = make_noreset_runner(
-            [(algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -137,15 +138,16 @@ class TestNoResetBenchmarkRunnerInheritance:
         point_policy: PointBasedPolicy,
     ) -> None:
         """_collect_runs does not raise NotImplementedError."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_noreset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
             point_policy,
         )
         try:
-            runner._collect_runs(algorithm, 1.0, [single_provider])
+            runner._collect_runs(entry, 1.0, [single_provider])
         except NotImplementedError:
             pytest.fail("_collect_runs raised NotImplementedError")
 
@@ -162,17 +164,17 @@ class TestNoResetBenchmarkRunnerCacheInitialization:
         point_policy: PointBasedPolicy,
     ) -> None:
         """Cache is populated during __init__ via BenchmarkExecutor."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_noreset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
             point_policy,
         )
-        key = (str(algorithm), hash(algorithm.configuration), single_provider.name)
+        key = (entry.full_name, entry.full_hash, single_provider.name)
         assert key in runner._inf_trace_cache
 
-        # Inf trace produced with threshold=inf has no detected change points
         inf_trace = runner._inf_trace_cache[key]
         assert len(inf_trace.detected_change_points) == 0
 
@@ -185,14 +187,15 @@ class TestNoResetBenchmarkRunnerCacheInitialization:
         point_policy: PointBasedPolicy,
     ) -> None:
         """Detection function length equals the number of observations in provider."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_noreset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
             point_policy,
         )
-        key = (str(algorithm), hash(algorithm.configuration), single_provider.name)
+        key = (entry.full_name, entry.full_hash, single_provider.name)
         inf_trace = runner._inf_trace_cache[key]
         assert len(inf_trace.detection_function) == len(single_provider)
 
@@ -204,17 +207,18 @@ class TestNoResetBenchmarkRunnerCacheInitialization:
         solver: OnlineCpdSolver,
         point_policy: PointBasedPolicy,
     ) -> None:
-        """algorithm_name in inf trace matches str(algorithm)."""
+        """algorithm_name in inf trace matches entry.full_name."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_noreset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
             point_policy,
         )
-        key = (str(algorithm), hash(algorithm.configuration), single_provider.name)
+        key = (entry.full_name, entry.full_hash, single_provider.name)
         inf_trace = runner._inf_trace_cache[key]
-        assert inf_trace.algorithm_name == str(algorithm)
+        assert inf_trace.algorithm_name == entry.full_name
 
 
 class TestNoResetBenchmarkRunnerCollectRuns:
@@ -229,14 +233,15 @@ class TestNoResetBenchmarkRunnerCollectRuns:
         point_policy: PointBasedPolicy,
     ) -> None:
         """_collect_runs returns exactly len(providers) (trace, provider) pairs."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_noreset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             two_providers,
             {"m": mock_metric},
             solver,
             point_policy,
         )
-        runs = runner._collect_runs(algorithm, 1.0, two_providers)
+        runs = runner._collect_runs(entry, 1.0, two_providers)
         assert len(runs) == len(two_providers)
 
     def test_empty_providers_returns_empty_list(
@@ -247,14 +252,15 @@ class TestNoResetBenchmarkRunnerCollectRuns:
         point_policy: PointBasedPolicy,
     ) -> None:
         """_collect_runs with empty providers returns empty list."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_noreset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             [],
             {"m": mock_metric},
             solver,
             point_policy,
         )
-        runs = runner._collect_runs(algorithm, 1.0, [])
+        runs = runner._collect_runs(entry, 1.0, [])
         assert runs == []
 
     def test_each_run_is_noreset_detection_trace(
@@ -266,14 +272,15 @@ class TestNoResetBenchmarkRunnerCollectRuns:
         point_policy: PointBasedPolicy,
     ) -> None:
         """Each trace in collected runs is a NoResetDetectionTrace."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_noreset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
             point_policy,
         )
-        runs = runner._collect_runs(algorithm, 1.0, [single_provider])
+        runs = runner._collect_runs(entry, 1.0, [single_provider])
         for trace, _ in runs:
             assert isinstance(trace, NoResetDetectionTrace)
 
@@ -286,14 +293,15 @@ class TestNoResetBenchmarkRunnerCollectRuns:
         point_policy: PointBasedPolicy,
     ) -> None:
         """Each trace is paired with its corresponding provider."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_noreset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             two_providers,
             {"m": mock_metric},
             solver,
             point_policy,
         )
-        runs = runner._collect_runs(algorithm, 1.0, two_providers)
+        runs = runner._collect_runs(entry, 1.0, two_providers)
         for (_, provider), expected in zip(runs, two_providers, strict=False):
             assert provider is expected
 
@@ -306,14 +314,15 @@ class TestNoResetBenchmarkRunnerCollectRuns:
         point_policy: PointBasedPolicy,
     ) -> None:
         """High threshold (inf) produces no detected change points."""
+        entry = AlgorithmEntry(algorithm=algorithm_with_signal, thresholds=[float("inf")])
         runner = make_noreset_runner(
-            [(algorithm_with_signal, [float("inf")])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
             point_policy,
         )
-        runs = runner._collect_runs(algorithm_with_signal, float("inf"), [single_provider])
+        runs = runner._collect_runs(entry, float("inf"), [single_provider])
         trace, _ = runs[0]
         assert len(trace.detected_change_points) == 0
 
@@ -326,14 +335,15 @@ class TestNoResetBenchmarkRunnerCollectRuns:
         point_policy: PointBasedPolicy,
     ) -> None:
         """Low threshold (0.0) with signal algorithm produces detections."""
+        entry = AlgorithmEntry(algorithm=algorithm_with_signal, thresholds=[0.0])
         runner = make_noreset_runner(
-            [(algorithm_with_signal, [0.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
             point_policy,
         )
-        runs = runner._collect_runs(algorithm_with_signal, 0.0, [single_provider])
+        runs = runner._collect_runs(entry, 0.0, [single_provider])
         trace, _ = runs[0]
         assert len(trace.detected_change_points) > 0
 
@@ -346,16 +356,16 @@ class TestNoResetBenchmarkRunnerCollectRuns:
         point_policy: PointBasedPolicy,
     ) -> None:
         """Detected change points match what policy.apply() would return."""
+        entry = AlgorithmEntry(algorithm=algorithm_with_signal, thresholds=[1.0])
         runner = make_noreset_runner(
-            [(algorithm_with_signal, [1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
             point_policy,
         )
 
-        # Get the cached inf trace
-        key = (str(algorithm_with_signal), hash(algorithm_with_signal.configuration), single_provider.name)
+        key = (entry.full_name, entry.full_hash, single_provider.name)
         inf_trace = runner._inf_trace_cache[key]
 
         expected_cps = point_policy.apply(
@@ -363,7 +373,7 @@ class TestNoResetBenchmarkRunnerCollectRuns:
             1.0,
             single_provider.change_points,
         )
-        runs = runner._collect_runs(algorithm_with_signal, 1.0, [single_provider])
+        runs = runner._collect_runs(entry, 1.0, [single_provider])
         trace, _ = runs[0]
         assert list(trace.detected_change_points) == expected_cps
 
@@ -381,7 +391,7 @@ class TestNoResetBenchmarkRunnerRun:
     ) -> None:
         """Basic happy path - one algorithm, one threshold, one provider."""
         runner = make_noreset_runner(
-            [(algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -406,18 +416,16 @@ class TestNoResetBenchmarkRunnerRun:
     ) -> None:
         """Multiple thresholds - solver runs only once per provider (checked via caching behaviour)."""
         runner = make_noreset_runner(
-            [(algorithm_with_signal, [0.5, 1.0, 2.0])],
+            [AlgorithmEntry(algorithm=algorithm_with_signal, thresholds=[0.5, 1.0, 2.0])],
             [single_provider],
             {"m": mock_metric},
             solver,
             point_policy,
             dump_dir=tmp_path,
         )
-        # Because execution happens in __init__, we already have our files
         pkl_files = list(tmp_path.glob("*.pkl"))
-        assert len(pkl_files) == 1  # 1 trace per provider, NOT 3 traces
+        assert len(pkl_files) == 1
 
-        # Ensure run completes successfully using the cached inf trace
         result = runner.run()
         entries = next(iter(result.values()))
         assert len(entries) == 3
@@ -433,7 +441,7 @@ class TestNoResetBenchmarkRunnerRun:
         """run() result has correct nested structure."""
         thresholds = [0.5, 1.0]
         runner = make_noreset_runner(
-            [(algorithm, thresholds)],
+            [AlgorithmEntry(algorithm=algorithm, thresholds=thresholds)],
             two_providers,
             {"m": mock_metric},
             solver,
@@ -456,7 +464,7 @@ class TestNoResetBenchmarkRunnerRun:
     ) -> None:
         """Empty providers list - metric is called with empty batch."""
         runner = make_noreset_runner(
-            [(algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])],
             [],
             {"m": mock_metric},
             solver,
@@ -475,15 +483,16 @@ class TestNoResetBenchmarkRunnerRun:
         event_policy: EventBasedPolicy,
     ) -> None:
         """PointBasedPolicy and EventBasedPolicy may produce different detections."""
+        entry = AlgorithmEntry(algorithm=algorithm_with_signal, thresholds=[1.0])
         runner_point = make_noreset_runner(
-            [(algorithm_with_signal, [1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
             point_policy,
         )
         runner_event = make_noreset_runner(
-            [(algorithm_with_signal, [1.0])],
+            [entry],
             [single_provider],
             {
                 "m": MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding](
@@ -493,11 +502,10 @@ class TestNoResetBenchmarkRunnerRun:
             solver,
             event_policy,
         )
-        runs_point = runner_point._collect_runs(algorithm_with_signal, 1.0, [single_provider])
-        runs_event = runner_event._collect_runs(algorithm_with_signal, 1.0, [single_provider])
+        runs_point = runner_point._collect_runs(entry, 1.0, [single_provider])
+        runs_event = runner_event._collect_runs(entry, 1.0, [single_provider])
         trace_point, _ = runs_point[0]
         trace_event, _ = runs_event[0]
-        # Results may differ - we just verify both are valid NoResetDetectionTrace
         assert isinstance(trace_point, NoResetDetectionTrace)
         assert isinstance(trace_event, NoResetDetectionTrace)
 
@@ -516,7 +524,7 @@ class TestNoResetBenchmarkRunnerCaching:
     ) -> None:
         """Without dump_dir no files are created during init."""
         _ = make_noreset_runner(
-            [(algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -536,7 +544,7 @@ class TestNoResetBenchmarkRunnerCaching:
     ) -> None:
         """With dump_dir, inf trace registry and pickle are created synchronously during init."""
         _ = make_noreset_runner(
-            [(algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])],
             [single_provider],
             {"m": mock_metric},
             solver,

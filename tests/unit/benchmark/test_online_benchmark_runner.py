@@ -10,10 +10,12 @@ __license__ = "SPDX-License-Identifier: MIT"
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from pysatl_cpd.benchmark.online_benchmark_runner import OnlineBenchmarkRunner
+from pysatl_cpd.core.algorithm_entry import AlgorithmEntry
 from pysatl_cpd.core.online.ionline_algorithm import OnlineAlgorithmConfiguration
 from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 from pysatl_cpd.core.typedefs import Number
@@ -96,7 +98,7 @@ def single_run() -> list[tuple[MockOnlineDetectionTrace, MockLabeledData]]:
 
 
 def make_runner(
-    algorithms: Sequence[tuple[MockOnlineAlgorithm[Number], Sequence[float]]],
+    entries: Sequence[AlgorithmEntry[Any, Any, Any]],
     providers: Sequence[MockLabeledData],
     metrics: dict[str, MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledData]],
     solver: OnlineCpdSolver,
@@ -105,7 +107,7 @@ def make_runner(
 ) -> MockBenchmarkRunner[MockOnlineDetectionTrace, MockLabeledData]:
     """Helper to construct MockBenchmarkRunner with given parameters."""
     return MockBenchmarkRunner(
-        algorithms=algorithms,
+        entries=entries,
         providers=providers,
         metrics=metrics,  # type: ignore[arg-type]
         solver=solver,
@@ -130,13 +132,13 @@ class TestOnlineBenchmarkRunnerInit:
         solver: OnlineCpdSolver,
     ) -> None:
         """All constructor parameters are stored as private attributes."""
-        algorithms = [(single_algorithm, [1.0])]
+        entries = [AlgorithmEntry(algorithm=single_algorithm, thresholds=[1.0])]
         providers = [single_provider]
         metrics = {"m": mock_metric}
 
-        runner = make_runner(algorithms, providers, metrics, solver)
+        runner = make_runner(entries, providers, metrics, solver)
 
-        assert runner._algorithms == algorithms
+        assert runner._entries == entries
         assert runner._providers == providers
         assert runner._metrics == metrics
         assert runner._solver is solver
@@ -150,7 +152,7 @@ class TestOnlineBenchmarkRunnerInit:
     ) -> None:
         """dump_dir is None when not provided."""
         runner = make_runner(
-            [(single_algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=single_algorithm, thresholds=[1.0])],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -167,7 +169,7 @@ class TestOnlineBenchmarkRunnerInit:
     ) -> None:
         """dump_dir passed as str is stored as Path."""
         runner = make_runner(
-            [(single_algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=single_algorithm, thresholds=[1.0])],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -186,7 +188,7 @@ class TestOnlineBenchmarkRunnerInit:
     ) -> None:
         """dump_dir passed as Path is stored as Path."""
         runner = make_runner(
-            [(single_algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=single_algorithm, thresholds=[1.0])],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -209,7 +211,7 @@ class TestOnlineBenchmarkRunnerAbstract:
         """OnlineBenchmarkRunner cannot be instantiated directly."""
         with pytest.raises(TypeError):
             OnlineBenchmarkRunner(  # type: ignore[abstract]
-                algorithms=[(single_algorithm, [1.0])],
+                entries=[AlgorithmEntry(algorithm=single_algorithm, thresholds=[1.0])],
                 providers=[single_provider],
                 metrics={"m": mock_metric},
                 solver=solver,
@@ -229,7 +231,7 @@ class TestOnlineBenchmarkRunnerAbstract:
 
         with pytest.raises(TypeError):
             IncompleteRunner(  # type: ignore[abstract]
-                algorithms=[(single_algorithm, [1.0])],
+                entries=[AlgorithmEntry(algorithm=single_algorithm, thresholds=[1.0])],
                 providers=[single_provider],
                 metrics={"m": mock_metric},
                 solver=solver,
@@ -248,7 +250,7 @@ class TestOnlineBenchmarkRunnerRunStructure:
     ) -> None:
         """run() returns a dict."""
         runner = make_runner(
-            [(single_algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=single_algorithm, thresholds=[1.0])],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -264,8 +266,9 @@ class TestOnlineBenchmarkRunnerRunStructure:
         solver: OnlineCpdSolver,
     ) -> None:
         """Keys of result dict are (str, OnlineAlgorithmConfiguration) tuples."""
+        entry = AlgorithmEntry(algorithm=single_algorithm, thresholds=[1.0])
         runner = make_runner(
-            [(single_algorithm, [1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -275,6 +278,7 @@ class TestOnlineBenchmarkRunnerRunStructure:
             assert isinstance(key, tuple)
             assert len(key) == 2
             assert isinstance(key[0], str)
+            assert key[0] == entry.full_name
             assert isinstance(key[1], OnlineAlgorithmConfiguration)
 
     def test_result_value_is_list_of_threshold_metric_tuples(
@@ -286,7 +290,7 @@ class TestOnlineBenchmarkRunnerRunStructure:
     ) -> None:
         """Values of result dict are list[tuple[float, dict[str, Any]]]."""
         runner = make_runner(
-            [(single_algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=single_algorithm, thresholds=[1.0])],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -307,14 +311,15 @@ class TestOnlineBenchmarkRunnerRunStructure:
     ) -> None:
         """Each threshold produces exactly one entry in the result list."""
         thresholds = [0.5, 1.0, 1.5]
+        entry = AlgorithmEntry(algorithm=single_algorithm, thresholds=thresholds)
         runner = make_runner(
-            [(single_algorithm, thresholds)],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
         )
         result = runner.run()
-        key = (str(single_algorithm), single_algorithm.configuration)
+        key = (entry.full_name, single_algorithm.configuration)
         assert len(result[key]) == len(thresholds)
 
     def test_metric_names_match_input_dict_keys(
@@ -326,7 +331,7 @@ class TestOnlineBenchmarkRunnerRunStructure:
     ) -> None:
         """Metric names in result match the keys from the metrics dict."""
         runner = make_runner(
-            [(single_algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=single_algorithm, thresholds=[1.0])],
             [single_provider],
             two_metrics,
             solver,
@@ -350,7 +355,7 @@ class TestOnlineBenchmarkRunnerRunLogic:
         """_collect_runs is called exactly once per (algorithm, threshold) pair."""
         thresholds = [0.5, 1.0, 1.5]
         runner = make_runner(
-            [(single_algorithm, thresholds)],
+            [AlgorithmEntry(algorithm=single_algorithm, thresholds=thresholds)],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -368,7 +373,7 @@ class TestOnlineBenchmarkRunnerRunLogic:
         """metric.evaluate() is called once per (algorithm, threshold) pair."""
         thresholds = [0.5, 1.0]
         runner = make_runner(
-            [(single_algorithm, thresholds)],
+            [AlgorithmEntry(algorithm=single_algorithm, thresholds=thresholds)],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -384,8 +389,9 @@ class TestOnlineBenchmarkRunnerRunLogic:
         solver: OnlineCpdSolver,
     ) -> None:
         """Two algorithms produce two distinct keys in result dict."""
+        entries = [AlgorithmEntry(algorithm=algo, thresholds=[1.0]) for algo in two_algorithms]
         runner = make_runner(
-            [(algo, [1.0]) for algo in two_algorithms],
+            entries,
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -402,14 +408,15 @@ class TestOnlineBenchmarkRunnerRunLogic:
     ) -> None:
         """Two thresholds produce two entries in the result list for one algorithm."""
         thresholds = [0.5, 1.5]
+        entry = AlgorithmEntry(algorithm=single_algorithm, thresholds=thresholds)
         runner = make_runner(
-            [(single_algorithm, thresholds)],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
         )
         result = runner.run()
-        key = (str(single_algorithm), single_algorithm.configuration)
+        key = (entry.full_name, single_algorithm.configuration)
         assert len(result[key]) == 2
 
     def test_multiple_metrics_all_appear_in_result(
@@ -421,7 +428,7 @@ class TestOnlineBenchmarkRunnerRunLogic:
     ) -> None:
         """All metrics from input dict appear in every result entry."""
         runner = make_runner(
-            [(single_algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=single_algorithm, thresholds=[1.0])],
             [single_provider],
             two_metrics,
             solver,
@@ -442,7 +449,7 @@ class TestOnlineBenchmarkRunnerRunLogic:
         """_collect_runs receives exactly the threshold from the input list."""
         thresholds = [0.5, 1.0, 2.0]
         runner = make_runner(
-            [(single_algorithm, thresholds)],
+            [AlgorithmEntry(algorithm=single_algorithm, thresholds=thresholds)],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -460,7 +467,7 @@ class TestOnlineBenchmarkRunnerRunLogic:
     ) -> None:
         """_collect_runs receives the full list of providers."""
         runner = make_runner(
-            [(single_algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=single_algorithm, thresholds=[1.0])],
             two_providers,
             {"m": mock_metric},
             solver,
@@ -476,7 +483,7 @@ class TestOnlineBenchmarkRunnerRunLogic:
     ) -> None:
         """Empty providers list results in metric being called with empty runs."""
         runner = make_runner(
-            [(single_algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=single_algorithm, thresholds=[1.0])],
             [],
             {"m": mock_metric},
             solver,
@@ -492,14 +499,15 @@ class TestOnlineBenchmarkRunnerRunLogic:
         solver: OnlineCpdSolver,
     ) -> None:
         """Empty thresholds list produces empty entries list for the algorithm."""
+        entry = AlgorithmEntry(algorithm=single_algorithm, thresholds=[])
         runner = make_runner(
-            [(single_algorithm, [])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
         )
         result = runner.run()
-        key = (str(single_algorithm), single_algorithm.configuration)
+        key = (entry.full_name, single_algorithm.configuration)
         assert result[key] == []
 
     def test_result_preserves_threshold_order(
@@ -511,13 +519,14 @@ class TestOnlineBenchmarkRunnerRunLogic:
     ) -> None:
         """Thresholds in result appear in the same order as in input list."""
         thresholds = [2.0, 0.5, 1.0]
+        entry = AlgorithmEntry(algorithm=single_algorithm, thresholds=thresholds)
         runner = make_runner(
-            [(single_algorithm, thresholds)],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
         )
         result = runner.run()
-        key = (str(single_algorithm), single_algorithm.configuration)
+        key = (entry.full_name, single_algorithm.configuration)
         result_thresholds = [t for t, _ in result[key]]
         assert result_thresholds == thresholds
