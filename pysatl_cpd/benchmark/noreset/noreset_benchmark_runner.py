@@ -13,6 +13,7 @@ __author__ = "Danil Totmyanin"
 __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
+import dataclasses
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
@@ -23,7 +24,7 @@ from pysatl_cpd.benchmark.metrics.multiple_run_metric import MultipleRunMetric
 from pysatl_cpd.benchmark.noreset.noreset_detection_trace import NoResetDetectionTrace
 from pysatl_cpd.benchmark.noreset.threshold_policy import ThresholdPolicy
 from pysatl_cpd.benchmark.online_benchmark_runner import OnlineBenchmarkRunner
-from pysatl_cpd.core.online.ionline_algorithm import OnlineAlgorithm
+from pysatl_cpd.core.algorithm_entry import AlgorithmEntry
 from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 
@@ -32,7 +33,7 @@ class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[
     """
     Optimised benchmark runner for series with a single change point.
 
-    For each (algorithm, provider) pair the solver is executed exactly
+    For each (algorithm entry, provider) pair the solver is executed exactly
     once with threshold=inf, producing a full detection function trace.
     All threshold evaluations are then simulated by applying a
     ThresholdPolicy to that cached trace, avoiding redundant solver runs.
@@ -40,8 +41,9 @@ class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[
 
     Parameters
     ----------
-    algorithms : Sequence[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]]
-        Sequence of (algorithm, thresholds) pairs to evaluate.
+    entries : Sequence[AlgorithmEntry]
+        Sequence of AlgorithmEntry objects containing algorithm, thresholds,
+        and an optional data transformer.
     providers : Sequence[ProviderT]
         Labeled data providers to run against.
     metrics : dict[str, MultipleRunMetric[NoResetDetectionTrace[Any], ProviderT, Any]]
@@ -54,11 +56,13 @@ class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[
     dump_dir : Path | str | None, optional
         Directory for caching inf traces via BenchmarkExecutor.
         If None, caching is disabled. Default is None.
+    verbose : bool, default=False
+        If True, displays progress bars during execution.
     """
 
     def __init__(
         self,
-        algorithms: Sequence[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]],
+        entries: Sequence[AlgorithmEntry[Any, Any, Any]],
         providers: Sequence[ProviderT],
         metrics: dict[str, MultipleRunMetric[NoResetDetectionTrace[Any], ProviderT, Any]],
         solver: OnlineCpdSolver,
@@ -67,7 +71,7 @@ class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[
         verbose: bool = False,
     ) -> None:
         super().__init__(
-            algorithms=algorithms,
+            entries=entries,
             providers=providers,
             metrics=metrics,
             solver=solver,
@@ -76,8 +80,11 @@ class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[
         )
         self._policy = policy
 
+        # Replace all thresholds with inf for initial pre-caching run
+        inf_entries = [dataclasses.replace(entry, thresholds=[float("inf")]) for entry in entries]
+
         executor: BenchmarkExecutor[Any] = BenchmarkExecutor(
-            algorithms=[(algorithm, [float("inf")]) for algorithm, _ in algorithms],
+            entries=inf_entries,
             providers=list(providers),
             solver=self._solver,
             dump_dir=self._dump_dir,
@@ -86,17 +93,18 @@ class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[
         self._inf_trace_cache: dict[tuple[str, int, str], OnlineDetectionTrace[Any]] = {}
 
         for record, trace in executor.execute():
+            # record.algorithm maps to entry.full_name, hash maps to entry.full_hash
             key = (record.algorithm, record.configuration_hash, record.data)
             self._inf_trace_cache[key] = trace
 
     def _collect_runs(
         self,
-        algorithm: OnlineAlgorithm[Any, Any, Any],
+        entry: AlgorithmEntry[Any, Any, Any],
         threshold: float,
         providers: Sequence[ProviderT],
     ) -> list[tuple[NoResetDetectionTrace[Any], ProviderT]]:
         """
-        Collect NoReset runs for a given algorithm and threshold.
+        Collect NoReset runs for a given algorithm entry and threshold.
 
         For each provider, retrieves the inf trace via BenchmarkExecutor
         and applies the ThresholdPolicy to produce a lightweight
@@ -104,8 +112,8 @@ class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[
 
         Parameters
         ----------
-        algorithm : OnlineAlgorithm[Any, Any, Any]
-            The algorithm to evaluate.
+        entry : AlgorithmEntry
+            The algorithm configuration entry to evaluate.
         threshold : float
             The detection threshold to simulate.
         providers : Sequence[ProviderT]
@@ -119,8 +127,8 @@ class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[
         if not providers:
             return []
 
-        algo_name = str(algorithm)
-        config_hash = hash(algorithm.configuration)
+        algo_name = entry.full_name
+        config_hash = entry.full_hash
         runs: list[tuple[NoResetDetectionTrace[Any], ProviderT]] = []
 
         for provider in providers:

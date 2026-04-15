@@ -19,7 +19,8 @@ from tqdm.auto import tqdm
 from pysatl_cpd.analysis.labeled_data import LabeledData
 from pysatl_cpd.benchmark.core.benchmark_logger import BenchmarkLogger
 from pysatl_cpd.benchmark.metrics.multiple_run_metric import MultipleRunMetric
-from pysatl_cpd.core.online.ionline_algorithm import OnlineAlgorithm, OnlineAlgorithmConfiguration
+from pysatl_cpd.core.algorithm_entry import AlgorithmEntry
+from pysatl_cpd.core.online.ionline_algorithm import OnlineAlgorithmConfiguration
 from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 
@@ -34,10 +35,11 @@ class OnlineBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labele
 
     Parameters
     ----------
-    algorithms : Sequence[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]]
-        Sequence of (algorithm, thresholds) pairs to evaluate.
+    entries : Sequence[AlgorithmEntry]
+        Sequence of AlgorithmEntry objects containing algorithm, thresholds,
+        and an optional data transformer.
     providers : Sequence[ProviderT]
-        Sequence of labeled data providers.
+        Sequence of labeled data providers to run against.
     metrics : dict[str, MultipleRunMetric[TraceT, ProviderT, Any]]
         Named metrics to evaluate for each (algorithm, threshold) batch.
     solver : OnlineCpdSolver
@@ -45,18 +47,20 @@ class OnlineBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labele
     dump_dir : Path | str | None, optional
         Directory for caching results via BenchmarkExecutor.
         If None, caching is disabled. Default is None.
+    verbose : bool, default=False
+        If True, displays progress bars during execution.
     """
 
     def __init__(
         self,
-        algorithms: Sequence[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]],
+        entries: Sequence[AlgorithmEntry[Any, Any, Any]],
         providers: Sequence[ProviderT],
         metrics: dict[str, MultipleRunMetric[TraceT, ProviderT, Any]],
         solver: OnlineCpdSolver,
         dump_dir: Path | str | None = None,
         verbose: bool = False,
     ) -> None:
-        self._algorithms = algorithms
+        self._entries = entries
         self._providers = providers
         self._metrics = metrics
         self._solver = solver
@@ -67,17 +71,17 @@ class OnlineBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labele
     @abstractmethod
     def _collect_runs(
         self,
-        algorithm: OnlineAlgorithm[Any, Any, Any],
+        entry: AlgorithmEntry[Any, Any, Any],
         threshold: float,
         providers: Sequence[ProviderT],
     ) -> list[tuple[TraceT, ProviderT]]:
         """
-        Collect (trace, provider) pairs for a given algorithm and threshold.
+        Collect (trace, provider) pairs for a given algorithm entry and threshold.
 
         Parameters
         ----------
-        algorithm : OnlineAlgorithm[Any, Any, Any]
-            The algorithm to evaluate.
+        entry : AlgorithmEntry
+            The algorithm configuration entry to evaluate.
         threshold : float
             The detection threshold.
         providers : Sequence[ProviderT]
@@ -88,29 +92,27 @@ class OnlineBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labele
         list[tuple[TraceT, ProviderT]]
             Batch of (trace, provider) pairs for metric evaluation.
         """
-
         raise NotImplementedError("Method `_collect_runs` is not implemented yet.")
 
     def run(
         self,
     ) -> dict[tuple[str, OnlineAlgorithmConfiguration], list[tuple[float, dict[str, Any]]]]:
         """
-        Execute the benchmark over all algorithms and thresholds.
+        Execute the benchmark over all entries and thresholds.
 
-        For each (algorithm, threshold) pair, collects runs via
+        For each (entry, threshold) pair, collects runs via
         _collect_runs() and evaluates all registered metrics.
 
         Returns
         -------
         dict[tuple[str, OnlineAlgorithmConfiguration], list[tuple[float, dict[str, Any]]]]
-            Mapping of (algorithm_name, configuration) to a list of
+            Mapping of (algorithm_full_name, configuration) to a list of
             (threshold, {metric_name: metric_value}) entries, one per threshold.
         """
-
         benchmark_start = time.time()
 
-        total_runs = sum(len(thresholds) for _, thresholds in self._algorithms)
-        n_algorithms = len(self._algorithms)
+        total_runs = sum(len(entry.thresholds) for entry in self._entries)
+        n_algorithms = len(self._entries)
         n_providers = len(self._providers)
 
         if not self._metrics:
@@ -127,26 +129,26 @@ class OnlineBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labele
             list[tuple[float, dict[str, Any]]],
         ] = {}
 
-        algo_iterator = tqdm(
-            self._algorithms,
+        entries_iterator = tqdm(
+            self._entries,
             disable=not self._verbose,
             desc="Processing algorithms",
             unit="algo",
         )
 
-        for algorithm, thresholds in algo_iterator:
-            algo_name = str(algorithm)
+        for entry in entries_iterator:
+            algo_name = entry.full_name
 
-            self._logger.algorithm_start(algo_name, len(thresholds))
+            self._logger.algorithm_start(algo_name, len(entry.thresholds))
 
             key: tuple[str, OnlineAlgorithmConfiguration] = (
-                str(algorithm),
-                algorithm.configuration,
+                entry.full_name,
+                entry.algorithm.configuration,
             )
             results[key] = []
 
             threshold_iterator = tqdm(
-                thresholds,
+                entry.thresholds,
                 desc=f"  Thresholds ({algo_name})",
                 disable=not self._verbose,
                 leave=False,
@@ -161,7 +163,7 @@ class OnlineBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labele
                         threshold=f"{threshold:.4f}",
                     )
 
-                    runs = self._collect_runs(algorithm, threshold, self._providers)
+                    runs = self._collect_runs(entry, threshold, self._providers)
 
                     self._logger.metrics_computed(
                         algo_name=algo_name,

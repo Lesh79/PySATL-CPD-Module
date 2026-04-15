@@ -13,6 +13,7 @@ from pysatl_cpd.benchmark.metrics.classification.classification_report import Cl
 from pysatl_cpd.benchmark.metrics.online.delay_metric import MeanDelayMetric, MedianDelayMetric
 from pysatl_cpd.benchmark.noreset.noreset_benchmark_runner import NoResetBenchmarkRunner
 from pysatl_cpd.benchmark.noreset.threshold_policy import EventBasedPolicy
+from pysatl_cpd.core.algorithm_entry import AlgorithmEntry
 from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 
 # ---------------------------------------------------------------------------
@@ -169,7 +170,7 @@ def main() -> None:
     print(f"Algorithm: ShewhartControlChart(learning_period={LEARNING_PERIOD}, window={WINDOW_SIZE})")
     print(
         f"Dataset (NoReset): {N_SERIES} series, length={SERIES_LENGTH}, change_point={CHANGE_POINT},"
-        "shift={MU_AFTER - MU_BEFORE:.1f}*sigma"
+        f"shift={MU_AFTER - MU_BEFORE:.1f}*sigma"
     )
     print(f"Dataset (ARL):     {N_SERIES} series, length={SERIES_LENGTH}, no change points")
     print(f"Error margin: {ERROR_MARGIN}")
@@ -192,7 +193,7 @@ def main() -> None:
     policy = EventBasedPolicy(ERROR_MARGIN[1], strict_edge=False)
 
     runner = NoResetBenchmarkRunner(
-        algorithms=[(algorithm, THRESHOLDS)],
+        entries=[AlgorithmEntry(algorithm, THRESHOLDS)],
         providers=providers,
         metrics=metrics,
         solver=solver,
@@ -206,7 +207,7 @@ def main() -> None:
     # RUN 2: Average Run Length (ARL)
     # ==========================================
     arl_runner = ARLBenchmarkRunner(
-        algorithms=[(algorithm, THRESHOLDS)],
+        entries=[AlgorithmEntry(algorithm, THRESHOLDS)],
         providers=arl_providers,
         solver=solver,
         mode="noreset",  # uses rapid point-based extraction behind the scenes

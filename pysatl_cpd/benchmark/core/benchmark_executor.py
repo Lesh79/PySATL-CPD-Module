@@ -20,8 +20,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from pysatl_cpd.core.algorithm_entry import AlgorithmEntry
 from pysatl_cpd.core.data_providers.idata_provider import DataProvider
-from pysatl_cpd.core.online.ionline_algorithm import OnlineAlgorithm
 from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 
@@ -37,7 +37,7 @@ class BenchmarkRecord:
     Parameters
     ----------
     algorithm : str
-        The string identifier or name of the online algorithm.
+        The string identifier or name of the online algorithm (and transformer).
     configuration_hash : str
         A hash string representing the algorithm's configuration.
     data : str
@@ -79,9 +79,9 @@ class BenchmarkExecutor[DataT]:
 
     Parameters
     ----------
-    algorithms : Sequence[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]]
-        A sequence of tuples, where each tuple contains an instantiated online
-        algorithm and a sequence of thresholds to test it against.
+    entries : Sequence[AlgorithmEntry]
+        A sequence of AlgorithmEntry objects, each grouping an algorithm,
+        its thresholds, and an optional data transformer.
     providers : Sequence[DataProvider[DataT]]
         A sequence of data providers to be fed into the algorithms.
     solver : OnlineCpdSolver
@@ -94,12 +94,12 @@ class BenchmarkExecutor[DataT]:
 
     def __init__(
         self,
-        algorithms: Sequence[tuple[OnlineAlgorithm[Any, Any, Any], Sequence[float]]],
+        entries: Sequence[AlgorithmEntry[Any, Any, Any]],
         providers: Sequence[DataProvider[DataT]],
         solver: OnlineCpdSolver,
         dump_dir: str | Path | None = None,
     ) -> None:
-        self.__algorithms = algorithms
+        self.__entries = entries
         self.__providers = providers
         self.__solver = solver
         self.__dump_dir = Path(dump_dir) if dump_dir is not None else None
@@ -141,12 +141,17 @@ class BenchmarkExecutor[DataT]:
                         )
                         registry[record.key] = record
 
-        for (algorithm, thresholds), provider in itertools.product(self.__algorithms, self.__providers):
-            algo_name = str(algorithm)
-            config_hash = hash(algorithm.configuration)
+        for entry, provider in itertools.product(self.__entries, self.__providers):
+            algo_name = entry.full_name
+            config_hash = entry.full_hash
             data_name = provider.name
 
-            for threshold in thresholds:
+            # Apply data transformer if specified in the entry
+            active_provider = provider
+            if entry.transformer is not None:
+                active_provider = entry.transformer.transform(provider)
+
+            for threshold in entry.thresholds:
                 key = (algo_name, config_hash, data_name, float(threshold))
 
                 if key in registry:
@@ -159,7 +164,7 @@ class BenchmarkExecutor[DataT]:
                             results.append((registry[key], trace))
                             continue
 
-                steps = list(self.__solver.run(algorithm, provider, threshold))
+                steps = list(self.__solver.run(entry.algorithm, active_provider, threshold))
                 trace = OnlineDetectionTrace.from_run(steps, algo_name, config_hash)
 
                 record = BenchmarkRecord(algo_name, config_hash, data_name, threshold, None)
