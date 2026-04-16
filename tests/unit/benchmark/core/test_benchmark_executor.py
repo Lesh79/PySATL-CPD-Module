@@ -25,6 +25,7 @@ from pysatl_cpd.core.algorithm_entry import AlgorithmEntry
 from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 from tests.mocks.algorithms.online.simple import MockOnlineAlgorithm
+from tests.mocks.core.data_transformers.data_transformer import MockDataTransformer
 
 
 def _make_provider(
@@ -519,3 +520,139 @@ class TestBenchmarkExecutorCaching:
         with open(registry_path, encoding="utf-8") as f:
             rows: list[dict[str, str]] = list(csv.DictReader(f))
         assert len(rows) == 3
+
+
+# ---------------------------------------------------------------------------
+# 6. Data Transformers
+# ---------------------------------------------------------------------------
+class TestBenchmarkExecutorTransformers:
+    """Tests for the DataTransformer integration in BenchmarkExecutor."""
+
+    def test_transformer_modifies_data_passed_to_algorithm(self) -> None:
+        """Executor should pass transformed data, not raw data, to the solver."""
+        algo = MockOnlineAlgorithm[float](name="A", return_sequence=[0.0])
+        transformer = MockDataTransformer(name="T1", add_value=5.0)
+        entry = AlgorithmEntry(algorithm=algo, thresholds=[1.0], transformer=transformer)
+
+        # Original provider with zeros
+        provider: LabeledData[float] = LabeledData(raw_data=[0.0, 0.0, 0.0], change_points=[], name="data")
+        solver: OnlineCpdSolver = OnlineCpdSolver()
+
+        executor: BenchmarkExecutor[float] = BenchmarkExecutor(
+            entries=[entry],
+            providers=[provider],
+            solver=solver,
+        )
+        executor.execute()
+
+        # The algorithm should have received [5.0, 5.0, 5.0]
+        history: list[float] = algo.get_call_history()
+        assert history == [5.0, 5.0, 5.0]
+
+    def test_record_metadata_uses_transformer_name_and_hash(self) -> None:
+        """Benchmark record should inherit the full name and hash from the Entry."""
+        algo = MockOnlineAlgorithm[float](name="BaseAlgo", return_sequence=[0.0])
+        transformer = MockDataTransformer(name="MyTF", add_value=1.0)
+        entry = AlgorithmEntry(algorithm=algo, thresholds=[1.0], transformer=transformer)
+
+        provider: LabeledData[float] = _make_provider(3, name="d1")
+        solver: OnlineCpdSolver = OnlineCpdSolver()
+
+        executor: BenchmarkExecutor[float] = BenchmarkExecutor(
+            entries=[entry],
+            providers=[provider],
+            solver=solver,
+        )
+        results = executor.execute()
+        record: BenchmarkRecord = results[0][0]
+
+        # Name should be combined
+        assert record.algorithm == "BaseAlgo_MyTF"
+        assert record.algorithm == entry.full_name
+
+        # Hash should match the entry's composite hash
+        assert record.configuration_hash == entry.full_hash
+
+    def test_caching_separates_different_transformers(self, tmp_path: Path) -> None:
+        """Using the same algorithm but different transformers should create separate cache records."""
+        algo = MockOnlineAlgorithm[float](name="A", return_sequence=[0.0])
+
+        entry_clean = AlgorithmEntry(algorithm=algo, thresholds=[1.0], transformer=None)
+        entry_transformed = AlgorithmEntry(
+            algorithm=algo, thresholds=[1.0], transformer=MockDataTransformer(name="T1", add_value=2.0)
+        )
+
+        provider: LabeledData[float] = _make_provider(3, name="data")
+        solver: OnlineCpdSolver = OnlineCpdSolver()
+
+        executor: BenchmarkExecutor[float] = BenchmarkExecutor(
+            entries=[entry_clean, entry_transformed],
+            providers=[provider],
+            solver=solver,
+            dump_dir=tmp_path,
+        )
+        executor.execute()
+
+        # Should produce two distinct pickle files
+        pkl_files: list[Path] = list(tmp_path.glob("*.pkl"))
+        assert len(pkl_files) == 2
+
+        # Names of the files should reflect the different algorithm representations
+        file_names: str = " ".join(f.name for f in pkl_files)
+        assert "A_" in file_names
+        assert "A_T1_" in file_names
+
+    def test_transformer_is_called_even_on_cache_hit(self, tmp_path: Path) -> None:
+        """Transformer should be applied before checking cache, incrementing its call count."""
+        transformer = MockDataTransformer(name="T1", add_value=1.0)
+        provider: LabeledData[float] = _make_provider(3, name="data")
+        solver: OnlineCpdSolver = OnlineCpdSolver()
+
+        # First run to populate cache
+        algo1 = MockOnlineAlgorithm[float](name="A", return_sequence=[0.0])
+        entry1 = AlgorithmEntry(algorithm=algo1, thresholds=[1.0], transformer=transformer)
+        exec1: BenchmarkExecutor[float] = BenchmarkExecutor([entry1], [provider], solver, tmp_path)
+        exec1.execute()
+
+        assert transformer.call_count == 1
+        assert len(algo1.get_call_history()) == 3
+
+        # Second run with cache hit (using a fresh algorithm instance to verify it doesn't run)
+        algo2 = MockOnlineAlgorithm[float](name="A", return_sequence=[0.0])
+        entry2 = AlgorithmEntry(algorithm=algo2, thresholds=[1.0], transformer=transformer)
+        exec2: BenchmarkExecutor[float] = BenchmarkExecutor([entry2], [provider], solver, tmp_path)
+        exec2.execute()
+
+        # Transformer is still called during iteration
+        assert transformer.call_count == 2
+
+        # But the solver/algorithm was skipped due to cache hit
+        assert len(algo2.get_call_history()) == 0
+
+    def test_multiple_entries_mixed_transformers(self) -> None:
+        """Executor should properly route data when processing mixed transformer configurations."""
+        algo1 = MockOnlineAlgorithm[float](name="A", return_sequence=[0.0])
+        algo2 = MockOnlineAlgorithm[float](name="A", return_sequence=[0.0])
+        algo3 = MockOnlineAlgorithm[float](name="A", return_sequence=[0.0])
+
+        entry_none = AlgorithmEntry(algorithm=algo1, thresholds=[1.0])
+        entry_t1 = AlgorithmEntry(algorithm=algo2, thresholds=[1.0], transformer=MockDataTransformer("T1", 10.0))
+        entry_t2 = AlgorithmEntry(algorithm=algo3, thresholds=[1.0], transformer=MockDataTransformer("T2", 20.0))
+
+        # Provider yields [1.0, 1.0]
+        provider: LabeledData[float] = _make_provider(2, name="data")
+        solver: OnlineCpdSolver = OnlineCpdSolver()
+
+        executor: BenchmarkExecutor[float] = BenchmarkExecutor(
+            entries=[entry_none, entry_t1, entry_t2],
+            providers=[provider],
+            solver=solver,
+        )
+        results = executor.execute()
+
+        assert len(results) == 3
+
+        # Verify specific algorithm histories to ensure they received correct streams
+        assert algo1.get_call_history() == [1.0, 1.0]  # No transformation
+        assert algo2.get_call_history() == [11.0, 11.0]  # 1.0 + 10.0
+        assert algo3.get_call_history() == [21.0, 21.0]  # 1.0 + 20.0
