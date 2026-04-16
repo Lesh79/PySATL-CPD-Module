@@ -10,6 +10,7 @@ __license__ = "SPDX-License-Identifier: MIT"
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -22,8 +23,8 @@ from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 from pysatl_cpd.core.typedefs import Number
 from tests.mocks.algorithms.online import MockOnlineAlgorithm
 from tests.mocks.analysis.labeled_data import MockLabeledDataWithPadding
-from tests.mocks.analysis.metrics.mock_run_metric import MockRunMetric
-from tests.mocks.benchmark.metrics.mock_aggregation_metric import MockAggregationMetric
+from tests.mocks.analysis.metrics.run_metric import MockRunMetric
+from tests.mocks.benchmark.metrics.aggregation_metric import MockAggregationMetric
 from tests.mocks.core.online.online_detection_trace import MockOnlineDetectionTrace
 
 # ---------------------------------------------------------------------------
@@ -85,7 +86,7 @@ def mock_metric() -> MockAggregationMetric[MockOnlineDetectionTrace, MockLabeled
 
 
 def make_noreset_runner(
-    entries: Sequence[AlgorithmEntry],
+    entries: Sequence[AlgorithmEntry[Any, Any, Any]],
     providers: Sequence[MockLabeledDataWithPadding],
     metrics: dict[str, MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding]],
     solver: OnlineCpdSolver,

@@ -21,9 +21,9 @@ from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 from pysatl_cpd.core.typedefs import Number
 from tests.mocks.algorithms.online import MockOnlineAlgorithm
 from tests.mocks.analysis.labeled_data import MockLabeledData
-from tests.mocks.analysis.metrics.mock_run_metric import MockRunMetric
-from tests.mocks.benchmark.metrics.mock_aggregation_metric import MockAggregationMetric
-from tests.mocks.benchmark.mock_benchmark_runner import MockBenchmarkRunner
+from tests.mocks.analysis.metrics.run_metric import MockRunMetric
+from tests.mocks.benchmark.benchmark_runner import MockBenchmarkRunner
+from tests.mocks.benchmark.metrics.aggregation_metric import MockAggregationMetric
 from tests.mocks.core.online.online_detection_trace import MockOnlineDetectionTrace
 
 # ---------------------------------------------------------------------------

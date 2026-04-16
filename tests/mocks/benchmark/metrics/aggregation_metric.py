@@ -4,7 +4,7 @@ from typing import Any
 from pysatl_cpd.analysis.labeled_data import LabeledData
 from pysatl_cpd.benchmark.metrics.aggregation_metric import AggregationMetric
 from pysatl_cpd.core.detection_trace import DetectionTrace
-from tests.mocks.analysis.metrics.mock_run_metric import MockRunMetric
+from tests.mocks.analysis.metrics.run_metric import MockRunMetric
 
 
 class MockAggregationMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any]](
