@@ -170,3 +170,4 @@ cython_debug/
 *.jpeg
 
 assets/data
+benchmark_cache/
