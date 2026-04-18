@@ -18,7 +18,7 @@ from pysatl_cpd.analysis.labeled_data import LabeledData
 from pysatl_cpd.core.detection_trace import DetectionTrace
 
 
-class RunMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any], ResultT](ABC):
+class SingleRunMetric[TraceT: DetectionTrace, ProviderT: LabeledData[Any], ResultT](ABC):
     """
     Base class for all run evaluation metrics in change point detection.
 
