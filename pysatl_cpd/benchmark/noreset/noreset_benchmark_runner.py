@@ -1,4 +1,3 @@
-
 """
 NoReset benchmark runner implementation.
 
@@ -19,28 +18,27 @@ import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 
-from pysatl_cpd.analysis.labeled_data import LabeledData
 from pysatl_cpd.benchmark.core.benchmark_executor import BenchmarkExecutor
 from pysatl_cpd.benchmark.metrics.multiple_run_metric import MultipleRunMetric
 from pysatl_cpd.benchmark.noreset.noreset_detection_trace import NoResetDetectionTrace
 from pysatl_cpd.benchmark.noreset.threshold_policy import ThresholdPolicy
 from pysatl_cpd.core.algorithm_entry import AlgorithmEntry
-from pysatl_cpd.core.online.ionline_algorithm import OnlineAlgorithm
-from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
-from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
-
 from pysatl_cpd.core.data_providers.dataset import (
     AnnotationFilter,
     Dataset,
     PandasLabeledDataProvider,
     SegmentFilter,
 )
+from pysatl_cpd.core.online.ionline_algorithm import OnlineAlgorithm
+from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
+from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 
 
 class ThresholdRange(Protocol):
     """Protocol for generating a sequence of thresholds."""
-    def get_thresholds(self) -> list[float]:
-        ...
+
+    def get_thresholds(self) -> list[float]: ...
+
 
 @dataclasses.dataclass
 class ManualThresholds(ThresholdRange):
@@ -48,6 +46,7 @@ class ManualThresholds(ThresholdRange):
 
     def get_thresholds(self) -> list[float]:
         return self.thresholds
+
 
 @dataclasses.dataclass
 class LinspaceThresholds(ThresholdRange):
@@ -58,10 +57,11 @@ class LinspaceThresholds(ThresholdRange):
     def get_thresholds(self) -> list[float]:
         return np.linspace(self.start, self.stop, self.num).tolist()
 
+
 class DataTransformer(Protocol):
     """Protocol for transforming data providers before running the algorithm."""
-    def transform(self, provider: PandasLabeledDataProvider) -> PandasLabeledDataProvider:
-        ...
+
+    def transform(self, provider: PandasLabeledDataProvider) -> PandasLabeledDataProvider: ...
 
 
 @dataclasses.dataclass
@@ -69,6 +69,7 @@ class OnlineBenchmarkEntry:
     """
     Configuration entry for running an online algorithm in the benchmark.
     """
+
     algorithm: OnlineAlgorithm
     thresholds: ThresholdRange
     data_transformer: DataTransformer | None = None
@@ -127,7 +128,7 @@ class NoResetBenchmark:
             Mapping of entry_name to a DataFrame containing thresholds and metrics.
         """
         if not providers:
-            return {entry.entry_name : pd.DataFrame() for entry in entries}
+            return {entry.entry_name: pd.DataFrame() for entry in entries}
 
         inf_entries: list[AlgorithmEntry[Any, Any, Any]] = []
         for entry in entries:

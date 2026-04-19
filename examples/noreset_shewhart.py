@@ -24,6 +24,7 @@ from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 # 1. Dataset generation
 # ---------------------------------------------------------------------------
 
+
 def generate_dataset(
     n: int,
     series_length: int = 200,
@@ -47,11 +48,13 @@ def generate_dataset(
 
         df = pd.DataFrame({"value": data, "segment": segments})
 
-        seg_info = pd.DataFrame({
-            "segment": [0, 1],
-            "start": [0, change_point],
-            "end": [change_point - 1, series_length - 1],
-        })
+        seg_info = pd.DataFrame(
+            {
+                "segment": [0, 1],
+                "start": [0, change_point],
+                "end": [change_point - 1, series_length - 1],
+            }
+        )
 
         provider = PandasLabeledDataProvider(
             dataset=df,
@@ -79,11 +82,13 @@ def generate_arl_dataset(
         data = rng.normal(mu, sigma, size=series_length)
 
         df = pd.DataFrame({"value": data, "segment": 0})
-        seg_info = pd.DataFrame({
-            "segment": [0],
-            "start": [0],
-            "end": [series_length - 1],
-        })
+        seg_info = pd.DataFrame(
+            {
+                "segment": [0],
+                "start": [0],
+                "end": [series_length - 1],
+            }
+        )
 
         provider = PandasLabeledDataProvider(
             dataset=df,
@@ -99,6 +104,7 @@ def generate_arl_dataset(
 # ---------------------------------------------------------------------------
 # 2. Main benchmark
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     # --- Parameters ---
@@ -118,16 +124,26 @@ def main() -> None:
 
     # --- Generate datasets ---
     providers = generate_dataset(
-        n=N_SERIES, series_length=SERIES_LENGTH, change_point=CHANGE_POINT,
-        mu_before=MU_BEFORE, mu_after=MU_AFTER, sigma=SIGMA, seed=42,
+        n=N_SERIES,
+        series_length=SERIES_LENGTH,
+        change_point=CHANGE_POINT,
+        mu_before=MU_BEFORE,
+        mu_after=MU_AFTER,
+        sigma=SIGMA,
+        seed=42,
     )
     arl_providers = generate_arl_dataset(
-        n=N_SERIES, series_length=SERIES_LENGTH,
-        mu=MU_BEFORE, sigma=SIGMA, seed=42,
+        n=N_SERIES,
+        series_length=SERIES_LENGTH,
+        mu=MU_BEFORE,
+        sigma=SIGMA,
+        seed=42,
     )
 
     print(f"Algorithm: ShewhartControlChart(learning_period={LEARNING_PERIOD}, window={WINDOW_SIZE})")
-    print(f"Dataset (NoReset): {N_SERIES} series, length={SERIES_LENGTH}, cp={CHANGE_POINT}, shift={MU_AFTER - MU_BEFORE:.1f}σ")
+    print(
+        f"Dataset (NoReset): {N_SERIES} series, length={SERIES_LENGTH}, cp={CHANGE_POINT}, shift={MU_AFTER - MU_BEFORE:.1f}σ"
+    )
     print(f"Dataset (ARL):     {N_SERIES} series, length={SERIES_LENGTH}, no change points")
     print(f"Error margin: {ERROR_MARGIN}")
     print("-" * 115)
@@ -139,9 +155,7 @@ def main() -> None:
     solver = OnlineCpdSolver()
 
     entry = OnlineBenchmarkEntry(
-        algorithm=algorithm,
-        thresholds=LinspaceThresholds(start=0, stop=7, num=30),
-        entry_name="Shewhart"
+        algorithm=algorithm, thresholds=LinspaceThresholds(start=0, stop=7, num=30), entry_name="Shewhart"
     )
 
     # ==========================================
@@ -172,7 +186,7 @@ def main() -> None:
     # ==========================================
     runner_arl = NoResetBenchmark(
         solver=solver,
-        policy=PointBasedPolicy(strict=True), # Быстрая поточечная экстракция
+        policy=PointBasedPolicy(strict=True),  # Быстрая поточечная экстракция
         metrics={"arl": ARLMetric()},
         dump_dir="benchmark_cache/arl",
         verbose=True,
