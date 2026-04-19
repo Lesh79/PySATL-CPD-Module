@@ -12,7 +12,7 @@ __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 
 
-from pysatl_cpd.core.data_providers.dataset import Annotation, Dataset, PandasLabeledDataProvider, SegmentInfo
+from pysatl_cpd.core.data_providers.dataset import Annotation, Dataset, PandasLabeledDataProvider, RealDatasetLoader, SegmentInfo
 from pysatl_cpd.core.data_providers.idata_provider import DataProvider
 from pysatl_cpd.core.data_providers.numpy_data_provider import (
     NDArrayMultivariateProvider,
@@ -25,6 +25,7 @@ __all__ = [
     "SegmentInfo",
     "PandasLabeledDataProvider",
     "Dataset",
+    "RealDatasetLoader",
     "NDArrayMultivariateProvider",
     "NDArrayUnivariateProvider",
 ]
