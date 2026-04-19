@@ -79,11 +79,6 @@ class BenchmarkExecutor[DataT]:
 
     Parameters
     ----------
-    entries : Sequence[AlgorithmEntry]
-        A sequence of AlgorithmEntry objects, each grouping an algorithm,
-        its thresholds, and an optional data transformer.
-    providers : Sequence[DataProvider[DataT]]
-        A sequence of data providers to be fed into the algorithms.
     solver : OnlineCpdSolver
         The solver instance responsible for iterating over the data providers
         and running the algorithmic logic.
@@ -94,17 +89,17 @@ class BenchmarkExecutor[DataT]:
 
     def __init__(
         self,
-        entries: Sequence[AlgorithmEntry[Any, Any, Any]],
-        providers: Sequence[DataProvider[DataT]],
         solver: OnlineCpdSolver,
         dump_dir: str | Path | None = None,
     ) -> None:
-        self.__entries = entries
-        self.__providers = providers
         self.__solver = solver
         self.__dump_dir = Path(dump_dir) if dump_dir is not None else None
 
-    def execute(self) -> list[tuple[BenchmarkRecord, OnlineDetectionTrace[Any]]]:
+    def execute(
+        self,
+        entries: Sequence[AlgorithmEntry[Any, Any, Any]],
+        providers: Sequence[DataProvider[DataT]],
+    ) -> list[tuple[BenchmarkRecord, OnlineDetectionTrace[Any]]]:
         """
         Execute the benchmark over all combinations of algorithms, data, and thresholds.
 
@@ -113,6 +108,14 @@ class BenchmarkExecutor[DataT]:
         calculated traces from the registry to bypass solver execution. If a trace
         is missing, it runs the solver, caches the resulting trace to disk, and
         updates the CSV registry.
+
+        Parameters
+        ----------
+        entries : Sequence[AlgorithmEntry]
+            A sequence of AlgorithmEntry objects, each grouping an algorithm,
+            its thresholds, and an optional data transformer.
+        providers : Sequence[DataProvider[DataT]]
+            A sequence of data providers to be fed into the algorithms.
 
         Returns
         -------
@@ -141,7 +144,7 @@ class BenchmarkExecutor[DataT]:
                         )
                         registry[record.key] = record
 
-        for entry, provider in itertools.product(self.__entries, self.__providers):
+        for entry, provider in itertools.product(entries, providers):
             algo_name = entry.full_name
             config_hash = entry.full_hash
             data_name = provider.name

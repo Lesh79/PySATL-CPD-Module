@@ -35,11 +35,6 @@ class OnlineBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labele
 
     Parameters
     ----------
-    entries : Sequence[AlgorithmEntry]
-        Sequence of AlgorithmEntry objects containing algorithm, thresholds,
-        and an optional data transformer.
-    providers : Sequence[ProviderT]
-        Sequence of labeled data providers to run against.
     metrics : dict[str, MultipleRunMetric[TraceT, ProviderT, Any]]
         Named metrics to evaluate for each (algorithm, threshold) batch.
     solver : OnlineCpdSolver
@@ -53,15 +48,11 @@ class OnlineBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labele
 
     def __init__(
         self,
-        entries: Sequence[AlgorithmEntry[Any, Any, Any]],
-        providers: Sequence[ProviderT],
         metrics: dict[str, MultipleRunMetric[TraceT, ProviderT, Any]],
         solver: OnlineCpdSolver,
         dump_dir: Path | str | None = None,
         verbose: bool = False,
     ) -> None:
-        self._entries = entries
-        self._providers = providers
         self._metrics = metrics
         self._solver = solver
         self._dump_dir = Path(dump_dir) if isinstance(dump_dir, str) else dump_dir
@@ -77,31 +68,24 @@ class OnlineBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labele
     ) -> list[tuple[TraceT, ProviderT]]:
         """
         Collect (trace, provider) pairs for a given algorithm entry and threshold.
-
-        Parameters
-        ----------
-        entry : AlgorithmEntry
-            The algorithm configuration entry to evaluate.
-        threshold : float
-            The detection threshold.
-        providers : Sequence[ProviderT]
-            Sequence of data providers to run against.
-
-        Returns
-        -------
-        list[tuple[TraceT, ProviderT]]
-            Batch of (trace, provider) pairs for metric evaluation.
         """
         raise NotImplementedError("Method `_collect_runs` is not implemented yet.")
 
     def run(
         self,
+        entries: Sequence[AlgorithmEntry[Any, Any, Any]],
+        providers: Sequence[ProviderT],
     ) -> dict[tuple[str, OnlineAlgorithmConfiguration], list[tuple[float, dict[str, Any]]]]:
         """
         Execute the benchmark over all entries and thresholds.
 
-        For each (entry, threshold) pair, collects runs via
-        _collect_runs() and evaluates all registered metrics.
+        Parameters
+        ----------
+        entries : Sequence[AlgorithmEntry]
+            Sequence of AlgorithmEntry objects containing algorithm, thresholds,
+            and an optional data transformer.
+        providers : Sequence[ProviderT]
+            Sequence of labeled data providers to run against.
 
         Returns
         -------
@@ -111,9 +95,9 @@ class OnlineBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labele
         """
         benchmark_start = time.time()
 
-        total_runs = sum(len(entry.thresholds) for entry in self._entries)
-        n_algorithms = len(self._entries)
-        n_providers = len(self._providers)
+        total_runs = sum(len(entry.thresholds) for entry in entries)
+        n_algorithms = len(entries)
+        n_providers = len(providers)
 
         if not self._metrics:
             self._logger.warning_no_metrics()
@@ -130,7 +114,7 @@ class OnlineBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labele
         ] = {}
 
         entries_iterator = tqdm(
-            self._entries,
+            entries,
             disable=not self._verbose,
             desc="Processing algorithms",
             unit="algo",
@@ -163,7 +147,7 @@ class OnlineBenchmarkRunner[TraceT: OnlineDetectionTrace[Any], ProviderT: Labele
                         threshold=f"{threshold:.4f}",
                     )
 
-                    runs = self._collect_runs(entry, threshold, self._providers)
+                    runs = self._collect_runs(entry, threshold, providers)
 
                     self._logger.metrics_computed(
                         algo_name=algo_name,

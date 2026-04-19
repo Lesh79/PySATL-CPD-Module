@@ -142,7 +142,7 @@ def main() -> None:
     WINDOW_SIZE = 50
 
     # Thresholds to evaluate
-    THRESHOLDS = np.linspace(0, 7, 3000)
+    THRESHOLDS = np.linspace(0, 7, 30)
 
     # Error margin for TP/FP/FN matching & Delays
     ERROR_MARGIN = (0, 100)
@@ -193,28 +193,30 @@ def main() -> None:
     policy = EventBasedPolicy(ERROR_MARGIN[1], strict_edge=False)
 
     runner = NoResetBenchmarkRunner(
-        entries=[AlgorithmEntry(algorithm, THRESHOLDS)],
-        providers=providers,
         metrics=metrics,
         solver=solver,
         policy=policy,
         dump_dir="benchmark_cache/noreset",
         verbose=True,
     )
-    noreset_results = runner.run()
+    noreset_results = runner.run(
+        entries=[AlgorithmEntry(algorithm, THRESHOLDS)],
+        providers=providers,
+            )
 
     # ==========================================
     # RUN 2: Average Run Length (ARL)
     # ==========================================
     arl_runner = ARLBenchmarkRunner(
-        entries=[AlgorithmEntry(algorithm, THRESHOLDS)],
-        providers=arl_providers,
         solver=solver,
         mode="noreset",  # uses rapid point-based extraction behind the scenes
         dump_dir="benchmark_cache/arl",
         verbose=True,
     )
-    arl_results = arl_runner.run()
+    arl_results = arl_runner.run(
+        entries=[AlgorithmEntry(algorithm, THRESHOLDS)],
+        providers=arl_providers,
+            )
 
     # ==========================================
     # Combine and Print Results
