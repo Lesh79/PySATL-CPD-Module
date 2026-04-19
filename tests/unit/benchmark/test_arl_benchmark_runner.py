@@ -19,6 +19,7 @@ import pytest
 from pysatl_cpd.analysis.labeled_data import LabeledData
 from pysatl_cpd.benchmark.arl_benchmark_runner import ARLBenchmarkRunner
 from pysatl_cpd.benchmark.metrics.online.arl_metric import ARLMetric
+from pysatl_cpd.core.algorithm_entry import AlgorithmEntry
 from pysatl_cpd.core.online.ionline_algorithm import OnlineAlgorithmConfiguration
 from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
@@ -59,12 +60,13 @@ class TestARLBenchmarkRunnerInit:
     def test_raises_if_provider_has_change_points(self) -> None:
         """Should raise ValueError when a single provider has non-empty change_points."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="algo", return_sequence=[0.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         provider: LabeledData[float] = _make_provider(10, change_points=[5], name="bad")
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         with pytest.raises(ValueError):
             ARLBenchmarkRunner(
-                algorithms=[(algorithm, [1.0])],
+                entries=[entry],
                 providers=[provider],
                 solver=solver,
                 mode="reset",
@@ -73,13 +75,14 @@ class TestARLBenchmarkRunnerInit:
     def test_raises_if_any_provider_has_change_points(self) -> None:
         """Should raise ValueError when at least one of several providers has change_points."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="algo", return_sequence=[0.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         ok_provider: LabeledData[float] = _make_provider(10, name="ok")
         bad_provider: LabeledData[float] = _make_provider(10, change_points=[3], name="bad")
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         with pytest.raises(ValueError):
             ARLBenchmarkRunner(
-                algorithms=[(algorithm, [1.0])],
+                entries=[entry],
                 providers=[ok_provider, bad_provider],
                 solver=solver,
                 mode="reset",
@@ -88,12 +91,13 @@ class TestARLBenchmarkRunnerInit:
     def test_raises_if_any_provider_has_change_points_noreset_mode(self) -> None:
         """Validation should apply in noreset mode as well."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="algo", return_sequence=[0.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         bad_provider: LabeledData[float] = _make_provider(10, change_points=[3], name="bad")
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         with pytest.raises(ValueError):
             ARLBenchmarkRunner(
-                algorithms=[(algorithm, [1.0])],
+                entries=[entry],
                 providers=[bad_provider],
                 solver=solver,
                 mode="noreset",
@@ -102,11 +106,12 @@ class TestARLBenchmarkRunnerInit:
     def test_valid_init_with_empty_change_points(self) -> None:
         """Should succeed when all providers have empty change_points."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="algo", return_sequence=[0.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         provider: LabeledData[float] = _make_provider(10, name="clean")
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [1.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="reset",
@@ -116,11 +121,12 @@ class TestARLBenchmarkRunnerInit:
     def test_metrics_contain_arl_metric(self) -> None:
         """Internal _metrics dict should contain 'arl' key with ARLMetric instance."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="algo", return_sequence=[0.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         provider: LabeledData[float] = _make_provider(10, name="data")
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [1.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="reset",
@@ -132,11 +138,12 @@ class TestARLBenchmarkRunnerInit:
     def test_accepts_both_modes(self, mode: Literal["reset", "noreset"]) -> None:
         """Constructor should accept both 'reset' and 'noreset' mode values."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="algo", return_sequence=[0.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         provider: LabeledData[float] = _make_provider(5, name="d")
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [1.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode=mode,
@@ -153,6 +160,7 @@ class TestARLBenchmarkRunnerCollectRuns:
     def test_returns_correct_number_of_pairs_reset(self) -> None:
         """Should return one (trace, provider) pair per provider in reset mode."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="algo", return_sequence=[0.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         providers: list[LabeledData[float]] = [
             _make_provider(10, name="d1"),
             _make_provider(10, name="d2"),
@@ -161,19 +169,18 @@ class TestARLBenchmarkRunnerCollectRuns:
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [1.0])],
+            entries=[entry],
             providers=providers,
             solver=solver,
             mode="reset",
         )
-        runs: list[tuple[OnlineDetectionTrace[Any], LabeledData[float]]] = runner._collect_runs(
-            algorithm, 1.0, providers
-        )
+        runs: list[tuple[OnlineDetectionTrace[Any], LabeledData[float]]] = runner._collect_runs(entry, 1.0, providers)
         assert len(runs) == 3
 
     def test_returns_correct_number_of_pairs_noreset(self) -> None:
         """Should return one (trace, provider) pair per provider in noreset mode."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="algo", return_sequence=[0.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         providers: list[LabeledData[float]] = [
             _make_provider(10, name="d1"),
             _make_provider(10, name="d2"),
@@ -181,19 +188,18 @@ class TestARLBenchmarkRunnerCollectRuns:
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [1.0])],
+            entries=[entry],
             providers=providers,
             solver=solver,
             mode="noreset",
         )
-        runs: list[tuple[OnlineDetectionTrace[Any], LabeledData[float]]] = runner._collect_runs(
-            algorithm, 1.0, providers
-        )
+        runs: list[tuple[OnlineDetectionTrace[Any], LabeledData[float]]] = runner._collect_runs(entry, 1.0, providers)
         assert len(runs) == 2
 
     def test_pairs_traces_with_correct_providers(self) -> None:
         """Each trace should be paired with its corresponding provider by name."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="algo", return_sequence=[0.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         providers: list[LabeledData[float]] = [
             _make_provider(10, name="alpha"),
             _make_provider(15, name="beta"),
@@ -201,29 +207,28 @@ class TestARLBenchmarkRunnerCollectRuns:
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [1.0])],
+            entries=[entry],
             providers=providers,
             solver=solver,
             mode="reset",
         )
-        runs: list[tuple[OnlineDetectionTrace[Any], LabeledData[float]]] = runner._collect_runs(
-            algorithm, 1.0, providers
-        )
+        runs: list[tuple[OnlineDetectionTrace[Any], LabeledData[float]]] = runner._collect_runs(entry, 1.0, providers)
         names: list[str] = [prov.name for _, prov in runs]
         assert names == ["alpha", "beta"]
 
     def test_empty_providers_returns_empty_list(self) -> None:
         """Empty providers sequence should return empty list."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="algo", return_sequence=[0.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [1.0])],
+            entries=[entry],
             providers=[_make_provider(10)],
             solver=solver,
             mode="reset",
         )
-        runs: list[tuple[OnlineDetectionTrace[Any], LabeledData[float]]] = runner._collect_runs(algorithm, 1.0, [])
+        runs: list[tuple[OnlineDetectionTrace[Any], LabeledData[float]]] = runner._collect_runs(entry, 1.0, [])
         assert runs == []
 
 
@@ -234,13 +239,14 @@ class TestARLBenchmarkRunnerRun:
     """Tests for run() output structure and ARL values."""
 
     def test_run_returns_correct_key_structure(self) -> None:
-        """Result key should be (str(algorithm), algorithm.configuration)."""
+        """Result key should be (entry.full_name, algorithm.configuration)."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="KeyAlgo", return_sequence=[0.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         provider: LabeledData[float] = _make_provider(10)
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [1.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="reset",
@@ -252,17 +258,18 @@ class TestARLBenchmarkRunnerRun:
 
         assert len(results) == 1
         key: tuple[str, OnlineAlgorithmConfiguration] = next(iter(results))
-        assert key[0] == str(algorithm)
+        assert key[0] == entry.full_name
         assert key[1] == algorithm.configuration
 
     def test_run_arl_infinity_when_no_detections(self) -> None:
         """ARL should be inf when the detection function never exceeds the threshold."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="QuietAlgo", return_sequence=[0.5])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[3.0])
         provider: LabeledData[float] = _make_provider(20)
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [3.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="reset",
@@ -277,11 +284,12 @@ class TestARLBenchmarkRunnerRun:
     def test_run_arl_infinity_noreset_when_no_detections(self) -> None:
         """ARL should be inf in noreset mode when no threshold crossing occurs."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="QuietAlgo", return_sequence=[0.5])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[3.0])
         provider: LabeledData[float] = _make_provider(20)
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [3.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="noreset",
@@ -296,45 +304,31 @@ class TestARLBenchmarkRunnerRun:
     def test_run_multiple_thresholds(self) -> None:
         """Each threshold should produce its own entry with 'arl' metric."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="Multi", return_sequence=[0.0, 2.0, 5.0])
+        thresholds: list[float] = [1.0, 3.0, 10.0]
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=thresholds)
         provider: LabeledData[float] = _make_provider(20)
         solver: OnlineCpdSolver = OnlineCpdSolver()
-        thresholds: list[float] = [1.0, 3.0, 10.0]
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, thresholds)],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="reset",
         )
         results = runner.run()
         key: tuple[str, OnlineAlgorithmConfiguration] = next(iter(results))
-        entries: list[tuple[float, dict[str, Any]]] = results[key]
+        entries_res: list[tuple[float, dict[str, Any]]] = results[key]
 
-        assert len(entries) == 3
-        recorded: list[float] = [t for t, _ in entries]
+        assert len(entries_res) == 3
+        recorded: list[float] = [t for t, _ in entries_res]
         assert recorded == thresholds
-        for _, m in entries:
+        for _, m in entries_res:
             assert "arl" in m
 
     def test_run_arl_aggregated_across_providers(self) -> None:
-        """ARL should aggregate run lengths from all providers.
-
-        Algorithm [0.0, 5.0], threshold=3.0, reset mode.
-        After each detection the algorithm resets so the sequence
-        restarts: 0, 5, 0, 5, ...
-
-        For each provider detections happen at steps where value=5.0.
-        Step 0 -> 0.0 (no), step 1 -> 5.0 (yes, reset).
-        After reset: step 2 -> 0.0 (no), step 3 -> 5.0 (yes, reset). Etc.
-
-        p1 (4 obs): detections at steps 1, 3.
-            Run lengths from 0: [1, 2]. (0->1 = 1, 1->3 = 2)
-        p2 (6 obs): detections at steps 1, 3, 5.
-            Run lengths from 0: [1, 2, 2].
-
-        Flat run lengths: [1, 2, 1, 2, 2].  ARL = 8 / 5 = 1.6.
-        """
+        """ARL should aggregate run lengths from all providers."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="Agg", return_sequence=[0.0, 5.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[3.0])
         providers: list[LabeledData[float]] = [
             _make_provider(4, name="p1"),
             _make_provider(6, name="p2"),
@@ -342,7 +336,7 @@ class TestARLBenchmarkRunnerRun:
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [3.0])],
+            entries=[entry],
             providers=providers,
             solver=solver,
             mode="reset",
@@ -363,30 +357,17 @@ class TestARLBenchmarkRunnerModeSemantics:
     """Tests verifying different ARL behavior between reset and noreset modes."""
 
     def test_reset_vs_noreset_produce_different_arl(self) -> None:
-        """Reset and noreset modes should produce different ARL values.
-
-        Algorithm return_sequence=[0.0, 5.0, 0.0, 0.0], threshold=3.0.
-
-        Reset mode:
-            Step 0 -> 0.0 (no). Step 1 -> 5.0 (yes, reset).
-            After reset: Step 2 -> 0.0 (no). Step 3 -> 5.0 (yes, reset). Etc.
-            Detections at steps 1, 3, 5, 7, ..., 19.
-            Run lengths from 0: [1, 2, 2, 2, ...].  ARL < 2.
-
-        NoReset mode:
-            Sequence cycles without reset: 0, 5, 0, 0, 0, 5, 0, 0, 0, 5, ...
-            Detections only where value=5.0.
-            ARL > arl_reset.
-        """
+        """Reset and noreset modes should produce different ARL values."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(
             name="ModeTest",
             return_sequence=[0.0, 5.0, 0.0, 0.0],
         )
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[3.0])
         provider: LabeledData[float] = _make_provider(20)
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner_reset: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [3.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="reset",
@@ -396,7 +377,7 @@ class TestARLBenchmarkRunnerModeSemantics:
         arl_reset: float = res_reset[key_reset][0][1]["arl"]
 
         runner_noreset: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [3.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="noreset",
@@ -410,32 +391,17 @@ class TestARLBenchmarkRunnerModeSemantics:
         assert arl_reset < arl_noreset
 
     def test_reset_mode_exact_arl_with_immediate_signal(self) -> None:
-        """Verify exact ARL in reset mode.
-
-        Algorithm return_sequence=[0.0, 5.0, 0.0, 0.0], threshold=3.0.
-        Reset mode: sequence restarts after every signal.
-
-        12 observations:
-        Step 0 -> 0.0 (no). Step 1 -> 5.0 (yes, reset).
-        Step 2 -> 0.0 (no). Step 3 -> 5.0 (yes, reset).
-        Step 4 -> 0.0 (no). Step 5 -> 5.0 (yes, reset).
-        Step 6 -> 0.0 (no). Step 7 -> 5.0 (yes, reset).
-        Step 8 -> 0.0 (no). Step 9 -> 5.0 (yes, reset).
-        Step 10 -> 0.0 (no). Step 11 -> 5.0 (yes, reset).
-
-        Detections at steps 1, 3, 5, 7, 9, 11.
-        Run lengths from 0: [1, 2, 2, 2, 2, 2].
-        ARL = 11 / 6.
-        """
+        """Verify exact ARL in reset mode."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(
             name="Immediate",
             return_sequence=[0.0, 5.0, 0.0, 0.0],
         )
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[3.0])
         provider: LabeledData[float] = _make_provider(12)
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [3.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="reset",
@@ -449,24 +415,17 @@ class TestARLBenchmarkRunnerModeSemantics:
         assert abs(arl_value - expected_arl) < 1e-10
 
     def test_noreset_mode_exact_arl_with_periodic_signal(self) -> None:
-        """Verify exact ARL in noreset mode with periodic signal.
-
-        Algorithm return_sequence=[5.0, 0.0, 0.0, 0.0], threshold=3.0.
-        NoReset mode: sequence cycles without restart.
-        12 observations -> values: 5,0,0,0,5,0,0,0,5,0,0,0.
-        Detections at 1-based indices: 1, 5, 9 (where value=5.0).
-        Run lengths from 0: [1, 4, 4].
-        ARL = 9 / 3 = 3.0.
-        """
+        """Verify exact ARL in noreset mode with periodic signal."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(
             name="Periodic",
             return_sequence=[5.0, 0.0, 0.0, 0.0],
         )
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[3.0])
         provider: LabeledData[float] = _make_provider(12)
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [3.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="noreset",
@@ -480,56 +439,50 @@ class TestARLBenchmarkRunnerModeSemantics:
         assert abs(arl_value - expected_arl) < 1e-10
 
     def test_noreset_lower_threshold_shorter_arl(self) -> None:
-        """Lower threshold in noreset mode should detect more, producing shorter ARL.
-
-        Algorithm [0.0, 1.0, 2.0, 3.0, 4.0, 5.0], 24 observations.
-        threshold=1.5: detections where value > 1.5 -> indices with 2,3,4,5.
-        threshold=4.5: detections where value > 4.5 -> indices with 5 only.
-        """
+        """Lower threshold in noreset mode should detect more, producing shorter ARL."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(
             name="Gradual",
             return_sequence=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0],
         )
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.5, 4.5])
         provider: LabeledData[float] = _make_provider(24)
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [1.5, 4.5])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="noreset",
         )
         results = runner.run()
         key: tuple[str, OnlineAlgorithmConfiguration] = next(iter(results))
-        entries: list[tuple[float, dict[str, Any]]] = results[key]
+        entries_res: list[tuple[float, dict[str, Any]]] = results[key]
 
-        arl_low: float = entries[0][1]["arl"]
-        arl_high: float = entries[1][1]["arl"]
+        arl_low: float = entries_res[0][1]["arl"]
+        arl_high: float = entries_res[1][1]["arl"]
 
         assert math.isfinite(arl_low)
         assert math.isfinite(arl_high)
         assert arl_low < arl_high
 
     def test_noreset_same_arl_for_same_threshold_different_runs(self) -> None:
-        """In noreset mode, same algorithm+provider+threshold should give same ARL.
-
-        This validates determinism and that the inf-trace is reused correctly.
-        """
+        """In noreset mode, same algorithm+provider+threshold should give same ARL."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(
             name="Stable",
             return_sequence=[0.0, 0.0, 5.0],
         )
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[3.0])
         provider: LabeledData[float] = _make_provider(15)
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner1: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [3.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="noreset",
         )
         runner2: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [3.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="noreset",
@@ -555,11 +508,12 @@ class TestARLBenchmarkRunnerMaxRunlength:
     def test_forced_detections_produce_finite_arl(self) -> None:
         """Forced detections via max_runlength give finite ARL with unreachable threshold."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="Silent", return_sequence=[0.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[100.0])
         provider: LabeledData[float] = _make_provider(18)
         solver: OnlineCpdSolver = OnlineCpdSolver(max_runlength=5)
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [100.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="reset",
@@ -573,20 +527,14 @@ class TestARLBenchmarkRunnerMaxRunlength:
         assert arl_value > 0
 
     def test_exact_arl_with_max_runlength(self) -> None:
-        """Verify exact ARL with max_runlength=5 on 18 observations.
-
-        max_runlength=5 forces detection when run_length > 5, i.e. at step 5
-        (0-based, run_length becomes 6).
-        After reset: next forced at step 11, then step 17.
-        Detections at steps 5, 11, 17.
-        Run lengths from 0: [5, 6, 6].  ARL = 17 / 3.
-        """
+        """Verify exact ARL with max_runlength=5 on 18 observations."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="Silent", return_sequence=[0.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[100.0])
         provider: LabeledData[float] = _make_provider(18)
         solver: OnlineCpdSolver = OnlineCpdSolver(max_runlength=5)
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [100.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="reset",
@@ -600,21 +548,14 @@ class TestARLBenchmarkRunnerMaxRunlength:
         assert abs(arl_value - expected_arl) < 1e-10
 
     def test_signal_before_forced_prevents_forced(self) -> None:
-        """Signal detections happening before max_runlength prevent forced detections.
-
-        Algorithm [0.0, 0.0, 5.0], threshold=3.0, max_runlength=10.
-        Signal every 3 steps (well before forced at 11).
-        After each signal, reset -> sequence restarts.
-
-        18 obs -> detections at steps 2, 5, 8, 11, 14, 17.
-        Run lengths: [2, 3, 3, 3, 3, 3].  ARL = 17 / 6.
-        """
+        """Signal detections happening before max_runlength prevent forced detections."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="Fast", return_sequence=[0.0, 0.0, 5.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[3.0])
         provider: LabeledData[float] = _make_provider(18)
         solver: OnlineCpdSolver = OnlineCpdSolver(max_runlength=10)
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [3.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="reset",
@@ -628,33 +569,21 @@ class TestARLBenchmarkRunnerMaxRunlength:
         assert abs(arl_value - expected_arl) < 1e-10
 
     def test_max_runlength_noreset_inf_trace_still_forces(self) -> None:
-        """In noreset mode, max_runlength affects the inf-trace run.
-
-        Algorithm returns 0.0 always, max_runlength=4, threshold=100.0.
-        The inf-trace is computed with threshold=inf, but max_runlength
-        still forces detections every 5 steps (run_length > 4).
-
-        Those forced detections appear in the inf-trace and should be
-        detected via point-based policy as the detection function will
-        show NaN/reset artifacts. But actually since the sequence always
-        returns 0.0 which is <= any threshold, noreset mode with
-        threshold=100.0 should detect nothing from the detection function.
-        However the forced detections in the inf-trace should still
-        produce finite ARL through detected_change_points in the trace.
-        """
+        """In noreset mode, max_runlength affects the inf-trace run."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="Silent", return_sequence=[0.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[100.0])
         provider: LabeledData[float] = _make_provider(15)
         solver_forced: OnlineCpdSolver = OnlineCpdSolver(max_runlength=4)
         solver_no_forced: OnlineCpdSolver = OnlineCpdSolver()
 
         runner_forced: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [100.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver_forced,
             mode="reset",
         )
         runner_no_forced: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [100.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver_no_forced,
             mode="reset",
@@ -680,20 +609,14 @@ class TestARLBenchmarkRunnerResetBehavior:
     """Tests verifying that algorithm reset after each detection affects ARL."""
 
     def test_reset_restarts_return_sequence(self) -> None:
-        """After reset, return_sequence restarts producing periodic detections.
-
-        Algorithm [0.0, 5.0], threshold=3.0, reset mode, 8 observations.
-        Step 0: 0.0 (no). Step 1: 5.0 (yes, reset).
-        Step 2: 0.0 (no). Step 3: 5.0 (yes, reset). Etc.
-        Detections at steps 1, 3, 5, 7.
-        Run lengths: [1, 2, 2, 2].  ARL = 7 / 4 = 1.75.
-        """
+        """After reset, return_sequence restarts producing periodic detections."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(name="Reset", return_sequence=[0.0, 5.0])
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[3.0])
         provider: LabeledData[float] = _make_provider(8)
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [3.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="reset",
@@ -707,33 +630,18 @@ class TestARLBenchmarkRunnerResetBehavior:
         assert abs(arl_value - expected_arl) < 1e-10
 
     def test_reset_restarts_learning_period(self) -> None:
-        """Reset re-enters learning period, creating longer gaps between detections.
-
-        Algorithm return_sequence=[5.0], learning_period_size=2, threshold=3.0.
-        With reset: after each detection, algorithm resets and needs 2
-        observations for learning (returning 0.0), then next returns 5.0.
-
-        9 obs:
-        Step 0: learning (0.0). Step 1: learning (0.0).
-        Step 2: 5.0 (yes, reset).
-        Step 3: learning (0.0). Step 4: learning (0.0).
-        Step 5: 5.0 (yes, reset).
-        Step 6: learning (0.0). Step 7: learning (0.0).
-        Step 8: 5.0 (yes, reset).
-
-        Detections at steps 2, 5, 8.
-        Run lengths: [2, 3, 3].  ARL = 8 / 3.
-        """
+        """Reset re-enters learning period, creating longer gaps between detections."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(
             name="Learn",
             return_sequence=[5.0],
             learning_period_size=2,
         )
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[3.0])
         provider: LabeledData[float] = _make_provider(9)
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [3.0])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="reset",
@@ -747,31 +655,27 @@ class TestARLBenchmarkRunnerResetBehavior:
         assert abs(arl_value - expected_arl) < 1e-10
 
     def test_lower_threshold_produces_shorter_arl_reset(self) -> None:
-        """Lower threshold detects more often, resulting in shorter ARL in reset mode.
-
-        Algorithm [0.0, 1.0, 2.0, 3.0, 4.0, 5.0], 30 observations.
-        threshold=1.5: signal when value > 1.5, detections sooner after reset.
-        threshold=4.5: signal when value > 4.5, detections later after reset.
-        """
+        """Lower threshold detects more often, resulting in shorter ARL in reset mode."""
         algorithm: MockOnlineAlgorithm[float] = MockOnlineAlgorithm(
             name="Gradual",
             return_sequence=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0],
         )
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.5, 4.5])
         provider: LabeledData[float] = _make_provider(30)
         solver: OnlineCpdSolver = OnlineCpdSolver()
 
         runner: ARLBenchmarkRunner[OnlineDetectionTrace[Any], LabeledData[float]] = ARLBenchmarkRunner(
-            algorithms=[(algorithm, [1.5, 4.5])],
+            entries=[entry],
             providers=[provider],
             solver=solver,
             mode="reset",
         )
         results = runner.run()
         key: tuple[str, OnlineAlgorithmConfiguration] = next(iter(results))
-        entries: list[tuple[float, dict[str, Any]]] = results[key]
+        entries_res: list[tuple[float, dict[str, Any]]] = results[key]
 
-        arl_low: float = entries[0][1]["arl"]
-        arl_high: float = entries[1][1]["arl"]
+        arl_low: float = entries_res[0][1]["arl"]
+        arl_high: float = entries_res[1][1]["arl"]
 
         assert math.isfinite(arl_low)
         assert math.isfinite(arl_high)

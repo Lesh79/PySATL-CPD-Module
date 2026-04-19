@@ -42,3 +42,14 @@ class MockOnlineDetectionTrace(OnlineDetectionTrace[Any]):
             detection_function=np.array([]),
             algorithm_states=[],
         )
+
+    def slice(self, start: int, end: int) -> "MockOnlineDetectionTrace":
+        """
+        Mock implementation of slice.
+
+        Returns a new MockOnlineDetectionTrace containing only the change points
+        that fall within [start, end], shifted relative to `start`.
+        """
+
+        shifted_cps: list[int] = [cp - start for cp in self.detected_change_points if start <= cp <= end]
+        return MockOnlineDetectionTrace(detected_change_points=shifted_cps)

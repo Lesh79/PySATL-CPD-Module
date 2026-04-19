@@ -6,7 +6,7 @@ Logging utilities for benchmark execution.
 import logging
 from typing import Any
 
-__author__ = "PySATL contributors"
+__author__ = "Danil Totmyanin"
 __copyright__ = "Copyright (c) 2026 PySATL project"
 __license__ = "SPDX-License-Identifier: MIT"
 

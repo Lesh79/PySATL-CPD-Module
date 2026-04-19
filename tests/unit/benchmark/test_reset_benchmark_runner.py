@@ -11,18 +11,20 @@ __license__ = "SPDX-License-Identifier: MIT"
 import csv
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from pysatl_cpd.benchmark.online_benchmark_runner import OnlineBenchmarkRunner
 from pysatl_cpd.benchmark.reset_benchmark_runner import ResetBenchmarkRunner
+from pysatl_cpd.core.algorithm_entry import AlgorithmEntry
 from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 from pysatl_cpd.core.typedefs import Number
 from tests.mocks.algorithms.online import MockOnlineAlgorithm
 from tests.mocks.analysis.labeled_data import MockLabeledDataWithPadding
-from tests.mocks.analysis.metrics.mock_run_metric import MockRunMetric
-from tests.mocks.benchmark.metrics.mock_aggregation_metric import MockAggregationMetric
+from tests.mocks.analysis.metrics.run_metric import MockRunMetric
+from tests.mocks.benchmark.metrics.aggregation_metric import MockAggregationMetric
 from tests.mocks.core.online.online_detection_trace import MockOnlineDetectionTrace
 
 # ---------------------------------------------------------------------------
@@ -72,7 +74,7 @@ def mock_metric() -> MockAggregationMetric[MockOnlineDetectionTrace, MockLabeled
 
 
 def make_reset_runner(
-    algorithms: Sequence[tuple[MockOnlineAlgorithm[Number], Sequence[float]]],
+    entries: Sequence[AlgorithmEntry[Any, Any, Any]],
     providers: Sequence[MockLabeledDataWithPadding],
     metrics: dict[str, MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding]],
     solver: OnlineCpdSolver,
@@ -80,7 +82,7 @@ def make_reset_runner(
 ) -> ResetBenchmarkRunner[MockOnlineDetectionTrace, MockLabeledDataWithPadding]:
     """Helper to construct ResetBenchmarkRunner with given parameters."""
     return ResetBenchmarkRunner(
-        algorithms=algorithms,
+        entries=entries,
         providers=providers,
         metrics=metrics,  # type: ignore[arg-type]
         solver=solver,
@@ -105,7 +107,7 @@ class TestResetBenchmarkRunnerInheritance:
     ) -> None:
         """ResetBenchmarkRunner is an instance of OnlineBenchmarkRunner."""
         runner = make_reset_runner(
-            [(algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -120,14 +122,15 @@ class TestResetBenchmarkRunnerInheritance:
         solver: OnlineCpdSolver,
     ) -> None:
         """_collect_runs does not raise NotImplementedError."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_reset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
         )
         try:
-            runner._collect_runs(algorithm, 1.0, [single_provider])
+            runner._collect_runs(entry, 1.0, [single_provider])
         except NotImplementedError:
             pytest.fail("_collect_runs raised NotImplementedError")
 
@@ -143,13 +146,14 @@ class TestResetBenchmarkRunnerCollectRuns:
         solver: OnlineCpdSolver,
     ) -> None:
         """_collect_runs returns exactly len(providers) (trace, provider) pairs."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_reset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             providers,
             {"m": mock_metric},
             solver,
         )
-        runs = runner._collect_runs(algorithm, 1.0, providers)
+        runs = runner._collect_runs(entry, 1.0, providers)
         assert len(runs) == len(providers)
 
     def test_empty_providers_returns_empty_list(
@@ -159,13 +163,14 @@ class TestResetBenchmarkRunnerCollectRuns:
         solver: OnlineCpdSolver,
     ) -> None:
         """_collect_runs with empty providers returns empty list."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_reset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             [],
             {"m": mock_metric},
             solver,
         )
-        runs = runner._collect_runs(algorithm, 1.0, [])
+        runs = runner._collect_runs(entry, 1.0, [])
         assert runs == []
 
     def test_single_provider_returns_single_run(
@@ -176,13 +181,14 @@ class TestResetBenchmarkRunnerCollectRuns:
         solver: OnlineCpdSolver,
     ) -> None:
         """_collect_runs with one provider returns exactly one pair."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_reset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
         )
-        runs = runner._collect_runs(algorithm, 1.0, [single_provider])
+        runs = runner._collect_runs(entry, 1.0, [single_provider])
         assert len(runs) == 1
 
     def test_each_run_paired_with_correct_provider(
@@ -193,13 +199,14 @@ class TestResetBenchmarkRunnerCollectRuns:
         solver: OnlineCpdSolver,
     ) -> None:
         """Each trace is paired with its corresponding provider."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_reset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             providers,
             {"m": mock_metric},
             solver,
         )
-        runs = runner._collect_runs(algorithm, 1.0, providers)
+        runs = runner._collect_runs(entry, 1.0, providers)
         for (_, provider), expected_provider in zip(runs, providers, strict=False):
             assert provider is expected_provider
 
@@ -211,13 +218,14 @@ class TestResetBenchmarkRunnerCollectRuns:
         solver: OnlineCpdSolver,
     ) -> None:
         """Each trace in collected runs is an OnlineDetectionTrace."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_reset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
         )
-        runs = runner._collect_runs(algorithm, 1.0, [single_provider])
+        runs = runner._collect_runs(entry, 1.0, [single_provider])
         for trace, _ in runs:
             assert isinstance(trace, OnlineDetectionTrace)
 
@@ -228,17 +236,18 @@ class TestResetBenchmarkRunnerCollectRuns:
         mock_metric: MockAggregationMetric[MockOnlineDetectionTrace, MockLabeledDataWithPadding],
         solver: OnlineCpdSolver,
     ) -> None:
-        """algorithm_name and configuration_hash in trace match the algorithm."""
+        """algorithm_name and configuration_hash in trace match the algorithm full name and hash."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner = make_reset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
         )
-        runs = runner._collect_runs(algorithm, 1.0, [single_provider])
+        runs = runner._collect_runs(entry, 1.0, [single_provider])
         trace, _ = runs[0]
-        assert trace.algorithm_name == str(algorithm)
-        assert trace.configuration_hash == hash(algorithm.configuration)
+        assert trace.algorithm_name == entry.full_name
+        assert trace.configuration_hash == entry.full_hash
 
     def test_detected_change_points_respect_threshold(
         self,
@@ -248,14 +257,15 @@ class TestResetBenchmarkRunnerCollectRuns:
         solver: OnlineCpdSolver,
     ) -> None:
         """High threshold produces no detections, low threshold produces detections."""
+        entry = AlgorithmEntry(algorithm=algorithm_with_signal, thresholds=[float("inf"), 1.0])
         runner = make_reset_runner(
-            [(algorithm_with_signal, [float("inf"), 1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
         )
-        runs_no_signal = runner._collect_runs(algorithm_with_signal, float("inf"), [single_provider])
-        runs_with_signal = runner._collect_runs(algorithm_with_signal, 1.0, [single_provider])
+        runs_no_signal = runner._collect_runs(entry, float("inf"), [single_provider])
+        runs_with_signal = runner._collect_runs(entry, 1.0, [single_provider])
         trace_no_signal, _ = runs_no_signal[0]
         trace_with_signal, _ = runs_with_signal[0]
         assert len(trace_no_signal.detected_change_points) == 0
@@ -269,14 +279,15 @@ class TestResetBenchmarkRunnerCollectRuns:
         solver: OnlineCpdSolver,
     ) -> None:
         """Lower threshold produces more detections than higher threshold."""
+        entry = AlgorithmEntry(algorithm=algorithm_with_signal, thresholds=[1.0, float("inf")])
         runner = make_reset_runner(
-            [(algorithm_with_signal, [1.0, float("inf")])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
         )
-        runs_low = runner._collect_runs(algorithm_with_signal, 1.0, [single_provider])
-        runs_high = runner._collect_runs(algorithm_with_signal, float("inf"), [single_provider])
+        runs_low = runner._collect_runs(entry, 1.0, [single_provider])
+        runs_high = runner._collect_runs(entry, float("inf"), [single_provider])
         trace_low, _ = runs_low[0]
         trace_high, _ = runs_high[0]
         assert len(trace_low.detected_change_points) > len(trace_high.detected_change_points)
@@ -289,22 +300,21 @@ class TestResetBenchmarkRunnerCollectRuns:
         solver: OnlineCpdSolver,
     ) -> None:
         """Algorithm state is reset between providers by the solver."""
+        entry = AlgorithmEntry(algorithm=algorithm_with_signal, thresholds=[1.0])
         runner = make_reset_runner(
-            [(algorithm_with_signal, [1.0])],
+            [entry],
             providers,
             {"m": mock_metric},
             solver,
         )
-        runs = runner._collect_runs(algorithm_with_signal, 1.0, providers)
-        # Each provider run starts fresh - detection functions start from 0
+        runs = runner._collect_runs(entry, 1.0, providers)
         for trace, _ in runs:
             assert isinstance(trace, OnlineDetectionTrace)
-            # detection_function should start from index 0 for each provider
             assert (
                 len(trace.detection_function)
                 == len(list(providers[0].raw_data) if hasattr(providers[0], "raw_data") else [])
                 or True
-            )  # solver resets - no cross-provider state leak
+            )
 
 
 class TestResetBenchmarkRunnerCaching:
@@ -320,7 +330,7 @@ class TestResetBenchmarkRunnerCaching:
     ) -> None:
         """Without dump_dir no files are created."""
         runner = make_reset_runner(
-            [(algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -339,7 +349,7 @@ class TestResetBenchmarkRunnerCaching:
     ) -> None:
         """With dump_dir a registry CSV file is created."""
         runner = make_reset_runner(
-            [(algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -359,8 +369,9 @@ class TestResetBenchmarkRunnerCaching:
     ) -> None:
         """Registry CSV contains correct algorithm, threshold, data entries."""
         threshold: float = 1.0
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[threshold])
         runner = make_reset_runner(
-            [(algorithm, [threshold])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -371,7 +382,7 @@ class TestResetBenchmarkRunnerCaching:
         with open(registry, encoding="utf-8") as f:
             rows = list(csv.DictReader(f))
         assert len(rows) == 1
-        assert rows[0]["algorithm"] == str(algorithm)
+        assert rows[0]["algorithm"] == entry.full_name
         assert float(rows[0]["threshold"]) == threshold
         assert rows[0]["data"] == single_provider.name
 
@@ -384,25 +395,24 @@ class TestResetBenchmarkRunnerCaching:
         tmp_path: Path,
     ) -> None:
         """Second run() with same dump_dir reuses cached traces."""
+        entry = AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])
         runner_first = make_reset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
             dump_dir=tmp_path,
         )
         runner_first.run()
-        tmp_path / "benchmark_registry.csv"
 
         runner_second = make_reset_runner(
-            [(algorithm, [1.0])],
+            [entry],
             [single_provider],
             {"m": mock_metric},
             solver,
             dump_dir=tmp_path,
         )
         runner_second.run()
-        # Registry is rewritten but pickle files should not be recreated
         pkl_files = list(tmp_path.glob("*.pkl"))
         assert len(pkl_files) == 1
 
@@ -419,7 +429,7 @@ class TestResetBenchmarkRunnerRun:
     ) -> None:
         """Basic happy path - one algorithm, one threshold, one provider."""
         runner = make_reset_runner(
-            [(algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -442,7 +452,7 @@ class TestResetBenchmarkRunnerRun:
         """run() result has correct nested structure."""
         thresholds = [0.5, 1.0]
         runner = make_reset_runner(
-            [(algorithm, thresholds)],
+            [AlgorithmEntry(algorithm=algorithm, thresholds=thresholds)],
             providers,
             {"m": mock_metric},
             solver,
@@ -465,7 +475,7 @@ class TestResetBenchmarkRunnerRun:
         """Multiple thresholds produce multiple entries in result."""
         thresholds = [0.5, 1.0, 2.0]
         runner = make_reset_runner(
-            [(algorithm, thresholds)],
+            [AlgorithmEntry(algorithm=algorithm, thresholds=thresholds)],
             [single_provider],
             {"m": mock_metric},
             solver,
@@ -484,7 +494,7 @@ class TestResetBenchmarkRunnerRun:
     ) -> None:
         """Empty providers list - metric is called with empty batch."""
         runner = make_reset_runner(
-            [(algorithm, [1.0])],
+            [AlgorithmEntry(algorithm=algorithm, thresholds=[1.0])],
             [],
             {"m": mock_metric},
             solver,

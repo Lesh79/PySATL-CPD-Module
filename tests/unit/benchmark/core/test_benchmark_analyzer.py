@@ -17,8 +17,8 @@ from pysatl_cpd.benchmark.core.benchmark_analyzer import BenchmarkAnalyzer
 from pysatl_cpd.benchmark.metrics.multiple_run_metric import MultipleRunMetric
 from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 from tests.mocks.analysis.labeled_data import MockLabeledData
-from tests.mocks.analysis.metrics.mock_run_metric import MockRunMetric
-from tests.mocks.benchmark.metrics.mock_aggregation_metric import MockAggregationMetric
+from tests.mocks.analysis.metrics.run_metric import MockRunMetric
+from tests.mocks.benchmark.metrics.aggregation_metric import MockAggregationMetric
 from tests.mocks.core.online.online_detection_trace import MockOnlineDetectionTrace
 
 
