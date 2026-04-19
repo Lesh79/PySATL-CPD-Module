@@ -1,75 +1,28 @@
 """
 Example: Shewhart Control Chart benchmark on Normal Distribution data
-using NoResetBenchmarkRunner with ClassificationReport & Delay metrics,
-and ARLBenchmarkRunner for Average Run Length evaluation.
+using NoResetBenchmark with ClassificationReport & Delay metrics,
+and Average Run Length (ARL) evaluation.
 """
 
 import numpy as np
+import pandas as pd
 
 from pysatl_cpd.algorithms.online.shewhart_control_chart import ShewhartControlChart
-from pysatl_cpd.analysis.labeled_data import LabeledData
-from pysatl_cpd.benchmark.arl_benchmark_runner import ARLBenchmarkRunner
 from pysatl_cpd.benchmark.metrics.classification.classification_report import ClassificationReport
+from pysatl_cpd.benchmark.metrics.online.arl_metric import ARLMetric
 from pysatl_cpd.benchmark.metrics.online.delay_metric import MeanDelayMetric, MedianDelayMetric
-from pysatl_cpd.benchmark.noreset.noreset_benchmark_runner import NoResetBenchmarkRunner
-from pysatl_cpd.benchmark.noreset.threshold_policy import EventBasedPolicy
-from pysatl_cpd.core.algorithm_entry import AlgorithmEntry
+from pysatl_cpd.benchmark.noreset.noreset_benchmark_runner import (
+    LinspaceThresholds,
+    NoResetBenchmark,
+    OnlineBenchmarkEntry,
+)
+from pysatl_cpd.benchmark.noreset.threshold_policy import EventBasedPolicy, PointBasedPolicy
+from pysatl_cpd.core.data_providers.dataset import Annotation, PandasLabeledDataProvider
 from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 
 # ---------------------------------------------------------------------------
-# 1. Labeled data providers
+# 1. Dataset generation
 # ---------------------------------------------------------------------------
-
-
-class NormalShiftProvider(LabeledData[float]):
-    """Provider for a single time series WITH one change point."""
-
-    def __init__(self, name: str, data: list[float], change_point: int) -> None:
-        self._name = name
-        self._data = data
-        self._change_point = change_point
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def change_points(self) -> list[int]:
-        return [self._change_point]
-
-    def __iter__(self):
-        return iter(self._data)
-
-    def __len__(self) -> int:
-        return len(self._data)
-
-
-class NormalNullProvider(LabeledData[float]):
-    """Provider for a single time series WITHOUT change points (for ARL)."""
-
-    def __init__(self, name: str, data: list[float]) -> None:
-        self._name = name
-        self._data = data
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def change_points(self) -> list[int]:
-        return []
-
-    def __iter__(self):
-        return iter(self._data)
-
-    def __len__(self) -> int:
-        return len(self._data)
-
-
-# ---------------------------------------------------------------------------
-# 2. Dataset generation
-# ---------------------------------------------------------------------------
-
 
 def generate_dataset(
     n: int,
@@ -79,22 +32,32 @@ def generate_dataset(
     mu_after: float = 3.0,
     sigma: float = 1.0,
     seed: int = 42,
-) -> list[NormalShiftProvider]:
-    """Generate n time series, each with one change point."""
+) -> list[PandasLabeledDataProvider]:
+    """Generate n time series, each with one change point using PandasLabeledDataProvider."""
     rng = np.random.default_rng(seed)
     providers = []
 
     for i in range(n):
-        n_before = change_point - 1
-        n_after = series_length - n_before
+        before = rng.normal(mu_before, sigma, size=change_point)
+        after = rng.normal(mu_after, sigma, size=series_length - change_point)
+        data = np.concatenate([before, after])
 
-        before = rng.normal(mu_before, sigma, size=n_before).tolist()
-        after = rng.normal(mu_after, sigma, size=n_after).tolist()
+        segments = np.zeros(series_length, dtype=int)
+        segments[change_point:] = 1
 
-        provider = NormalShiftProvider(
+        df = pd.DataFrame({"value": data, "segment": segments})
+
+        seg_info = pd.DataFrame({
+            "segment": [0, 1],
+            "start": [0, change_point],
+            "end": [change_point - 1, series_length - 1],
+        })
+
+        provider = PandasLabeledDataProvider(
+            dataset=df,
+            segment_info=seg_info,
+            annotation=Annotation(scenario="shift"),
             name=f"series_{i:04d}",
-            data=before + after,
-            change_point=change_point,
         )
         providers.append(provider)
 
@@ -107,16 +70,26 @@ def generate_arl_dataset(
     mu: float = 0.0,
     sigma: float = 1.0,
     seed: int = 42,
-) -> list[NormalNullProvider]:
+) -> list[PandasLabeledDataProvider]:
     """Generate n stationary time series without change points for ARL."""
     rng = np.random.default_rng(seed)
     providers = []
 
     for i in range(n):
-        data = rng.normal(mu, sigma, size=series_length).tolist()
-        provider = NormalNullProvider(
+        data = rng.normal(mu, sigma, size=series_length)
+
+        df = pd.DataFrame({"value": data, "segment": 0})
+        seg_info = pd.DataFrame({
+            "segment": [0],
+            "start": [0],
+            "end": [series_length - 1],
+        })
+
+        provider = PandasLabeledDataProvider(
+            dataset=df,
+            segment_info=seg_info,
+            annotation=Annotation(scenario="null"),
             name=f"arl_series_{i:04d}",
-            data=data,
         )
         providers.append(provider)
 
@@ -124,9 +97,8 @@ def generate_arl_dataset(
 
 
 # ---------------------------------------------------------------------------
-# 3. Main benchmark
+# 2. Main benchmark
 # ---------------------------------------------------------------------------
-
 
 def main() -> None:
     # --- Parameters ---
@@ -141,37 +113,21 @@ def main() -> None:
     LEARNING_PERIOD = 1000
     WINDOW_SIZE = 50
 
-    # Thresholds to evaluate
-    THRESHOLDS = np.linspace(0, 7, 30)
-
     # Error margin for TP/FP/FN matching & Delays
     ERROR_MARGIN = (0, 100)
 
     # --- Generate datasets ---
-    # 1. Dataset with change points for Quality and Delays
     providers = generate_dataset(
-        n=N_SERIES,
-        series_length=SERIES_LENGTH,
-        change_point=CHANGE_POINT,
-        mu_before=MU_BEFORE,
-        mu_after=MU_AFTER,
-        sigma=SIGMA,
-        seed=42,
+        n=N_SERIES, series_length=SERIES_LENGTH, change_point=CHANGE_POINT,
+        mu_before=MU_BEFORE, mu_after=MU_AFTER, sigma=SIGMA, seed=42,
     )
-    # 2. Dataset without change points for ARL
     arl_providers = generate_arl_dataset(
-        n=N_SERIES,
-        series_length=SERIES_LENGTH,
-        mu=MU_BEFORE,
-        sigma=SIGMA,
-        seed=42,
+        n=N_SERIES, series_length=SERIES_LENGTH,
+        mu=MU_BEFORE, sigma=SIGMA, seed=42,
     )
 
     print(f"Algorithm: ShewhartControlChart(learning_period={LEARNING_PERIOD}, window={WINDOW_SIZE})")
-    print(
-        f"Dataset (NoReset): {N_SERIES} series, length={SERIES_LENGTH}, change_point={CHANGE_POINT},"
-        f"shift={MU_AFTER - MU_BEFORE:.1f}*sigma"
-    )
+    print(f"Dataset (NoReset): {N_SERIES} series, length={SERIES_LENGTH}, cp={CHANGE_POINT}, shift={MU_AFTER - MU_BEFORE:.1f}σ")
     print(f"Dataset (ARL):     {N_SERIES} series, length={SERIES_LENGTH}, no change points")
     print(f"Error margin: {ERROR_MARGIN}")
     print("-" * 115)
@@ -182,72 +138,54 @@ def main() -> None:
     )
     solver = OnlineCpdSolver()
 
+    entry = OnlineBenchmarkEntry(
+        algorithm=algorithm,
+        thresholds=LinspaceThresholds(start=0, stop=7, num=30),
+        entry_name="Shewhart"
+    )
+
     # ==========================================
     # RUN 1: Classification & Delays (NoReset)
     # ==========================================
-    metrics = {
+    metrics_q = {
         "classification_report": ClassificationReport(error_margin=ERROR_MARGIN),
         "mean_delay": MeanDelayMetric(max_delay=ERROR_MARGIN[1]),
         "median_delay": MedianDelayMetric(max_delay=ERROR_MARGIN[1]),
     }
-    policy = EventBasedPolicy(ERROR_MARGIN[1], strict_edge=False)
 
-    runner = NoResetBenchmarkRunner(
-        metrics=metrics,
+    runner_q = NoResetBenchmark(
         solver=solver,
-        policy=policy,
+        policy=EventBasedPolicy(ERROR_MARGIN[1], strict_edge=False),
+        metrics=metrics_q,
         dump_dir="benchmark_cache/noreset",
         verbose=True,
     )
-    noreset_results = runner.run(
-        entries=[AlgorithmEntry(algorithm, THRESHOLDS)],
-        providers=providers,
-            )
+
+    results_q = runner_q.run(entries=[entry], providers=providers)
+    df_quality = results_q["Shewhart"]
+
+    report_df = df_quality["classification_report"].apply(pd.Series)
+    df_quality = pd.concat([df_quality.drop(columns=["classification_report"]), report_df], axis=1)
 
     # ==========================================
     # RUN 2: Average Run Length (ARL)
     # ==========================================
-    arl_runner = ARLBenchmarkRunner(
+    runner_arl = NoResetBenchmark(
         solver=solver,
-        mode="noreset",  # uses rapid point-based extraction behind the scenes
+        policy=PointBasedPolicy(strict=True), # Быстрая поточечная экстракция
+        metrics={"arl": ARLMetric()},
         dump_dir="benchmark_cache/arl",
         verbose=True,
     )
-    arl_results = arl_runner.run(
-        entries=[AlgorithmEntry(algorithm, THRESHOLDS)],
-        providers=arl_providers,
-            )
+
+    results_arl = runner_arl.run(entries=[entry], providers=arl_providers)
+    df_arl = results_arl["Shewhart"]
 
     # ==========================================
     # Combine and Print Results
     # ==========================================
+    df_final = pd.merge(df_quality, df_arl, on="threshold", how="outer").sort_values("threshold")
 
-    # Structure to hold merged metrics: {threshold: {"metric_name": value}}
-    combined_results = {}
-
-    # 1. Parse ARL
-    for (_algo_name, _config), threshold_results in arl_results.items():
-        for threshold, metric_values in threshold_results:
-            combined_results.setdefault(threshold, {})["arl"] = metric_values["arl"]
-
-    # 2. Parse Quality & Delays
-    for (_algo_name, _config), threshold_results in noreset_results.items():
-        for threshold, metric_values in threshold_results:
-            rep = metric_values["classification_report"]
-            combined_results.setdefault(threshold, {}).update(
-                {
-                    "tp": rep["tp"],
-                    "fp": rep["fp"],
-                    "fn": rep["fn"],
-                    "precision": rep["precision"],
-                    "recall": rep["recall"],
-                    "f1": rep["f1"],
-                    "mean_delay": metric_values["mean_delay"],
-                    "median_delay": metric_values["median_delay"],
-                }
-            )
-
-    # 3. Print unified table
     print(
         f"\n{'Threshold':>10} | {'ARL':>10} | {'TP':>4} | {'FP':>4} | {'FN':>4} | "
         f"{'Precision':>9} | {'Recall':>9} | {'F1':>9} | "
@@ -255,10 +193,9 @@ def main() -> None:
     )
     print("-" * 115)
 
-    for threshold in sorted(combined_results.keys()):
-        res = combined_results[threshold]
+    for _, res in df_final.iterrows():
         print(
-            f"{threshold:>10.1f} | "
+            f"{res['threshold']:>10.1f} | "
             f"{res.get('arl', float('inf')):>10.1f} | "
             f"{res.get('tp', 0):>4.0f} | "
             f"{res.get('fp', 0):>4.0f} | "

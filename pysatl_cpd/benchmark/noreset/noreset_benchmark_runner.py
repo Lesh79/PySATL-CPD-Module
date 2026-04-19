@@ -1,7 +1,9 @@
-# -*- coding: ascii -*-
 
 """
 NoReset benchmark runner implementation.
+
+Provides NoResetBenchmarkRunner - an optimised benchmark for series with
+a single change point (bisegments). Returns pandas DataFrames ready for analysis.
 """
 
 __author__ = "Danil Totmyanin"
@@ -11,54 +13,131 @@ __license__ = "SPDX-License-Identifier: MIT"
 import dataclasses
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
+
+import numpy as np
+import pandas as pd
+from tqdm.auto import tqdm
 
 from pysatl_cpd.analysis.labeled_data import LabeledData
 from pysatl_cpd.benchmark.core.benchmark_executor import BenchmarkExecutor
 from pysatl_cpd.benchmark.metrics.multiple_run_metric import MultipleRunMetric
 from pysatl_cpd.benchmark.noreset.noreset_detection_trace import NoResetDetectionTrace
 from pysatl_cpd.benchmark.noreset.threshold_policy import ThresholdPolicy
-from pysatl_cpd.benchmark.online_benchmark_runner import OnlineBenchmarkRunner
 from pysatl_cpd.core.algorithm_entry import AlgorithmEntry
-from pysatl_cpd.core.online.ionline_algorithm import OnlineAlgorithmConfiguration
+from pysatl_cpd.core.online.ionline_algorithm import OnlineAlgorithm
 from pysatl_cpd.core.online.online_cpd_solver import OnlineCpdSolver
 from pysatl_cpd.core.online.online_detection_trace import OnlineDetectionTrace
 
+from pysatl_cpd.core.data_providers.dataset import (
+    AnnotationFilter,
+    Dataset,
+    PandasLabeledDataProvider,
+    SegmentFilter,
+)
 
-class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[NoResetDetectionTrace[Any], ProviderT]):
+
+class ThresholdRange(Protocol):
+    """Protocol for generating a sequence of thresholds."""
+    def get_thresholds(self) -> list[float]:
+        ...
+
+@dataclasses.dataclass
+class ManualThresholds(ThresholdRange):
+    thresholds: list[float]
+
+    def get_thresholds(self) -> list[float]:
+        return self.thresholds
+
+@dataclasses.dataclass
+class LinspaceThresholds(ThresholdRange):
+    start: float
+    stop: float
+    num: int
+
+    def get_thresholds(self) -> list[float]:
+        return np.linspace(self.start, self.stop, self.num).tolist()
+
+class DataTransformer(Protocol):
+    """Protocol for transforming data providers before running the algorithm."""
+    def transform(self, provider: PandasLabeledDataProvider) -> PandasLabeledDataProvider:
+        ...
+
+
+@dataclasses.dataclass
+class OnlineBenchmarkEntry:
     """
-    Optimised benchmark runner for series with a single change point.
+    Configuration entry for running an online algorithm in the benchmark.
+    """
+    algorithm: OnlineAlgorithm
+    thresholds: ThresholdRange
+    data_transformer: DataTransformer | None = None
+    entry_name: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.entry_name is None:
+            name = str(self.algorithm.__class__.__name__)
+            if self.data_transformer:
+                name += f" + {self.data_transformer.__class__.__name__}"
+            self.entry_name = name
+
+
+class NoResetBenchmark:
+    """
+    Optimised benchmark runner for bisegments (single change point).
+
+    Evaluates a set of algorithms across thresholds and returns a pandas DataFrame
+    for each algorithm containing the computed metrics.
     """
 
     def __init__(
         self,
-        metrics: dict[str, MultipleRunMetric[NoResetDetectionTrace[Any], ProviderT, Any]],
         solver: OnlineCpdSolver,
         policy: ThresholdPolicy,
-        dump_dir: Path | str | None = None,
+        metrics: dict[str, MultipleRunMetric[NoResetDetectionTrace[Any], PandasLabeledDataProvider, Any]],
+        dump_dir: str | Path | None = None,
         verbose: bool = False,
     ) -> None:
-        super().__init__(
-            metrics=metrics,
-            solver=solver,
-            dump_dir=dump_dir,
-            verbose=verbose,
-        )
+        self._solver = solver
         self._policy = policy
+        self._metrics = metrics
+        self._dump_dir = Path(dump_dir) if dump_dir is not None else None
+        self._verbose = verbose
+
         self._inf_trace_cache: dict[tuple[str, int, str], OnlineDetectionTrace[Any]] = {}
 
     def run(
         self,
-        entries: Sequence[AlgorithmEntry[Any, Any, Any]],
-        providers: Sequence[ProviderT],
-    ) -> dict[tuple[str, OnlineAlgorithmConfiguration], list[tuple[float, dict[str, Any]]]]:
+        entries: Sequence[OnlineBenchmarkEntry],
+        providers: Sequence[PandasLabeledDataProvider],
+    ) -> dict[str, pd.DataFrame]:
         """
-        Execute the benchmark over all entries and thresholds.
+        Execute the benchmark over all entries and providers.
 
-        Pre-calculates detection functions using threshold=inf before executing
-        the standard evaluation loop.
+        Parameters
+        ----------
+        entries : Sequence[OnlineBenchmarkEntry]
+            Algorithms and their threshold configurations to evaluate.
+        providers : Sequence[PandasLabeledDataProvider]
+            Prepared data providers (usually bisegments).
+
+        Returns
+        -------
+        dict[str, pd.DataFrame]
+            Mapping of entry_name to a DataFrame containing thresholds and metrics.
         """
-        inf_entries = [dataclasses.replace(entry, thresholds=[float("inf")]) for entry in entries]
+        if not providers:
+            return {entry.entry_name : pd.DataFrame() for entry in entries}
+
+        inf_entries: list[AlgorithmEntry[Any, Any, Any]] = []
+        for entry in entries:
+            inf_entries.append(
+                AlgorithmEntry(
+                    algorithm=entry.algorithm,
+                    thresholds=[float("inf")],
+                    transformer=entry.data_transformer,
+                )
+            )
 
         executor: BenchmarkExecutor[Any] = BenchmarkExecutor(
             solver=self._solver,
@@ -66,45 +145,83 @@ class NoResetBenchmarkRunner[ProviderT: LabeledData[Any]](OnlineBenchmarkRunner[
         )
 
         self._inf_trace_cache.clear()
-        for record, trace in executor.execute(
-            entries=inf_entries,
-            providers=list(providers),
-                ):
+        for record, trace in executor.execute(entries=inf_entries, providers=providers):
             key = (record.algorithm, record.configuration_hash, record.data)
             self._inf_trace_cache[key] = trace
 
-        # Execute standard evaluation loop
-        return super().run(entries, providers)
+        results: dict[str, pd.DataFrame] = {}
 
-    def _collect_runs(
+        entries_iterator = tqdm(entries, disable=not self._verbose, desc="Evaluating Algorithms")
+
+        for entry in entries_iterator:
+            algo_name = entry.entry_name or "UnknownAlgo"
+            temp_algo_entry = AlgorithmEntry(algorithm=entry.algorithm, thresholds=[])
+            internal_algo_name = temp_algo_entry.full_name
+            config_hash = temp_algo_entry.full_hash
+
+            rows = []
+            thresholds = entry.thresholds.get_thresholds()
+
+            for thr in tqdm(thresholds, disable=not self._verbose, desc=f"  Thresholds ({algo_name})", leave=False):
+                runs: list[tuple[NoResetDetectionTrace[Any], PandasLabeledDataProvider]] = []
+
+                for provider in providers:
+                    cache_key = (internal_algo_name, config_hash, provider.name)
+                    inf_trace = self._inf_trace_cache[cache_key]
+
+                    detected_change_points = self._policy.apply(
+                        inf_trace.detection_function,
+                        thr,
+                        provider.change_points,
+                    )
+
+                    noreset_trace = NoResetDetectionTrace.from_inf_trace(
+                        source_trace=inf_trace,
+                        detected_change_points=detected_change_points,
+                        threshold=thr,
+                    )
+                    runs.append((noreset_trace, provider))
+
+                metric_results = {"threshold": thr}
+                for metric_name, metric in self._metrics.items():
+                    metric_results[metric_name] = metric.evaluate(runs)
+
+                rows.append(metric_results)
+
+            results[algo_name] = pd.DataFrame(rows)
+
+        return results
+
+    def evaluate_with_filters(
         self,
-        entry: AlgorithmEntry[Any, Any, Any],
-        threshold: float,
-        providers: Sequence[ProviderT],
-    ) -> list[tuple[NoResetDetectionTrace[Any], ProviderT]]:
-        if not providers:
-            return []
+        entries: Sequence[OnlineBenchmarkEntry],
+        dataset: Dataset,
+        annotation_filter: AnnotationFilter | None = None,
+        bisegment_filter: SegmentFilter | None = None,
+    ) -> dict[str, pd.DataFrame]:
+        """
+        Convenience method to filter the dataset and run the benchmark.
 
-        algo_name = entry.full_name
-        config_hash = entry.full_hash
-        runs: list[tuple[NoResetDetectionTrace[Any], ProviderT]] = []
+        Parameters
+        ----------
+        entries : Sequence[OnlineBenchmarkEntry]
+            Algorithms and threshold configurations to evaluate.
+        dataset : Dataset
+            The complete dataset containing multiple annotated time series.
+        annotation_filter : AnnotationFilter | None
+            Filter to apply at the timeseries level (e.g. by scenario).
+        bisegment_filter : SegmentFilter | None
+            Filter to apply when extracting bisegments.
 
-        for provider in providers:
-            cache_key = (algo_name, config_hash, provider.name)
-            inf_trace = self._inf_trace_cache[cache_key]
+        Returns
+        -------
+        dict[str, pd.DataFrame]
+            DataFrames with metrics for each algorithm.
+        """
+        filtered_dataset = dataset
+        if annotation_filter is not None:
+            filtered_dataset = filtered_dataset.filter_by_annotation(annotation_filter)
 
-            detected_change_points: list[int] = self._policy.apply(
-                inf_trace.detection_function,
-                threshold,
-                provider.change_points,
-            )
+        providers = filtered_dataset.select_bisegments_by_filter(bisegment_filter)
 
-            noreset_trace = NoResetDetectionTrace.from_inf_trace(
-                source_trace=inf_trace,
-                detected_change_points=detected_change_points,
-                threshold=threshold,
-            )
-
-            runs.append((noreset_trace, provider))
-
-        return runs
+        return self.run(entries, providers)
